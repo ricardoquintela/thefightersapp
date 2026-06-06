@@ -102,10 +102,11 @@ function Card({ children, style = {}, gold = false }) {
   return React.createElement("div", { style: { background: BG2, border: `1px solid ${gold ? BORDER_GOLD : BORDER}`, borderRadius: 10, padding: "14px 16px", ...style } }, children);
 }
 
-function StatBox({ label, value, color }) {
+function StatBox({ label, value, color, sub }) {
   return React.createElement("div", { style: { background: BG3, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "12px", textAlign: "center", flex: 1 } },
     React.createElement("div", { style: { fontSize: 22, fontWeight: 700, color } }, value),
-    React.createElement("div", { style: { fontSize: 11, color: TEXT3, marginTop: 3, textTransform: "uppercase", letterSpacing: "0.5px" } }, label)
+    React.createElement("div", { style: { fontSize: 11, color: TEXT3, marginTop: 2, textTransform: "uppercase", letterSpacing: "0.5px" } }, label),
+    sub && React.createElement("div", { style: { fontSize: 10, color: color, marginTop: 2, fontWeight: 600 } }, sub)
   );
 }
 
@@ -232,7 +233,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
 
 function InviteModal({ fighter, user, onClose }) {
   const subject = encodeURIComponent("Convite - Norte Forte Fighters App");
-  const body = encodeURIComponent(`Olá ${fighter.name},\n\nFoste adicionado à Norte Forte Fighters App.\n\nUsername: ${user.username}\nPassword: ${user.password}\n\nNorte Forte`);
+  const body = encodeURIComponent(`Olá ${fighter.name},\n\nFoste adicionado à Norte Forte Fighters App.\n\nAcede à app aqui: https://norteforte.vercel.app\n\nUsername: ${user.username}\nPassword: ${user.password}\n\nNorte Forte`);
   return React.createElement("div", { style: { position: "fixed", inset: 0, background: "#000000bb", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 } },
     React.createElement(Card, { gold: true, style: { maxWidth: 400, width: "100%" } },
       React.createElement("div", { style: { fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 } }, `Convite para ${fighter.name}`),
@@ -263,7 +264,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
   const [editFightId, setEditFightId] = useState(null);
   const [delFightId, setDelFightId] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [nf, setNf] = useState({ opponent: "", result: "V", method: "KO/TKO", event: "", date: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador" });
+  const [nf, setNf] = useState({ opponent: "", result: "V", method: "KO/TKO", event: "", date: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", weight: "" });
   const [nu, setNu] = useState({ opponent: "", event: "", date: "", local: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador" });
   const [nt, setNt] = useState({ name: "", org: "", year: 2026 });
 
@@ -283,6 +284,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
   const wins = f.fights.filter(x => x.result === "V").length;
   const losses = f.fights.filter(x => x.result === "D").length;
   const draws = f.fights.filter(x => x.result === "E").length;
+  const kos = f.fights.filter(x => x.result === "V" && x.method === "KO/TKO").length;
   const total = wins + losses + draws;
   const wr = total > 0 ? Math.round(wins / total * 100) : 0;
   const upd = (k, v) => setF(p => ({ ...p, [k]: v }));
@@ -335,7 +337,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
   const tabContent = () => {
     if (tab === 0) return React.createElement(Card, null,
       React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-        [["Equipa", "team"], ["Peso (kg)", "weight"], ["Categoria", "category"], ["Contacto", "contact"]].map(([l, k]) =>
+        [          ["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
           React.createElement("div", { key: k },
             React.createElement("label", { style: lbl }, l),
             isOwner
@@ -380,12 +382,23 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
               METHODS.map(m => React.createElement("option", { key: m }, m))
             )
           ),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Evento"), React.createElement("input", { style: inp, value: nf.event, onChange: e => setNf({ ...nf, event: e.target.value }) })),
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"),
+            React.createElement("select", { style: inp, value: nf.modality, onChange: e => setNf({ ...nf, modality: e.target.value, sub_modality: MODALITIES[e.target.value][0] }) },
+              Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m))
+            )
+          ),
+          nf.modality === "Kickboxing" && React.createElement("div", null, React.createElement("label", { style: lbl }, "Disciplina"),
+            React.createElement("select", { style: inp, value: nf.sub_modality, onChange: e => setNf({ ...nf, sub_modality: e.target.value }) },
+              MODALITIES["Kickboxing"].map(s => React.createElement("option", { key: s }, s))
+            )
+          ),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"),
             React.createElement("select", { style: inp, value: nf.level, onChange: e => setNf({ ...nf, level: e.target.value }) },
               LEVELS.map(l => React.createElement("option", { key: l }, l))
             )
-          )
+          ),
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Peso no combate (kg)"), React.createElement("input", { type: "number", style: inp, value: nf.weight, onChange: e => setNf({ ...nf, weight: e.target.value }), placeholder: "ex: 70" })),
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Evento"), React.createElement("input", { style: inp, value: nf.event, onChange: e => setNf({ ...nf, event: e.target.value }) }))
         ),
         React.createElement("button", { onClick: saveFight, style: btnGold }, "Guardar")
       ),
@@ -397,9 +410,10 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
             React.createElement("div", { style: { fontSize: 12, color: TEXT2, marginTop: 2 } }, `${fight.event} · ${fight.date}`),
             React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
               React.createElement(Badge, null, fight.modality),
-              React.createElement(Badge, { type: "gold" }, fight.sub_modality),
+              fight.sub_modality && fight.modality === "Kickboxing" && React.createElement(Badge, { type: "gold" }, fight.sub_modality),
               React.createElement(Badge, { type: "blue" }, fight.level),
-              React.createElement(Badge, null, fight.method)
+              React.createElement(Badge, null, fight.method),
+              fight.weight && React.createElement(Badge, { type: "default" }, `${fight.weight}kg`)
             ),
             delFightId === fight.id && React.createElement("div", { style: { marginTop: 10, display: "flex", gap: 8, alignItems: "center" } },
               React.createElement("span", { style: { fontSize: 13, color: "#e05555" } }, "Tens a certeza?"),
@@ -513,7 +527,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
         ),
         React.createElement(GoldDivider),
         React.createElement("div", { style: { display: "flex", gap: 8 } },
-          React.createElement(StatBox, { label: "Vitórias", value: wins, color: "#4caf7d" }),
+          React.createElement(StatBox, { label: "Vitórias", value: wins, color: "#4caf7d", sub: `${kos} KO` }),
           React.createElement(StatBox, { label: "Derrotas", value: losses, color: "#e05555" }),
           React.createElement(StatBox, { label: "Empates", value: draws, color: TEXT3 }),
           React.createElement(StatBox, { label: "Win Rate", value: wr + "%", color: GOLD })
@@ -555,7 +569,7 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames }) {
       React.createElement("div", { style: { width: 30, height: 2, background: GOLD, marginBottom: 16, borderRadius: 2 } }),
       React.createElement(Card, null,
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-          [["Nome completo", "name"], ["Equipa", "team"], ["Peso (kg)", "weight"], ["Categoria", "category"], ["Contacto", "contact"]].map(([l, k]) =>
+          [["Nome completo", "name"], ["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
             React.createElement("div", { key: k },
               React.createElement("label", { style: lbl }, l),
               React.createElement("input", { style: inp, value: f[k], onChange: e => upd(k, e.target.value) })
