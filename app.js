@@ -698,7 +698,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
     setDelTitleId(null);
   }
 
-  const TABS = ["Perfil", "Histórico", "Próximas Lutas", "Títulos", "Transferência"];
+  const TABS = ["Perfil", "Histórico", "Próximas Lutas", "Títulos";
 
   if (loading) return React.createElement("div", { style: { minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" } },
     React.createElement("div", { style: { color: GOLD, fontSize: 14 } }, "A carregar...")
