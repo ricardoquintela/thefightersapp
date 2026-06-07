@@ -116,7 +116,8 @@ function StatBox({ label, value, color, sub }) {
   );
 }
 
-function Header({ onLogout, user, currentPage, setPage }) {
+// ALTERADO: badge de pedidos pendentes
+function Header({ onLogout, user, currentPage, setPage, pendingCount = 0 }) {
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${BORDER}`, position: "relative" } },
     React.createElement(Logo),
     user && React.createElement("div", { style: { position: "absolute", right: 0, top: 0, display: "flex", alignItems: "center", gap: 8 } },
@@ -128,7 +129,10 @@ function Header({ onLogout, user, currentPage, setPage }) {
     ),
     user && setPage && React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", marginTop: 12, flexWrap: "wrap" } },
       user.role === "admin" && React.createElement("button", { onClick: () => setPage("fighters"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "fighters" ? GOLD_DIM : "transparent", color: currentPage === "fighters" ? "#fff" : GOLD } }, "Lutadores"),
-      user.role === "admin" && React.createElement("button", { onClick: () => setPage("pending"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "pending" ? GOLD_DIM : "transparent", color: currentPage === "pending" ? "#fff" : GOLD } }, "Pedidos"),
+      user.role === "admin" && React.createElement("button", { onClick: () => setPage("pending"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "pending" ? GOLD_DIM : "transparent", color: currentPage === "pending" ? "#fff" : GOLD, position: "relative" } },
+        "Pedidos",
+        pendingCount > 0 && React.createElement("span", { style: { position: "absolute", top: -7, right: -7, background: "#e05555", color: "#fff", borderRadius: "50%", width: 17, height: 17, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 } }, pendingCount > 9 ? "9+" : pendingCount)
+      ),
       user.role === "admin" && React.createElement("button", { onClick: () => setPage("teams"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "teams" ? GOLD_DIM : "transparent", color: currentPage === "teams" ? "#fff" : GOLD } }, "Equipas"),
       React.createElement("button", { onClick: () => setPage("calendar"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : GOLD } }, "📅 Calendário")
     )
@@ -170,38 +174,21 @@ function FightForm({ val, set }) {
   );
 }
 
-// ─── FORMULÁRIO DE EVENTO ────────────────────────────────────────────────────
 function EventForm({ val, set }) {
   return React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
     React.createElement("div", { style: { gridColumn: "1 / -1" } },
       React.createElement("label", { style: { ...lbl, color: GOLD } }, "Nome da Prova"),
       React.createElement("input", { style: { ...inp, borderColor: GOLD_DIM }, value: val.name || "", onChange: e => set({ ...val, name: e.target.value }), placeholder: "ex: Norte Forte Fight Night" })
     ),
-    React.createElement("div", null,
-      React.createElement("label", { style: lbl }, "Data"),
-      React.createElement("input", { type: "date", style: inp, value: val.date || "", onChange: e => set({ ...val, date: e.target.value }) })
-    ),
-    React.createElement("div", null,
-      React.createElement("label", { style: lbl }, "Organização"),
-      React.createElement("input", { style: inp, value: val.organization || "", onChange: e => set({ ...val, organization: e.target.value }), placeholder: "ex: WAKO Portugal" })
-    ),
-    React.createElement("div", null,
-      React.createElement("label", { style: lbl }, "Local / Recinto"),
-      React.createElement("input", { style: inp, value: val.local || "", onChange: e => set({ ...val, local: e.target.value }), placeholder: "ex: Pavilhão Municipal" })
-    ),
-    React.createElement("div", null,
-      React.createElement("label", { style: lbl }, "Cidade"),
-      React.createElement("input", { style: inp, value: val.city || "", onChange: e => set({ ...val, city: e.target.value }), placeholder: "ex: Porto" })
-    ),
-    React.createElement("div", null,
-      React.createElement("label", { style: lbl }, "País"),
-      React.createElement("input", { style: inp, value: val.country || "", onChange: e => set({ ...val, country: e.target.value }), placeholder: "ex: Portugal" })
-    )
+    React.createElement("div", null, React.createElement("label", { style: lbl }, "Data"), React.createElement("input", { type: "date", style: inp, value: val.date || "", onChange: e => set({ ...val, date: e.target.value }) })),
+    React.createElement("div", null, React.createElement("label", { style: lbl }, "Organização"), React.createElement("input", { style: inp, value: val.organization || "", onChange: e => set({ ...val, organization: e.target.value }), placeholder: "ex: WAKO Portugal" })),
+    React.createElement("div", null, React.createElement("label", { style: lbl }, "Local / Recinto"), React.createElement("input", { style: inp, value: val.local || "", onChange: e => set({ ...val, local: e.target.value }), placeholder: "ex: Pavilhão Municipal" })),
+    React.createElement("div", null, React.createElement("label", { style: lbl }, "Cidade"), React.createElement("input", { style: inp, value: val.city || "", onChange: e => set({ ...val, city: e.target.value }), placeholder: "ex: Porto" })),
+    React.createElement("div", null, React.createElement("label", { style: lbl }, "País"), React.createElement("input", { style: inp, value: val.country || "", onChange: e => set({ ...val, country: e.target.value }), placeholder: "ex: Portugal" }))
   );
 }
 
-// ─── CALENDÁRIO ──────────────────────────────────────────────────────────────
-function CalendarPage({ onLogout, user, setPage }) {
+function CalendarPage({ onLogout, user, setPage, pendingCount }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -224,8 +211,7 @@ function CalendarPage({ onLogout, user, setPage }) {
     const ev = { ...ne, id: `ev${Date.now()}`, created_at: new Date().toISOString() };
     await db.insert("events", ev);
     setEvents(p => [...p, ev].sort((a, b) => new Date(a.date) - new Date(b.date)));
-    setShowForm(false);
-    setNe({ ...EMPTY_EVENT });
+    setShowForm(false); setNe({ ...EMPTY_EVENT });
   }
 
   async function saveEditEvent() {
@@ -248,7 +234,6 @@ function CalendarPage({ onLogout, user, setPage }) {
     const days = daysUntil(ev.date);
     const isPast = days !== null && days < 0;
     return React.createElement(Card, { style: { marginBottom: 8, border: `1px solid ${isPast ? BORDER : BORDER_GOLD}` } },
-      // Formulário de edição inline
       editEvent && editEvent.id === ev.id
         ? React.createElement("div", null,
             React.createElement("div", { style: { fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, "Editar Prova"),
@@ -259,26 +244,20 @@ function CalendarPage({ onLogout, user, setPage }) {
             )
           )
         : React.createElement("div", { style: { display: "flex", gap: 12, alignItems: "flex-start" } },
-            // Data
             React.createElement("div", { style: { background: BG3, border: `1px solid ${isPast ? BORDER : GOLD_DIM}`, borderRadius: 8, padding: "8px 12px", textAlign: "center", minWidth: 52, flexShrink: 0 } },
               React.createElement("div", { style: { fontSize: 20, fontWeight: 700, color: isPast ? TEXT3 : GOLD } }, ev.date?.slice(8, 10)),
               React.createElement("div", { style: { fontSize: 10, color: TEXT3 } }, ev.date ? `${ev.date.slice(5,7)}/${ev.date.slice(0,4)}` : "")
             ),
-            // Info
             React.createElement("div", { style: { flex: 1 } },
               React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: isPast ? TEXT2 : TEXT } }, ev.name),
               ev.organization && React.createElement("div", { style: { fontSize: 12, color: GOLD, fontWeight: 600, marginTop: 2 } }, ev.organization),
-              React.createElement("div", { style: { fontSize: 12, color: TEXT2, marginTop: 2 } },
-                [ev.local, ev.city, ev.country].filter(Boolean).join(" · ")
-              ),
-              // Confirmação eliminar
+              React.createElement("div", { style: { fontSize: 12, color: TEXT2, marginTop: 2 } }, [ev.local, ev.city, ev.country].filter(Boolean).join(" · ")),
               delEventId === ev.id && React.createElement("div", { style: { marginTop: 10, display: "flex", gap: 8, alignItems: "center" } },
                 React.createElement("span", { style: { fontSize: 13, color: "#e05555" } }, "Tens a certeza?"),
                 React.createElement("button", { onClick: () => deleteEvent(ev.id), style: { ...btnGold, marginTop: 0, padding: "5px 14px", fontSize: 12, background: "#e05555" } }, "Eliminar"),
                 React.createElement("button", { onClick: () => setDelEventId(null), style: { ...btnGold, marginTop: 0, padding: "5px 14px", fontSize: 12, background: BG4, color: TEXT2, border: `1px solid ${BORDER}` } }, "Cancelar")
               )
             ),
-            // Dias + botões admin
             React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 } },
               !isPast && days !== null && React.createElement("div", { style: { textAlign: "center" } },
                 React.createElement("div", { style: { fontSize: 20, fontWeight: 700, color: days <= 7 ? "#e05555" : days <= 30 ? GOLD : "#4caf7d" } }, days),
@@ -296,15 +275,11 @@ function CalendarPage({ onLogout, user, setPage }) {
 
   return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, currentPage: "calendar", setPage }),
-
-      // Cabeçalho + botão novo (só admin)
+      React.createElement(Header, { onLogout, user, currentPage: "calendar", setPage, pendingCount }),
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: TEXT, textTransform: "uppercase", letterSpacing: 1 } }, "Calendário de Provas"),
         isAdmin && React.createElement("button", { onClick: () => { setShowForm(p => !p); setEditEvent(null); }, style: btnOutline }, "+ Nova Prova")
       ),
-
-      // Formulário nova prova
       showForm && React.createElement(Card, { gold: true, style: { marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 12, textTransform: "uppercase" } }, "Nova Prova"),
         React.createElement(EventForm, { val: ne, set: setNe }),
@@ -313,20 +288,14 @@ function CalendarPage({ onLogout, user, setPage }) {
           React.createElement("button", { onClick: () => { setShowForm(false); setNe({ ...EMPTY_EVENT }); }, style: { ...btnGold, marginTop: 0, background: BG4, color: TEXT2, border: `1px solid ${BORDER}` } }, "Cancelar")
         )
       ),
-
       loading && React.createElement("div", { style: { color: TEXT2, textAlign: "center", padding: 24 } }, "A carregar..."),
-
-      // Próximas provas
       upcoming.length > 0 && React.createElement("div", null,
         React.createElement("div", { style: { fontSize: 11, color: GOLD, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 } }, `Próximas · ${upcoming.length}`),
         upcoming.map(ev => React.createElement(EventCard, { key: ev.id, ev }))
       ),
-
       upcoming.length === 0 && !loading && React.createElement(Card, { style: { marginBottom: 16 } },
         React.createElement("div", { style: { color: TEXT3, textAlign: "center", padding: "16px 0" } }, "Nenhuma prova agendada.")
       ),
-
-      // Provas passadas
       past.length > 0 && React.createElement("div", { style: { marginTop: 20 } },
         React.createElement(GoldDivider),
         React.createElement("div", { style: { fontSize: 11, color: TEXT3, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 } }, `Realizadas · ${past.length}`),
@@ -336,7 +305,6 @@ function CalendarPage({ onLogout, user, setPage }) {
   );
 }
 
-// ─── REGISTO PÚBLICO ──────────────────────────────────────────────────────────
 function RegisterPage() {
   const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", contact: "", email: "", team: "Norte Forte" });
   const [err, setErr] = useState("");
@@ -352,8 +320,7 @@ function RegisterPage() {
     if (existing.length > 0) { setSaving(false); return setErr("Este e-mail já está registado."); }
     const id = Date.now();
     await db.insert("fighters", { ...f, id, weight: Number(f.weight) || 0, available: false, status: "pending", registration_date: new Date().toISOString() });
-    setSaving(false);
-    setDone(true);
+    setSaving(false); setDone(true);
   }
 
   if (done) return React.createElement("div", { style: { minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
@@ -381,12 +348,8 @@ function RegisterPage() {
             React.createElement("label", { style: { ...lbl, color: GOLD } }, "E-mail"),
             React.createElement("input", { style: { ...inp, borderColor: GOLD_DIM }, value: f.email, onChange: e => upd("email", e.target.value), placeholder: "o teu e-mail" })
           ),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"),
-            React.createElement("select", { style: inp, value: f.modality, onChange: e => upd("modality", e.target.value) }, Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))
-          ),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"),
-            React.createElement("select", { style: inp, value: f.level, onChange: e => upd("level", e.target.value) }, LEVELS.map(l => React.createElement("option", { key: l }, l)))
-          )
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"), React.createElement("select", { style: inp, value: f.modality, onChange: e => upd("modality", e.target.value) }, Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))),
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: f.level, onChange: e => upd("level", e.target.value) }, LEVELS.map(l => React.createElement("option", { key: l }, l))))
         ),
         err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginTop: 10 } }, err),
         React.createElement("button", { onClick: handleRegister, disabled: saving, style: { ...btnGold, width: "100%", marginTop: 16, opacity: saving ? 0.7 : 1 } }, saving ? "A enviar..." : "Enviar Pedido de Registo")
@@ -395,8 +358,7 @@ function RegisterPage() {
   );
 }
 
-// ─── PEDIDOS PENDENTES ────────────────────────────────────────────────────────
-function PendingPage({ onLogout, user, setPage, setUsers, users }) {
+function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount }) {
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -430,7 +392,7 @@ function PendingPage({ onLogout, user, setPage, setUsers, users }) {
 
   return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, currentPage: "pending", setPage }),
+      React.createElement(Header, { onLogout, user, currentPage: "pending", setPage, pendingCount }),
       React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 } }, `Pedidos Pendentes · ${pending.length}`),
       loading && React.createElement("div", { style: { color: TEXT2, textAlign: "center", padding: 24 } }, "A carregar..."),
       pending.length === 0 && !loading && React.createElement(Card, null, React.createElement("div", { style: { color: TEXT3, textAlign: "center", padding: "24px 0" } }, "Nenhum pedido pendente.")),
@@ -452,8 +414,7 @@ function PendingPage({ onLogout, user, setPage, setUsers, users }) {
   );
 }
 
-// ─── EQUIPAS ─────────────────────────────────────────────────────────────────
-function TeamsPage({ onLogout, user, setPage }) {
+function TeamsPage({ onLogout, user, setPage, pendingCount }) {
   const [teams, setTeams] = useState([]);
   const [allFighters, setAllFighters] = useState([]);
   const [allFights, setAllFights] = useState([]);
@@ -465,14 +426,9 @@ function TeamsPage({ onLogout, user, setPage }) {
     async function load() {
       const [fighters, fights] = await Promise.all([db.get("fighters"), db.get("fights")]);
       const approved = fighters.filter(f => f.status !== "pending" && f.status !== "rejected");
-      setAllFighters(approved);
-      setAllFights(fights);
+      setAllFighters(approved); setAllFights(fights);
       const teamMap = {};
-      approved.forEach(f => {
-        const t = f.team || "Sem Equipa";
-        if (!teamMap[t]) teamMap[t] = [];
-        teamMap[t].push(f);
-      });
+      approved.forEach(f => { const t = f.team || "Sem Equipa"; if (!teamMap[t]) teamMap[t] = []; teamMap[t].push(f); });
       setTeams(Object.entries(teamMap).map(([name, fighters]) => ({ name, fighters })));
       setLoading(false);
     }
@@ -481,11 +437,7 @@ function TeamsPage({ onLogout, user, setPage }) {
 
   function getRecord(fighterId) {
     const fights = allFights.filter(f => f.fighter_id === fighterId);
-    const wins = fights.filter(x => x.result === "V").length;
-    const losses = fights.filter(x => x.result === "D").length;
-    const draws = fights.filter(x => x.result === "E").length;
-    const kos = fights.filter(x => x.result === "V" && x.method === "KO/TKO").length;
-    return { wins, losses, draws, kos, total: fights.length };
+    return { wins: fights.filter(x => x.result === "V").length, losses: fights.filter(x => x.result === "D").length, draws: fights.filter(x => x.result === "E").length, kos: fights.filter(x => x.result === "V" && x.method === "KO/TKO").length, total: fights.length };
   }
 
   if (selFighter) {
@@ -494,7 +446,7 @@ function TeamsPage({ onLogout, user, setPage }) {
     const fighterFights = allFights.filter(f => f.fighter_id === selFighter.id);
     return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
       React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-        React.createElement(Header, { onLogout, user, currentPage: "teams", setPage }),
+        React.createElement(Header, { onLogout, user, currentPage: "teams", setPage, pendingCount }),
         React.createElement("button", { onClick: () => setSelFighter(null), style: { fontSize: 13, color: TEXT2, background: "none", border: "none", cursor: "pointer", marginBottom: 14, padding: 0 } }, `← Voltar a ${selFighter.team}`),
         React.createElement(Card, { gold: true, style: { marginBottom: 14 } },
           React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 14 } },
@@ -546,7 +498,7 @@ function TeamsPage({ onLogout, user, setPage }) {
     const teamFighters = allFighters.filter(f => (f.team || "Sem Equipa") === selected);
     return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
       React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-        React.createElement(Header, { onLogout, user, currentPage: "teams", setPage }),
+        React.createElement(Header, { onLogout, user, currentPage: "teams", setPage, pendingCount }),
         React.createElement("button", { onClick: () => setSelected(null), style: { fontSize: 13, color: TEXT2, background: "none", border: "none", cursor: "pointer", marginBottom: 14, padding: 0 } }, "← Equipas"),
         React.createElement("div", { style: { fontSize: 20, fontWeight: 700, color: GOLD, marginBottom: 4, textTransform: "uppercase", letterSpacing: 2 } }, selected),
         React.createElement("div", { style: { fontSize: 13, color: TEXT2, marginBottom: 16 } }, `${teamFighters.length} atleta${teamFighters.length !== 1 ? "s" : ""}`),
@@ -559,10 +511,8 @@ function TeamsPage({ onLogout, user, setPage }) {
               React.createElement("div", { style: { flex: 1 } },
                 React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: TEXT, marginBottom: 4 } }, f.name),
                 React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 6 } },
-                  React.createElement(Badge, null, f.modality),
-                  f.sub_modality && React.createElement(Badge, { type: "gold" }, f.sub_modality),
-                  React.createElement(Badge, { type: "blue" }, f.level),
-                  React.createElement(Badge, null, `${f.weight}kg`)
+                  React.createElement(Badge, null, f.modality), f.sub_modality && React.createElement(Badge, { type: "gold" }, f.sub_modality),
+                  React.createElement(Badge, { type: "blue" }, f.level), React.createElement(Badge, null, `${f.weight}kg`)
                 ),
                 React.createElement("div", { style: { display: "flex", gap: 12, fontSize: 13 } },
                   React.createElement("span", { style: { color: "#4caf7d", fontWeight: 700 } }, `${rec.wins}V`),
@@ -581,7 +531,7 @@ function TeamsPage({ onLogout, user, setPage }) {
 
   return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, currentPage: "teams", setPage }),
+      React.createElement(Header, { onLogout, user, currentPage: "teams", setPage, pendingCount }),
       React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 } }, `Equipas · ${teams.length}`),
       loading && React.createElement("div", { style: { color: TEXT2, textAlign: "center", padding: 24 } }, "A carregar..."),
       teams.map(t => {
@@ -604,7 +554,6 @@ function TeamsPage({ onLogout, user, setPage }) {
   );
 }
 
-// ─── LOGIN ────────────────────────────────────────────────────────────────────
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [pw, setPw] = useState("");
@@ -634,8 +583,8 @@ function Login({ onLogin }) {
   );
 }
 
-// ─── FIGHTER PROFILE ─────────────────────────────────────────────────────────
-function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setPage }) {
+// ALTERADO: contador dias, fotos de combate, lightbox
+function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setPage, pendingCount }) {
   const [tab, setTab] = useState(0);
   const [f, setF] = useState({ ...fighter, fights: [], upcoming: [], titles: [] });
   const [loading, setLoading] = useState(true);
@@ -650,6 +599,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   const [nf, setNf] = useState({ ...EMPTY_FIGHT });
   const [nu, setNu] = useState({ opponent: "", event: "", date: "", local: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador" });
   const [nt, setNt] = useState({ name: "", org: "", year: 2026 });
+  const [lightbox, setLightbox] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -672,10 +622,35 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   const wr = total > 0 ? Math.round(wins / total * 100) : 0;
   const upd = (k, v) => setF(p => ({ ...p, [k]: v }));
 
+  // Próxima luta e contador
+  const todayD = new Date(); todayD.setHours(0,0,0,0);
+  const nextFight = (f.upcoming || []).filter(u => u.date && new Date(u.date) >= todayD).sort((a,b) => new Date(a.date)-new Date(b.date))[0];
+  const daysLeft = nextFight ? daysUntil(nextFight.date) : null;
+
+  const combatPhotos = Array.isArray(f.combat_photos) ? f.combat_photos : [];
+
   async function saveProfile() {
     setSaving(true);
-    await db.update("fighters", f.id, { name: f.name, weight: f.weight, category: f.category, contact: f.contact, modality: f.modality, sub_modality: f.sub_modality, level: f.level, available: f.available, photo: f.photo });
+    await db.update("fighters", f.id, { name: f.name, weight: f.weight, category: f.category, contact: f.contact, modality: f.modality, sub_modality: f.sub_modality, level: f.level, available: f.available, photo: f.photo, combat_photos: f.combat_photos });
     setSaving(false);
+  }
+
+  async function addCombatPhoto(e) {
+    const file = e.target.files[0]; if (!file) return;
+    if (combatPhotos.length >= 3) return;
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      const newPhotos = [...combatPhotos, ev.target.result];
+      upd("combat_photos", newPhotos);
+      await db.update("fighters", f.id, { combat_photos: newPhotos });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function removeCombatPhoto(idx) {
+    const newPhotos = combatPhotos.filter((_, i) => i !== idx);
+    upd("combat_photos", newPhotos);
+    await db.update("fighters", f.id, { combat_photos: newPhotos });
   }
 
   async function saveFight() {
@@ -730,20 +705,39 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   );
 
   const tabContent = () => {
-    if (tab === 0) return React.createElement(Card, null,
-      React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-        [["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
-          React.createElement("div", { key: k },
-            React.createElement("label", { style: lbl }, l),
-            isOwner ? React.createElement("input", { style: inp, value: f[k] || "", onChange: e => upd(k, e.target.value) }) : React.createElement("div", { style: { fontSize: 14, color: TEXT, padding: "8px 0" } }, f[k])
+    if (tab === 0) return React.createElement("div", null,
+      // Fotos de combate
+      React.createElement(Card, { style: { marginBottom: 12 } },
+        React.createElement("div", { style: { fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, `Fotos em Combate · ${combatPhotos.length}/3`),
+        React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+          combatPhotos.map((photo, idx) =>
+            React.createElement("div", { key: idx, style: { position: "relative", width: 90, height: 90 } },
+              React.createElement("img", { src: photo, onClick: () => setLightbox(photo), style: { width: 90, height: 90, objectFit: "cover", borderRadius: 8, cursor: "pointer", border: `1px solid ${GOLD_DIM}` } }),
+              isOwner && React.createElement("button", { onClick: () => removeCombatPhoto(idx), style: { position: "absolute", top: -6, right: -6, background: "#e05555", border: "none", borderRadius: "50%", width: 20, height: 20, color: "#fff", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 } }, "×")
+            )
+          ),
+          isOwner && combatPhotos.length < 3 && React.createElement("label", { style: { width: 90, height: 90, border: `2px dashed ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: TEXT3, fontSize: 28 } },
+            "+",
+            React.createElement("input", { type: "file", accept: "image/*", style: { display: "none" }, onChange: addCombatPhoto })
           )
-        ),
-        isOwner && React.createElement(React.Fragment, null,
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"), React.createElement("select", { style: inp, value: f.modality || "Kickboxing", onChange: e => upd("modality", e.target.value) }, Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: f.level || "Amador", onChange: e => upd("level", e.target.value) }, LEVELS.map(l => React.createElement("option", { key: l }, l))))
         )
       ),
-      isOwner && React.createElement("button", { onClick: saveProfile, disabled: saving, style: { ...btnGold, opacity: saving ? 0.7 : 1 } }, saving ? "A guardar..." : "Guardar alterações")
+      // Dados do perfil
+      React.createElement(Card, null,
+        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
+          [["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
+            React.createElement("div", { key: k },
+              React.createElement("label", { style: lbl }, l),
+              isOwner ? React.createElement("input", { style: inp, value: f[k] || "", onChange: e => upd(k, e.target.value) }) : React.createElement("div", { style: { fontSize: 14, color: TEXT, padding: "8px 0" } }, f[k])
+            )
+          ),
+          isOwner && React.createElement(React.Fragment, null,
+            React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"), React.createElement("select", { style: inp, value: f.modality || "Kickboxing", onChange: e => upd("modality", e.target.value) }, Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))),
+            React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: f.level || "Amador", onChange: e => upd("level", e.target.value) }, LEVELS.map(l => React.createElement("option", { key: l }, l))))
+          )
+        ),
+        isOwner && React.createElement("button", { onClick: saveProfile, disabled: saving, style: { ...btnGold, opacity: saving ? 0.7 : 1 } }, saving ? "A guardar..." : "Guardar alterações")
+      )
     );
 
     if (tab === 1) return React.createElement("div", null,
@@ -810,23 +804,28 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
         ),
         React.createElement("button", { onClick: saveUpcoming, style: btnGold }, "Guardar")
       ),
-      f.upcoming.map((u, i) => React.createElement(Card, { key: i, style: { marginBottom: 8 } },
-        React.createElement("div", { style: { display: "flex", gap: 12, alignItems: "center" } },
-          React.createElement("div", { style: { background: BG3, border: `1px solid ${GOLD_DIM}`, borderRadius: 8, padding: "8px 12px", textAlign: "center", minWidth: 48 } },
-            React.createElement("div", { style: { fontSize: 18, fontWeight: 700, color: GOLD } }, u.date?.slice(8, 10)),
-            React.createElement("div", { style: { fontSize: 10, color: TEXT2 } }, `${u.date?.slice(5, 7)}/${u.date?.slice(2, 4)}`)
-          ),
-          React.createElement("div", null,
-            React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: TEXT } }, `vs. ${u.opponent}`),
-            React.createElement("div", { style: { fontSize: 12, color: TEXT2, marginTop: 2 } }, `${u.event} · ${u.local}`),
-            React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
-              React.createElement(Badge, null, u.modality),
-              React.createElement(Badge, { type: "gold" }, u.sub_modality),
-              React.createElement(Badge, { type: "blue" }, u.level)
+      f.upcoming.map((u, i) => {
+        const days = daysUntil(u.date);
+        return React.createElement(Card, { key: i, style: { marginBottom: 8 } },
+          React.createElement("div", { style: { display: "flex", gap: 12, alignItems: "center" } },
+            React.createElement("div", { style: { background: BG3, border: `1px solid ${GOLD_DIM}`, borderRadius: 8, padding: "8px 12px", textAlign: "center", minWidth: 48 } },
+              React.createElement("div", { style: { fontSize: 18, fontWeight: 700, color: GOLD } }, u.date?.slice(8, 10)),
+              React.createElement("div", { style: { fontSize: 10, color: TEXT2 } }, `${u.date?.slice(5, 7)}/${u.date?.slice(2, 4)}`)
+            ),
+            React.createElement("div", { style: { flex: 1 } },
+              React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: TEXT } }, `vs. ${u.opponent}`),
+              React.createElement("div", { style: { fontSize: 12, color: TEXT2, marginTop: 2 } }, `${u.event} · ${u.local}`),
+              React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
+                React.createElement(Badge, null, u.modality), React.createElement(Badge, { type: "gold" }, u.sub_modality), React.createElement(Badge, { type: "blue" }, u.level)
+              )
+            ),
+            days !== null && days >= 0 && React.createElement("div", { style: { textAlign: "center", flexShrink: 0 } },
+              React.createElement("div", { style: { fontSize: 20, fontWeight: 700, color: days <= 7 ? "#e05555" : days <= 30 ? GOLD : "#4caf7d" } }, days),
+              React.createElement("div", { style: { fontSize: 9, color: TEXT3, textTransform: "uppercase" } }, "dias")
             )
           )
-        )
-      ))
+        );
+      })
     );
 
     if (tab === 3) return React.createElement("div", null,
@@ -892,8 +891,12 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   };
 
   return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
+    // Lightbox
+    lightbox && React.createElement("div", { onClick: () => setLightbox(null), style: { position: "fixed", inset: 0, background: "#000000ee", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, cursor: "pointer" } },
+      React.createElement("img", { src: lightbox, style: { maxWidth: "95vw", maxHeight: "90vh", borderRadius: 8, objectFit: "contain" } })
+    ),
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, setPage }),
+      React.createElement(Header, { onLogout, user, setPage, pendingCount }),
       onBack && React.createElement("button", { onClick: onBack, style: { fontSize: 13, color: TEXT2, background: "none", border: "none", cursor: "pointer", marginBottom: 14, padding: 0 } }, "← Voltar"),
       React.createElement(Card, { gold: true, style: { marginBottom: 14 } },
         React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 14 } },
@@ -918,6 +921,17 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
               React.createElement(Badge, null, f.modality),
               React.createElement(Badge, { type: "blue" }, f.level),
               React.createElement(Badge, null, `${f.weight}kg`)
+            ),
+            // Contador próxima luta
+            daysLeft !== null && daysLeft >= 0 && React.createElement("div", { style: { marginTop: 10, display: "flex", alignItems: "center", gap: 8, background: BG3, borderRadius: 8, padding: "8px 12px", border: `1px solid ${daysLeft <= 7 ? "#e05555" : daysLeft <= 30 ? GOLD_DIM : BORDER}` } },
+              React.createElement("div", { style: { flex: 1 } },
+                React.createElement("div", { style: { fontSize: 10, color: TEXT3, textTransform: "uppercase", letterSpacing: 1 } }, "Próxima luta"),
+                React.createElement("div", { style: { fontSize: 13, color: TEXT, fontWeight: 600 } }, `vs. ${nextFight.opponent}${nextFight.event ? ` · ${nextFight.event}` : ""}`)
+              ),
+              React.createElement("div", { style: { textAlign: "center" } },
+                React.createElement("div", { style: { fontSize: 24, fontWeight: 700, color: daysLeft <= 7 ? "#e05555" : daysLeft <= 30 ? GOLD : "#4caf7d" } }, daysLeft),
+                React.createElement("div", { style: { fontSize: 9, color: TEXT3, textTransform: "uppercase" } }, "dias")
+              )
             )
           )
         ),
@@ -937,7 +951,6 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   );
 }
 
-// ─── INVITE MODAL ─────────────────────────────────────────────────────────────
 function InviteModal({ fighter, user, onClose }) {
   const subject = encodeURIComponent("Convite - Norte Forte Fighters App");
   const body = encodeURIComponent(`Olá ${fighter.name},\n\nFoste adicionado à Norte Forte Fighters App.\n\nAcede à app aqui: https://norteforte.vercel.app\n\nUsername: ${user.username}\nPassword: ${user.password}\n\nNorte Forte`);
@@ -956,26 +969,23 @@ function InviteModal({ fighter, user, onClose }) {
   );
 }
 
-// ─── ADMIN DASHBOARD ─────────────────────────────────────────────────────────
-function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user, page, setPage }) {
+function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user, page, setPage, pendingCount }) {
   const [selected, setSelected] = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
   const [delId, setDelId] = useState(null);
   const [inviteData, setInviteData] = useState(null);
 
-  if (page === "pending") return React.createElement(PendingPage, { onLogout, user, setPage, setUsers, users });
-  if (page === "teams") return React.createElement(TeamsPage, { onLogout, user, setPage });
-  if (page === "calendar") return React.createElement(CalendarPage, { onLogout, user, setPage });
+  if (page === "pending") return React.createElement(PendingPage, { onLogout, user, setPage, setUsers, users, pendingCount });
+  if (page === "teams") return React.createElement(TeamsPage, { onLogout, user, setPage, pendingCount });
+  if (page === "calendar") return React.createElement(CalendarPage, { onLogout, user, setPage, pendingCount });
 
   if (showNewForm) return React.createElement(NewFighterForm, {
     onBack: () => setShowNewForm(false),
     onSave: async (fighter, newUser) => {
       await db.insert("fighters", { id: fighter.id, name: fighter.name, weight: fighter.weight, category: fighter.category, modality: fighter.modality, sub_modality: fighter.sub_modality, level: fighter.level, contact: fighter.contact, email: fighter.email, team: fighter.team, available: false, status: "approved" });
       await db.insert("users", newUser);
-      setFighters(p => [...p, fighter]);
-      setUsers(p => [...p, newUser]);
-      setShowNewForm(false);
-      setInviteData({ fighter, user: newUser });
+      setFighters(p => [...p, fighter]); setUsers(p => [...p, newUser]);
+      setShowNewForm(false); setInviteData({ fighter, user: newUser });
     },
     onLogout, user, existingUsernames: users.map(u => u.username)
   });
@@ -983,12 +993,12 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   if (selected) return React.createElement(FighterProfile, {
     fighter: selected, onBack: () => setSelected(null),
     onSave: f => setFighters(p => p.map(x => x.id === f.id ? f : x)),
-    user, isOwner: true, onLogout, setPage
+    user, isOwner: true, onLogout, setPage, pendingCount
   });
 
   return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage }),
+      React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount }),
       inviteData && React.createElement(InviteModal, { fighter: inviteData.fighter, user: inviteData.user, onClose: () => setInviteData(null) }),
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
         React.createElement("span", { style: { fontSize: 13, color: TEXT2, textTransform: "uppercase", letterSpacing: 1 } }, `${fighters.length} lutadores`),
@@ -1028,19 +1038,17 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   );
 }
 
-// ─── ATHLETE VIEW ─────────────────────────────────────────────────────────────
-function AthleteView({ fighters, user, onLogout, setPage }) {
+function AthleteView({ fighters, user, onLogout, setPage, pendingCount }) {
   const fighter = fighters.find(f => f.id === user.fighter_id);
   if (!fighter) return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, currentPage: "", setPage }),
+      React.createElement(Header, { onLogout, user, currentPage: "", setPage, pendingCount }),
       React.createElement(Card, null, React.createElement("div", { style: { color: TEXT2, textAlign: "center", padding: "24px 0" } }, "Perfil ainda não criado. Contacta o admin."))
     )
   );
-  return React.createElement(FighterProfile, { fighter, onBack: null, onSave: () => {}, user, isOwner: true, onLogout, setPage });
+  return React.createElement(FighterProfile, { fighter, onBack: null, onSave: () => {}, user, isOwner: true, onLogout, setPage, pendingCount });
 }
 
-// ─── NEW FIGHTER FORM ─────────────────────────────────────────────────────────
 function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames }) {
   const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", contact: "", email: "", team: "Norte Forte" });
   const [err, setErr] = useState("");
@@ -1087,13 +1095,13 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames }) {
   );
 }
 
-// ─── APP ──────────────────────────────────────────────────────────────────────
 function App() {
   const [user, setUser] = useState(null);
   const [fighters, setFighters] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState("fighters");
+  const [pendingCount, setPendingCount] = useState(0);
 
   const isRegister = window.location.search.includes("register=true");
   if (isRegister) return React.createElement(RegisterPage);
@@ -1104,6 +1112,7 @@ function App() {
       setLoading(true);
       const [f, u] = await Promise.all([db.get("fighters"), db.get("users")]);
       setFighters(f.filter(x => x.status !== "pending" && x.status !== "rejected"));
+      setPendingCount(f.filter(x => x.status === "pending").length);
       setUsers(u);
       setLoading(false);
     }
@@ -1116,23 +1125,21 @@ function App() {
     React.createElement("div", { style: { color: GOLD, fontSize: 14 } }, "A carregar dados...")
   );
 
-  // Calendário visível para todos
   if (page === "calendar") return React.createElement(React.Fragment, null,
-    React.createElement(CalendarPage, { onLogout: () => { setUser(null); setPage("fighters"); }, user, setPage }),
+    React.createElement(CalendarPage, { onLogout: () => { setUser(null); setPage("fighters"); }, user, setPage, pendingCount }),
     React.createElement(Footer)
   );
 
   if (user.role === "admin") return React.createElement(React.Fragment, null,
-    React.createElement(AdminDashboard, { fighters, setFighters, users, setUsers, onLogout: () => { setUser(null); setPage("fighters"); }, user, page, setPage }),
+    React.createElement(AdminDashboard, { fighters, setFighters, users, setUsers, onLogout: () => { setUser(null); setPage("fighters"); }, user, page, setPage, pendingCount }),
     React.createElement(Footer)
   );
   return React.createElement(React.Fragment, null,
-    React.createElement(AthleteView, { fighters, user, onLogout: () => setUser(null), setPage }),
+    React.createElement(AthleteView, { fighters, user, onLogout: () => setUser(null), setPage, pendingCount }),
     React.createElement(Footer)
   );
 }
 
-// ─── FOOTER ───────────────────────────────────────────────────────────────────
 function Footer() {
   return React.createElement("div", { style: { textAlign: "center", padding: "24px 16px", borderTop: `1px solid #2a2a2a`, marginTop: 20, fontSize: 11, color: "#555", letterSpacing: 1 } },
     "Norte Forte Fighters App · Designed & developed by Ricardo Quintela · © 2026"
