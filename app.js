@@ -689,5 +689,11 @@ function App() {
   return React.createElement(AthleteView, { fighters, user, onLogout: () => setUser(null) });
 }
 
+function Footer() {
+  return React.createElement("div", { style: { textAlign: "center", padding: "24px 16px", borderTop: `1px solid #2a2a2a`, marginTop: 20, fontSize: 11, color: "#555", letterSpacing: 1 } },
+    "Norte Forte Fighters App · Designed & developed by Ricardo Quintela · © 2025"
+  );
+}
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(React.createElement(App));
+root.render(React.createElement(React.Fragment, null, React.createElement(App), React.createElement(Footer)));
