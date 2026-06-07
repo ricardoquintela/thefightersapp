@@ -70,11 +70,9 @@ const btnRed = { padding: "6px 14px", borderRadius: 6, border: `1px solid #e0555
 
 function Logo() {
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
-    React.createElement("img", { 
-      src: "data:image/png;base64,COLA_AQUI_O_BASE64", 
-      alt: "Norte Forte", 
-      style: { height: 80, display: "block", margin: "0 auto" } 
-    })
+    React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginBottom: 4, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
+    React.createElement("div", { style: { fontFamily: "'Arial Black', Impact, sans-serif", fontSize: 34, fontWeight: 900, color: GOLD, lineHeight: 1.0, letterSpacing: 2, textTransform: "uppercase" } }, "Norte Forte"),
+    React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginTop: 4, fontWeight: 600, textTransform: "uppercase" } }, "Porto · Portugal")
   );
 }
 
