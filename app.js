@@ -111,7 +111,6 @@ function StatBox({ label, value, color, sub }) {
   );
 }
 
-// ALTERADO: Header agora recebe currentPage e setPage para navegação admin
 function Header({ onLogout, user, currentPage, setPage }) {
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${BORDER}`, position: "relative" } },
     React.createElement(Logo),
@@ -130,7 +129,6 @@ function Header({ onLogout, user, currentPage, setPage }) {
   );
 }
 
-// Formulário de combate reutilizável — INALTERADO
 function FightForm({ val, set }) {
   return React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
     React.createElement("div", null, React.createElement("label", { style: lbl }, "Adversário"), React.createElement("input", { style: inp, value: val.opponent || "", onChange: e => set({ ...val, opponent: e.target.value }) })),
@@ -166,7 +164,6 @@ function FightForm({ val, set }) {
   );
 }
 
-// NOVO: Página de registo público
 function RegisterPage() {
   const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", contact: "", email: "", team: "Norte Forte" });
   const [err, setErr] = useState("");
@@ -234,7 +231,6 @@ function RegisterPage() {
   );
 }
 
-// NOVO: Pedidos pendentes (admin)
 function PendingPage({ onLogout, user, setPage, setUsers, users }) {
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -293,7 +289,6 @@ function PendingPage({ onLogout, user, setPage, setUsers, users }) {
   );
 }
 
-// NOVO: Página de equipas
 function TeamsPage({ onLogout, user, setPage }) {
   const [teams, setTeams] = useState([]);
   const [allFighters, setAllFighters] = useState([]);
@@ -329,7 +324,6 @@ function TeamsPage({ onLogout, user, setPage }) {
     return { wins, losses, draws, kos, total: fights.length };
   }
 
-  // Perfil público de um lutador (só records, sem contacto)
   if (selFighter) {
     const rec = getRecord(selFighter.id);
     const wr = rec.total > 0 ? Math.round(rec.wins / rec.total * 100) : 0;
@@ -393,7 +387,6 @@ function TeamsPage({ onLogout, user, setPage }) {
     );
   }
 
-  // Lista de atletas de uma equipa
   if (selected) {
     const teamFighters = allFighters.filter(f => (f.team || "Sem Equipa") === selected);
     return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px", fontFamily: "system-ui, sans-serif" } },
@@ -436,7 +429,6 @@ function TeamsPage({ onLogout, user, setPage }) {
     );
   }
 
-  // Lista de equipas
   return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px", fontFamily: "system-ui, sans-serif" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "teams", setPage }),
@@ -469,7 +461,6 @@ function TeamsPage({ onLogout, user, setPage }) {
   );
 }
 
-// Login — ALTERADO: adicionado link "Quero registar-me"
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [pw, setPw] = useState("");
@@ -510,7 +501,6 @@ function Login({ onLogin }) {
   );
 }
 
-// FighterProfile — INALTERADO (mantém tudo igual ao teu ficheiro)
 function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
   const [tab, setTab] = useState(0);
   const [f, setF] = useState({ ...fighter, fights: [], upcoming: [], titles: [] });
@@ -520,6 +510,8 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
   const [showTF, setShowTF] = useState(false);
   const [editFight, setEditFight] = useState(null);
   const [delFightId, setDelFightId] = useState(null);
+  const [editTitle, setEditTitle] = useState(null);
+  const [delTitleId, setDelTitleId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [nf, setNf] = useState({ ...EMPTY_FIGHT });
   const [nu, setNu] = useState({ opponent: "", event: "", date: "", local: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador" });
@@ -584,6 +576,19 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
     const res = await db.insert("titles", { ...nt, year: Number(nt.year), fighter_id: f.id });
     setF(p => ({ ...p, titles: [...p.titles, res[0] || nt] }));
     setShowTF(false);
+    setNt({ name: "", org: "", year: 2026 });
+  }
+
+  async function saveEditTitle() {
+    await db.update("titles", editTitle.id, { name: editTitle.name, org: editTitle.org, year: Number(editTitle.year) });
+    setF(p => ({ ...p, titles: p.titles.map(x => x.id === editTitle.id ? { ...editTitle } : x) }));
+    setEditTitle(null);
+  }
+
+  async function deleteTitle(titleId) {
+    await db.delete("titles", titleId);
+    setF(p => ({ ...p, titles: p.titles.filter(x => x.id !== titleId) }));
+    setDelTitleId(null);
   }
 
   const TABS = ["Perfil", "Histórico", "Próximas Lutas", "Títulos", "Transferência"];
@@ -721,15 +726,33 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
     if (tab === 3) return React.createElement("div", null,
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } },
         React.createElement("span", { style: { fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase" } }, `Títulos · ${f.titles.length}`),
-        isOwner && React.createElement("button", { onClick: () => setShowTF(p => !p), style: btnOutline }, "+ Adicionar")
+        isOwner && React.createElement("button", { onClick: () => { setShowTF(p => !p); setEditTitle(null); }, style: btnOutline }, "+ Adicionar")
       ),
+      // Formulário novo título
       showTF && React.createElement(Card, { style: { marginBottom: 12 } },
+        React.createElement("div", { style: { fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, "Novo Título"),
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 } },
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Título"), React.createElement("input", { style: inp, value: nt.name, onChange: e => setNt({ ...nt, name: e.target.value }) })),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Organização"), React.createElement("input", { style: inp, value: nt.org, onChange: e => setNt({ ...nt, org: e.target.value }) })),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Ano"), React.createElement("input", { type: "number", style: inp, value: nt.year, onChange: e => setNt({ ...nt, year: e.target.value }) }))
         ),
-        React.createElement("button", { onClick: saveTitle, style: btnGold }, "Guardar")
+        React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
+          React.createElement("button", { onClick: saveTitle, style: { ...btnGold, marginTop: 0 } }, "Guardar"),
+          React.createElement("button", { onClick: () => setShowTF(false), style: { ...btnGold, marginTop: 0, background: BG4, color: TEXT2, border: `1px solid ${BORDER}` } }, "Cancelar")
+        )
+      ),
+      // Formulário editar título
+      editTitle && React.createElement(Card, { style: { marginBottom: 12, border: `1px solid ${GOLD_DIM}` } },
+        React.createElement("div", { style: { fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, "Editar Título"),
+        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 } },
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Título"), React.createElement("input", { style: inp, value: editTitle.name, onChange: e => setEditTitle({ ...editTitle, name: e.target.value }) })),
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Organização"), React.createElement("input", { style: inp, value: editTitle.org, onChange: e => setEditTitle({ ...editTitle, org: e.target.value }) })),
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Ano"), React.createElement("input", { type: "number", style: inp, value: editTitle.year, onChange: e => setEditTitle({ ...editTitle, year: e.target.value }) }))
+        ),
+        React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
+          React.createElement("button", { onClick: saveEditTitle, style: { ...btnGold, marginTop: 0 } }, "Guardar"),
+          React.createElement("button", { onClick: () => setEditTitle(null), style: { ...btnGold, marginTop: 0, background: BG4, color: TEXT2, border: `1px solid ${BORDER}` } }, "Cancelar")
+        )
       ),
       f.titles.length === 0 && React.createElement("div", { style: { color: TEXT3, fontSize: 14, textAlign: "center", padding: "24px 0" } }, "Nenhum título registado."),
       React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 } },
@@ -737,7 +760,17 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
           React.createElement("div", { style: { position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${GOLD}, transparent)` } }),
           React.createElement("div", { style: { fontSize: 24, marginBottom: 8 } }, "🏆"),
           React.createElement("div", { style: { fontWeight: 700, fontSize: 14, color: GOLD } }, t.name),
-          React.createElement("div", { style: { fontSize: 12, color: TEXT2, marginTop: 4 } }, `${t.org} · ${t.year}`)
+          React.createElement("div", { style: { fontSize: 12, color: TEXT2, marginTop: 4 } }, `${t.org} · ${t.year}`),
+          // Botões editar/eliminar
+          isOwner && React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } },
+            React.createElement("button", { onClick: () => { setEditTitle({ ...t }); setShowTF(false); }, style: { ...btnOutline, padding: "3px 10px", fontSize: 11 } }, "Editar"),
+            delTitleId === t.id
+              ? React.createElement("div", { style: { display: "flex", gap: 4, alignItems: "center" } },
+                  React.createElement("button", { onClick: () => deleteTitle(t.id), style: { ...btnRed, padding: "3px 10px", fontSize: 11, background: "#e0555522" } }, "Confirmar"),
+                  React.createElement("button", { onClick: () => setDelTitleId(null), style: { ...btnOutline, padding: "3px 8px", fontSize: 11 } }, "✕")
+                )
+              : React.createElement("button", { onClick: () => setDelTitleId(t.id), style: { ...btnRed, padding: "3px 10px", fontSize: 11 } }, "Eliminar")
+          )
         ))
       )
     );
@@ -805,7 +838,6 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
   );
 }
 
-// InviteModal — INALTERADO
 function InviteModal({ fighter, user, onClose }) {
   const subject = encodeURIComponent("Convite - Norte Forte Fighters App");
   const body = encodeURIComponent(`Olá ${fighter.name},\n\nFoste adicionado à Norte Forte Fighters App.\n\nAcede à app aqui: https://norteforte.vercel.app\n\nUsername: ${user.username}\nPassword: ${user.password}\n\nNorte Forte`);
@@ -833,7 +865,6 @@ function InviteModal({ fighter, user, onClose }) {
   );
 }
 
-// AdminDashboard — ALTERADO: agora recebe page/setPage e suporta PendingPage e TeamsPage
 function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user, page, setPage }) {
   const [selected, setSelected] = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
@@ -908,7 +939,6 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   );
 }
 
-// AthleteView — INALTERADO
 function AthleteView({ fighters, user, onLogout }) {
   const fighter = fighters.find(f => f.id === user.fighter_id);
   if (!fighter) return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
@@ -920,7 +950,6 @@ function AthleteView({ fighters, user, onLogout }) {
   return React.createElement(FighterProfile, { fighter, onBack: null, onSave: () => {}, user, isOwner: true, onLogout });
 }
 
-// NewFighterForm — INALTERADO
 function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames }) {
   const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", contact: "", email: "", team: "Norte Forte" });
   const [err, setErr] = useState("");
@@ -980,7 +1009,6 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames }) {
   );
 }
 
-// App — ALTERADO: page/setPage, registo público, filtro de status
 function App() {
   const [user, setUser] = useState(null);
   const [fighters, setFighters] = useState([]);
@@ -988,7 +1016,6 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState("fighters");
 
-  // Registo público: acede via ?register=true
   const isRegister = window.location.search.includes("register=true");
   if (isRegister) return React.createElement(RegisterPage);
 
@@ -997,7 +1024,6 @@ function App() {
     async function load() {
       setLoading(true);
       const [f, u] = await Promise.all([db.get("fighters"), db.get("users")]);
-      // Só mostra aprovados na lista principal
       setFighters(f.filter(x => x.status !== "pending" && x.status !== "rejected"));
       setUsers(u);
       setLoading(false);
@@ -1021,7 +1047,6 @@ function App() {
   );
 }
 
-// Footer — INALTERADO
 function Footer() {
   return React.createElement("div", { style: { textAlign: "center", padding: "24px 16px", borderTop: `1px solid #2a2a2a`, marginTop: 20, fontSize: 11, color: "#555", letterSpacing: 1 } },
     "Norte Forte Fighters App · Designed & developed by Ricardo Quintela · © 2025"
