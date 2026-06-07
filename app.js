@@ -460,7 +460,10 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
                 const file = e.target.files[0];
                 if (!file) return;
                 const reader = new FileReader();
-                reader.onload = ev => upd("photo", ev.target.result);
+                reader.onload = async ev => {
+  upd("photo", ev.target.result);
+  await db.update("fighters", f.id, { photo: ev.target.result });
+};
                 reader.readAsDataURL(file);
               }})
             )
