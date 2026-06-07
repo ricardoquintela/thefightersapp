@@ -1029,4 +1029,4 @@ function Footer() {
 }
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(React.createElement(React.Fragment, null, React.createElement(App), React.createElement(Footer)));
+root.render(React.createElement(App));
