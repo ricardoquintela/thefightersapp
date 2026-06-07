@@ -67,6 +67,7 @@ const lbl = { fontSize: 11, color: TEXT3, display: "block", marginBottom: 5, tex
 const btnGold = { padding: "9px 22px", borderRadius: 6, border: "none", background: GOLD, color: "#000", cursor: "pointer", fontSize: 14, fontWeight: 700, marginTop: 12 };
 const btnOutline = { padding: "6px 14px", borderRadius: 6, border: `1px solid ${GOLD_DIM}`, background: "transparent", cursor: "pointer", fontSize: 13, color: GOLD, fontWeight: 600 };
 const btnRed = { padding: "6px 14px", borderRadius: 6, border: `1px solid #e0555566`, background: "transparent", cursor: "pointer", fontSize: 13, color: "#e05555", fontWeight: 600 };
+const btnGreen = { padding: "6px 14px", borderRadius: 6, border: `1px solid #4caf7d66`, background: "transparent", cursor: "pointer", fontSize: 13, color: "#4caf7d", fontWeight: 600 };
 
 function Logo() {
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
@@ -89,7 +90,7 @@ function Avatar({ name, size = 44, photo }) {
 }
 
 function Badge({ children, type = "default" }) {
-  const s = { default: [BG4, GOLD], green: ["#0a1a0e", "#4caf7d"], blue: ["#0a0f1a", "#5b8fd4"], gold: ["#1a1200", GOLD], orange: ["#1a0f00", "#d4844c"] }[type] || [BG4, GOLD];
+  const s = { default: [BG4, GOLD], green: ["#0a1a0e", "#4caf7d"], blue: ["#0a0f1a", "#5b8fd4"], gold: ["#1a1200", GOLD], orange: ["#1a0f00", "#d4844c"], red: ["#1a0a0a", "#e05555"] }[type] || [BG4, GOLD];
   return React.createElement("span", { style: { background: s[0], color: s[1], fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 4, whiteSpace: "nowrap", border: `1px solid ${s[1]}22` } }, children);
 }
 
@@ -110,7 +111,8 @@ function StatBox({ label, value, color, sub }) {
   );
 }
 
-function Header({ onLogout, user }) {
+// ALTERADO: Header agora recebe currentPage e setPage para navegação admin
+function Header({ onLogout, user, currentPage, setPage }) {
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${BORDER}`, position: "relative" } },
     React.createElement(Logo),
     user && React.createElement("div", { style: { position: "absolute", right: 0, top: 0, display: "flex", alignItems: "center", gap: 8 } },
@@ -119,11 +121,16 @@ function Header({ onLogout, user }) {
         React.createElement("div", { style: { fontSize: 11, color: user.role === "admin" ? GOLD : TEXT2 } }, user.role === "admin" ? "Admin" : "Atleta")
       ),
       React.createElement("button", { onClick: onLogout, style: { padding: "5px 10px", borderRadius: 6, border: `1px solid ${BORDER}`, background: "transparent", color: TEXT2, cursor: "pointer", fontSize: 12 } }, "Sair")
+    ),
+    user && user.role === "admin" && setPage && React.createElement("div", { style: { display: "flex", gap: 8, justifyContent: "center", marginTop: 12 } },
+      React.createElement("button", { onClick: () => setPage("fighters"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "fighters" ? GOLD_DIM : "transparent", color: currentPage === "fighters" ? "#fff" : GOLD } }, "Lutadores"),
+      React.createElement("button", { onClick: () => setPage("pending"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "pending" ? GOLD_DIM : "transparent", color: currentPage === "pending" ? "#fff" : GOLD } }, "Pedidos"),
+      React.createElement("button", { onClick: () => setPage("teams"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "teams" ? GOLD_DIM : "transparent", color: currentPage === "teams" ? "#fff" : GOLD } }, "Equipas")
     )
   );
 }
 
-// Formulário de combate reutilizável
+// Formulário de combate reutilizável — INALTERADO
 function FightForm({ val, set }) {
   return React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
     React.createElement("div", null, React.createElement("label", { style: lbl }, "Adversário"), React.createElement("input", { style: inp, value: val.opponent || "", onChange: e => set({ ...val, opponent: e.target.value }) })),
@@ -159,6 +166,310 @@ function FightForm({ val, set }) {
   );
 }
 
+// NOVO: Página de registo público
+function RegisterPage() {
+  const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", contact: "", email: "", team: "Norte Forte" });
+  const [err, setErr] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState(false);
+  const upd = (k, v) => setF(p => ({ ...p, [k]: v }));
+
+  async function handleRegister() {
+    if (!f.name.trim()) return setErr("Nome obrigatório.");
+    if (!f.email.includes("@")) return setErr("E-mail válido obrigatório.");
+    setSaving(true);
+    const existing = await db.get("fighters", { email: f.email });
+    if (existing.length > 0) { setSaving(false); return setErr("Este e-mail já está registado."); }
+    const id = Date.now();
+    await db.insert("fighters", { ...f, id, weight: Number(f.weight) || 0, available: false, status: "pending", registration_date: new Date().toISOString() });
+    setSaving(false);
+    setDone(true);
+  }
+
+  if (done) return React.createElement("div", { style: { minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "system-ui, sans-serif", padding: 16 } },
+    React.createElement("div", { style: { textAlign: "center", maxWidth: 400 } },
+      React.createElement(Logo),
+      React.createElement("div", { style: { marginTop: 24, padding: 24, background: BG2, borderRadius: 10, border: `1px solid ${GOLD_DIM}` } },
+        React.createElement("div", { style: { fontSize: 32, marginBottom: 12 } }, "✅"),
+        React.createElement("div", { style: { fontSize: 18, fontWeight: 700, color: GOLD, marginBottom: 8 } }, "Pedido enviado!"),
+        React.createElement("div", { style: { fontSize: 14, color: TEXT2, marginBottom: 16 } }, "O teu pedido foi enviado ao administrador. Receberás as tuas credenciais após aprovação."),
+        React.createElement("a", { href: "/", style: { fontSize: 13, color: GOLD_DIM, textDecoration: "none" } }, "← Ir para o login")
+      )
+    )
+  );
+
+  return React.createElement("div", { style: { minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "system-ui, sans-serif", padding: 16 } },
+    React.createElement("div", { style: { width: "100%", maxWidth: 500 } },
+      React.createElement("div", { style: { marginBottom: 24 } }, React.createElement(Logo)),
+      React.createElement("div", { style: { fontSize: 14, color: TEXT2, textAlign: "center", marginBottom: 20 } }, "Preenche os teus dados para te juntares à Norte Forte Fighters App"),
+      React.createElement(Card, null,
+        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
+          [["Nome completo", "name"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
+            React.createElement("div", { key: k },
+              React.createElement("label", { style: lbl }, l),
+              React.createElement("input", { style: inp, value: f[k], onChange: e => upd(k, e.target.value) })
+            )
+          ),
+          React.createElement("div", { style: { gridColumn: "1 / -1" } },
+            React.createElement("label", { style: { ...lbl, color: GOLD } }, "E-mail"),
+            React.createElement("input", { style: { ...inp, borderColor: GOLD_DIM }, value: f.email, onChange: e => upd("email", e.target.value), placeholder: "o teu e-mail" })
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Modalidade"),
+            React.createElement("select", { style: inp, value: f.modality, onChange: e => upd("modality", e.target.value) },
+              Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Nível"),
+            React.createElement("select", { style: inp, value: f.level, onChange: e => upd("level", e.target.value) },
+              LEVELS.map(l => React.createElement("option", { key: l }, l))
+            )
+          )
+        ),
+        err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginTop: 10 } }, err),
+        React.createElement("button", { onClick: handleRegister, disabled: saving, style: { ...btnGold, width: "100%", marginTop: 16, opacity: saving ? 0.7 : 1 } }, saving ? "A enviar..." : "Enviar Pedido de Registo")
+      )
+    )
+  );
+}
+
+// NOVO: Pedidos pendentes (admin)
+function PendingPage({ onLogout, user, setPage, setUsers, users }) {
+  const [pending, setPending] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const all = await db.get("fighters");
+      setPending(all.filter(f => f.status === "pending"));
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  async function approve(fighter) {
+    let username = emailToUsername(fighter.email);
+    const existingUsers = await db.get("users");
+    let base = username; let i = 2;
+    while (existingUsers.map(u => u.username).includes(username)) { username = base + i; i++; }
+    const password = generatePassword();
+    const newUser = { id: `user_${fighter.id}`, name: fighter.name, role: "athlete", fighter_id: fighter.id, username, password, email: fighter.email };
+    await db.update("fighters", fighter.id, { status: "approved" });
+    await db.insert("users", newUser);
+    setUsers(p => [...p, newUser]);
+    setPending(p => p.filter(f => f.id !== fighter.id));
+    alert(`✅ Aprovado!\n\nUsername: ${username}\nPassword: ${password}\n\nEnvia estas credenciais ao atleta: ${fighter.email}`);
+  }
+
+  async function reject(fighterId) {
+    await db.update("fighters", fighterId, { status: "rejected" });
+    setPending(p => p.filter(f => f.id !== fighterId));
+  }
+
+  return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px", fontFamily: "system-ui, sans-serif" } },
+    React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
+      React.createElement(Header, { onLogout, user, currentPage: "pending", setPage }),
+      React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 } }, `Pedidos Pendentes · ${pending.length}`),
+      loading && React.createElement("div", { style: { color: TEXT2, textAlign: "center", padding: 24 } }, "A carregar..."),
+      pending.length === 0 && !loading && React.createElement(Card, null,
+        React.createElement("div", { style: { color: TEXT3, textAlign: "center", padding: "24px 0" } }, "Nenhum pedido pendente.")
+      ),
+      pending.map(f => React.createElement(Card, { key: f.id, style: { marginBottom: 8 } },
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
+          React.createElement(Avatar, { name: f.name, size: 36 }),
+          React.createElement("div", { style: { flex: 1 } },
+            React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: TEXT } }, f.name),
+            React.createElement("div", { style: { fontSize: 12, color: TEXT2, marginTop: 2 } }, `${f.email} · ${f.modality} · ${f.level} · ${f.weight}kg`),
+            React.createElement("div", { style: { fontSize: 11, color: TEXT3, marginTop: 2 } }, `Pedido: ${f.registration_date ? new Date(f.registration_date).toLocaleDateString("pt-PT") : "—"}`)
+          ),
+          React.createElement("div", { style: { display: "flex", gap: 8 } },
+            React.createElement("button", { onClick: () => approve(f), style: { ...btnGreen, padding: "5px 14px", fontSize: 12 } }, "✓ Aprovar"),
+            React.createElement("button", { onClick: () => reject(f.id), style: { ...btnRed, padding: "5px 14px", fontSize: 12 } }, "✕ Rejeitar")
+          )
+        )
+      ))
+    )
+  );
+}
+
+// NOVO: Página de equipas
+function TeamsPage({ onLogout, user, setPage }) {
+  const [teams, setTeams] = useState([]);
+  const [allFighters, setAllFighters] = useState([]);
+  const [allFights, setAllFights] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [selFighter, setSelFighter] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const [fighters, fights] = await Promise.all([db.get("fighters"), db.get("fights")]);
+      const approved = fighters.filter(f => f.status !== "pending" && f.status !== "rejected");
+      setAllFighters(approved);
+      setAllFights(fights);
+      const teamMap = {};
+      approved.forEach(f => {
+        const t = f.team || "Sem Equipa";
+        if (!teamMap[t]) teamMap[t] = [];
+        teamMap[t].push(f);
+      });
+      setTeams(Object.entries(teamMap).map(([name, fighters]) => ({ name, fighters })));
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  function getRecord(fighterId) {
+    const fights = allFights.filter(f => f.fighter_id === fighterId);
+    const wins = fights.filter(x => x.result === "V").length;
+    const losses = fights.filter(x => x.result === "D").length;
+    const draws = fights.filter(x => x.result === "E").length;
+    const kos = fights.filter(x => x.result === "V" && x.method === "KO/TKO").length;
+    return { wins, losses, draws, kos, total: fights.length };
+  }
+
+  // Perfil público de um lutador (só records, sem contacto)
+  if (selFighter) {
+    const rec = getRecord(selFighter.id);
+    const wr = rec.total > 0 ? Math.round(rec.wins / rec.total * 100) : 0;
+    const fighterFights = allFights.filter(f => f.fighter_id === selFighter.id);
+    return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px", fontFamily: "system-ui, sans-serif" } },
+      React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
+        React.createElement(Header, { onLogout, user, currentPage: "teams", setPage }),
+        React.createElement("button", { onClick: () => setSelFighter(null), style: { fontSize: 13, color: TEXT2, background: "none", border: "none", cursor: "pointer", marginBottom: 14, padding: 0 } }, `← Voltar a ${selFighter.team}`),
+        React.createElement(Card, { gold: true, style: { marginBottom: 14 } },
+          React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 14 } },
+            React.createElement(Avatar, { name: selFighter.name, size: 70, photo: selFighter.photo }),
+            React.createElement("div", { style: { flex: 1 } },
+              React.createElement("div", { style: { fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 8 } }, selFighter.name),
+              React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
+                React.createElement(Badge, { type: "gold" }, selFighter.team),
+                React.createElement(Badge, null, selFighter.modality),
+                selFighter.sub_modality && React.createElement(Badge, { type: "gold" }, selFighter.sub_modality),
+                React.createElement(Badge, { type: "blue" }, selFighter.level),
+                React.createElement(Badge, null, `${selFighter.weight}kg`)
+              )
+            )
+          ),
+          React.createElement(GoldDivider),
+          React.createElement("div", { style: { display: "flex", gap: 8 } },
+            React.createElement(StatBox, { label: "Vitórias", value: rec.wins, color: "#4caf7d", sub: rec.kos > 0 ? `${rec.kos} KO` : null }),
+            React.createElement(StatBox, { label: "Derrotas", value: rec.losses, color: "#e05555" }),
+            React.createElement(StatBox, { label: "Empates", value: rec.draws, color: TEXT3 }),
+            React.createElement(StatBox, { label: "Win Rate", value: wr + "%", color: GOLD })
+          )
+        ),
+        React.createElement("div", { style: { fontSize: 12, color: TEXT3, textAlign: "center", marginBottom: 16, padding: "8px", background: BG2, borderRadius: 6, border: `1px solid ${BORDER}` } },
+          "🔒 Apenas records públicos. Contactos não disponíveis."
+        ),
+        React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: TEXT2, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 } },
+          `Histórico · ${fighterFights.length} combates`
+        ),
+        fighterFights.length === 0
+          ? React.createElement(Card, null, React.createElement("div", { style: { color: TEXT3, textAlign: "center", padding: "16px 0" } }, "Sem combates registados."))
+          : fighterFights.map((fight, i) =>
+              React.createElement(Card, { key: i, style: { marginBottom: 8 } },
+                React.createElement("div", { style: { display: "flex", alignItems: "flex-start", gap: 12 } },
+                  React.createElement(ResultBadge, { r: fight.result }),
+                  React.createElement("div", { style: { flex: 1 } },
+                    React.createElement("div", { style: { fontWeight: 700, fontSize: 14, color: TEXT } },
+                      `vs. ${fight.opponent}`,
+                      fight.opponent_team && React.createElement("span", { style: { fontSize: 12, color: TEXT3, marginLeft: 6 } }, `(${fight.opponent_team})`)
+                    ),
+                    React.createElement("div", { style: { fontSize: 12, color: TEXT2, marginTop: 2 } }, `${fight.event || ""} · ${fight.date || ""}`),
+                    React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
+                      React.createElement(Badge, null, fight.modality),
+                      fight.sub_modality && React.createElement(Badge, { type: "gold" }, fight.sub_modality),
+                      React.createElement(Badge, { type: "blue" }, fight.level),
+                      React.createElement(Badge, null, fight.method),
+                      fight.weight && React.createElement(Badge, null, `${fight.weight}kg`)
+                    )
+                  )
+                )
+              )
+            )
+      )
+    );
+  }
+
+  // Lista de atletas de uma equipa
+  if (selected) {
+    const teamFighters = allFighters.filter(f => (f.team || "Sem Equipa") === selected);
+    return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px", fontFamily: "system-ui, sans-serif" } },
+      React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
+        React.createElement(Header, { onLogout, user, currentPage: "teams", setPage }),
+        React.createElement("button", { onClick: () => setSelected(null), style: { fontSize: 13, color: TEXT2, background: "none", border: "none", cursor: "pointer", marginBottom: 14, padding: 0 } }, "← Equipas"),
+        React.createElement("div", { style: { fontSize: 20, fontWeight: 700, color: GOLD, marginBottom: 4, textTransform: "uppercase", letterSpacing: 2 } }, selected),
+        React.createElement("div", { style: { fontSize: 13, color: TEXT2, marginBottom: 16 } }, `${teamFighters.length} atleta${teamFighters.length !== 1 ? "s" : ""}`),
+        React.createElement(GoldDivider),
+        teamFighters.map(f => {
+          const rec = getRecord(f.id);
+          return React.createElement("div", { key: f.id,
+            style: { background: BG2, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "14px 16px", marginBottom: 8, cursor: "pointer" },
+            onMouseEnter: e => e.currentTarget.style.borderColor = GOLD_DIM,
+            onMouseLeave: e => e.currentTarget.style.borderColor = BORDER,
+            onClick: () => setSelFighter(f)
+          },
+            React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
+              React.createElement(Avatar, { name: f.name, size: 36, photo: f.photo }),
+              React.createElement("div", { style: { flex: 1 } },
+                React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: TEXT, marginBottom: 4 } }, f.name),
+                React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 6 } },
+                  React.createElement(Badge, null, f.modality),
+                  f.sub_modality && React.createElement(Badge, { type: "gold" }, f.sub_modality),
+                  React.createElement(Badge, { type: "blue" }, f.level),
+                  React.createElement(Badge, null, `${f.weight}kg`)
+                ),
+                React.createElement("div", { style: { display: "flex", gap: 12, fontSize: 13 } },
+                  React.createElement("span", { style: { color: "#4caf7d", fontWeight: 700 } }, `${rec.wins}V`),
+                  React.createElement("span", { style: { color: "#e05555", fontWeight: 700 } }, `${rec.losses}D`),
+                  React.createElement("span", { style: { color: TEXT3, fontWeight: 700 } }, `${rec.draws}E`),
+                  rec.kos > 0 && React.createElement("span", { style: { color: GOLD, fontSize: 11 } }, `· ${rec.kos} KO`)
+                )
+              ),
+              React.createElement("div", { style: { fontSize: 20, color: TEXT3 } }, "›")
+            )
+          );
+        })
+      )
+    );
+  }
+
+  // Lista de equipas
+  return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px", fontFamily: "system-ui, sans-serif" } },
+    React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
+      React.createElement(Header, { onLogout, user, currentPage: "teams", setPage }),
+      React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 } }, `Equipas · ${teams.length}`),
+      loading && React.createElement("div", { style: { color: TEXT2, textAlign: "center", padding: 24 } }, "A carregar..."),
+      teams.map(t => {
+        const totalFights = t.fighters.reduce((acc, f) => acc + allFights.filter(x => x.fighter_id === f.id).length, 0);
+        const totalWins = t.fighters.reduce((acc, f) => acc + allFights.filter(x => x.fighter_id === f.id && x.result === "V").length, 0);
+        return React.createElement("div", { key: t.name,
+          style: { background: BG2, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "16px", marginBottom: 8, cursor: "pointer" },
+          onMouseEnter: e => e.currentTarget.style.borderColor = GOLD_DIM,
+          onMouseLeave: e => e.currentTarget.style.borderColor = BORDER,
+          onClick: () => setSelected(t.name)
+        },
+          React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } },
+            React.createElement("div", null,
+              React.createElement("div", { style: { fontWeight: 700, fontSize: 16, color: GOLD, marginBottom: 4 } }, t.name),
+              React.createElement("div", { style: { fontSize: 13, color: TEXT2 } },
+                `${t.fighters.length} atleta${t.fighters.length !== 1 ? "s" : ""}`,
+                totalFights > 0 && React.createElement("span", { style: { color: TEXT3, marginLeft: 8 } },
+                  `· ${totalWins}V / ${totalFights - totalWins}D em ${totalFights} combates`
+                )
+              )
+            ),
+            React.createElement("div", { style: { fontSize: 20, color: TEXT3 } }, "›")
+          )
+        );
+      })
+    )
+  );
+}
+
+// Login — ALTERADO: adicionado link "Quero registar-me"
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [pw, setPw] = useState("");
@@ -190,12 +501,16 @@ function Login({ onLogin }) {
         ),
         err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 10 } }, err),
         React.createElement("div", { style: { fontSize: 12, color: TEXT3, marginBottom: 14 } }, "Admin: admin / admin123"),
-        React.createElement("button", { onClick: doLogin, disabled: loading, style: { ...btnGold, width: "100%", marginTop: 0, padding: "11px", opacity: loading ? 0.7 : 1 } }, loading ? "A entrar..." : "Entrar")
+        React.createElement("button", { onClick: doLogin, disabled: loading, style: { ...btnGold, width: "100%", marginTop: 0, padding: "11px", opacity: loading ? 0.7 : 1 } }, loading ? "A entrar..." : "Entrar"),
+        React.createElement("div", { style: { textAlign: "center", marginTop: 16 } },
+          React.createElement("a", { href: "?register=true", style: { fontSize: 12, color: GOLD_DIM, textDecoration: "none" } }, "Quero registar-me →")
+        )
       )
     )
   );
 }
 
+// FighterProfile — INALTERADO (mantém tudo igual ao teu ficheiro)
 function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
   const [tab, setTab] = useState(0);
   const [f, setF] = useState({ ...fighter, fights: [], upcoming: [], titles: [] });
@@ -203,7 +518,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
   const [showFF, setShowFF] = useState(false);
   const [showUF, setShowUF] = useState(false);
   const [showTF, setShowTF] = useState(false);
-  const [editFight, setEditFight] = useState(null); // guarda o objeto do combate a editar
+  const [editFight, setEditFight] = useState(null);
   const [delFightId, setDelFightId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [nf, setNf] = useState({ ...EMPTY_FIGHT });
@@ -311,8 +626,6 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
         React.createElement("span", { style: { fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase" } }, `Lutas · ${f.fights.length}`),
         isOwner && React.createElement("button", { onClick: () => { setShowFF(p => !p); setEditFight(null); }, style: btnOutline }, "+ Adicionar")
       ),
-
-      // Formulário adicionar
       showFF && !editFight && React.createElement(Card, { style: { marginBottom: 12 } },
         React.createElement("div", { style: { fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, "Novo Combate"),
         React.createElement(FightForm, { val: nf, set: setNf }),
@@ -321,8 +634,6 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
           React.createElement("button", { onClick: () => setShowFF(false), style: { ...btnGold, marginTop: 0, background: BG4, color: TEXT2, border: `1px solid ${BORDER}` } }, "Cancelar")
         )
       ),
-
-      // Formulário editar
       editFight && React.createElement(Card, { style: { marginBottom: 12, border: `1px solid ${GOLD_DIM}` } },
         React.createElement("div", { style: { fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, "Editar Combate"),
         React.createElement(FightForm, { val: editFight, set: setEditFight }),
@@ -331,8 +642,6 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
           React.createElement("button", { onClick: () => setEditFight(null), style: { ...btnGold, marginTop: 0, background: BG4, color: TEXT2, border: `1px solid ${BORDER}` } }, "Cancelar")
         )
       ),
-
-      // Lista de combates
       f.fights.map(fight => React.createElement(Card, { key: fight.id, style: { marginBottom: 8 } },
         React.createElement("div", { style: { display: "flex", alignItems: "flex-start", gap: 12 } },
           React.createElement(ResultBadge, { r: fight.result }),
@@ -461,9 +770,9 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = async ev => {
-  upd("photo", ev.target.result);
-  await db.update("fighters", f.id, { photo: ev.target.result });
-};
+                  upd("photo", ev.target.result);
+                  await db.update("fighters", f.id, { photo: ev.target.result });
+                };
                 reader.readAsDataURL(file);
               }})
             )
@@ -496,6 +805,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout }) {
   );
 }
 
+// InviteModal — INALTERADO
 function InviteModal({ fighter, user, onClose }) {
   const subject = encodeURIComponent("Convite - Norte Forte Fighters App");
   const body = encodeURIComponent(`Olá ${fighter.name},\n\nFoste adicionado à Norte Forte Fighters App.\n\nAcede à app aqui: https://norteforte.vercel.app\n\nUsername: ${user.username}\nPassword: ${user.password}\n\nNorte Forte`);
@@ -523,16 +833,20 @@ function InviteModal({ fighter, user, onClose }) {
   );
 }
 
-function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user }) {
+// AdminDashboard — ALTERADO: agora recebe page/setPage e suporta PendingPage e TeamsPage
+function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user, page, setPage }) {
   const [selected, setSelected] = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
   const [delId, setDelId] = useState(null);
   const [inviteData, setInviteData] = useState(null);
 
+  if (page === "pending") return React.createElement(PendingPage, { onLogout, user, setPage, setUsers, users });
+  if (page === "teams") return React.createElement(TeamsPage, { onLogout, user, setPage });
+
   if (showNewForm) return React.createElement(NewFighterForm, {
     onBack: () => setShowNewForm(false),
     onSave: async (fighter, newUser) => {
-      await db.insert("fighters", { id: fighter.id, name: fighter.name, weight: fighter.weight, category: fighter.category, modality: fighter.modality, sub_modality: fighter.sub_modality, level: fighter.level, contact: fighter.contact, email: fighter.email, team: fighter.team, available: false });
+      await db.insert("fighters", { id: fighter.id, name: fighter.name, weight: fighter.weight, category: fighter.category, modality: fighter.modality, sub_modality: fighter.sub_modality, level: fighter.level, contact: fighter.contact, email: fighter.email, team: fighter.team, available: false, status: "approved" });
       await db.insert("users", newUser);
       setFighters(p => [...p, fighter]);
       setUsers(p => [...p, newUser]);
@@ -551,7 +865,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
 
   return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user }),
+      React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage }),
       inviteData && React.createElement(InviteModal, { fighter: inviteData.fighter, user: inviteData.user, onClose: () => setInviteData(null) }),
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
         React.createElement("span", { style: { fontSize: 13, color: TEXT2, textTransform: "uppercase", letterSpacing: 1 } }, `${fighters.length} lutadores`),
@@ -594,6 +908,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   );
 }
 
+// AthleteView — INALTERADO
 function AthleteView({ fighters, user, onLogout }) {
   const fighter = fighters.find(f => f.id === user.fighter_id);
   if (!fighter) return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
@@ -605,6 +920,7 @@ function AthleteView({ fighters, user, onLogout }) {
   return React.createElement(FighterProfile, { fighter, onBack: null, onSave: () => {}, user, isOwner: true, onLogout });
 }
 
+// NewFighterForm — INALTERADO
 function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames }) {
   const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", contact: "", email: "", team: "Norte Forte" });
   const [err, setErr] = useState("");
@@ -664,34 +980,48 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames }) {
   );
 }
 
+// App — ALTERADO: page/setPage, registo público, filtro de status
 function App() {
   const [user, setUser] = useState(null);
   const [fighters, setFighters] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState("fighters");
+
+  // Registo público: acede via ?register=true
+  const isRegister = window.location.search.includes("register=true");
+  if (isRegister) return React.createElement(RegisterPage);
 
   useEffect(() => {
     if (!user) return;
     async function load() {
       setLoading(true);
       const [f, u] = await Promise.all([db.get("fighters"), db.get("users")]);
-      setFighters(f);
+      // Só mostra aprovados na lista principal
+      setFighters(f.filter(x => x.status !== "pending" && x.status !== "rejected"));
       setUsers(u);
       setLoading(false);
     }
     load();
   }, [user]);
 
-  if (!user) return React.createElement(Login, { onLogin: setUser });
+  if (!user) return React.createElement(Login, { onLogin: u => { setUser(u); setPage("fighters"); } });
 
   if (loading) return React.createElement("div", { style: { minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" } },
     React.createElement("div", { style: { color: GOLD, fontSize: 14 } }, "A carregar dados...")
   );
 
-  if (user.role === "admin") return React.createElement(AdminDashboard, { fighters, setFighters, users, setUsers, onLogout: () => setUser(null), user });
-  return React.createElement(AthleteView, { fighters, user, onLogout: () => setUser(null) });
+  if (user.role === "admin") return React.createElement(React.Fragment, null,
+    React.createElement(AdminDashboard, { fighters, setFighters, users, setUsers, onLogout: () => { setUser(null); setPage("fighters"); }, user, page, setPage }),
+    React.createElement(Footer)
+  );
+  return React.createElement(React.Fragment, null,
+    React.createElement(AthleteView, { fighters, user, onLogout: () => setUser(null) }),
+    React.createElement(Footer)
+  );
 }
 
+// Footer — INALTERADO
 function Footer() {
   return React.createElement("div", { style: { textAlign: "center", padding: "24px 16px", borderTop: `1px solid #2a2a2a`, marginTop: 20, fontSize: 11, color: "#555", letterSpacing: 1 } },
     "Norte Forte Fighters App · Designed & developed by Ricardo Quintela · © 2025"
