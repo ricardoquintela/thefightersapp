@@ -877,19 +877,6 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       )
     );
 
-    if (tab === 4) return React.createElement(Card, null,
-      isOwner ? React.createElement(React.Fragment, null,
-        React.createElement("label", { style: { display: "flex", alignItems: "center", gap: 12, cursor: "pointer", marginBottom: 12 } },
-          React.createElement("div", { onClick: () => upd("available", !f.available), style: { width: 42, height: 24, borderRadius: 12, background: f.available ? GOLD : BG4, border: `1px solid ${f.available ? GOLD : BORDER}`, position: "relative", cursor: "pointer", flexShrink: 0 } },
-            React.createElement("div", { style: { position: "absolute", top: 3, left: f.available ? 20 : 3, width: 16, height: 16, borderRadius: "50%", background: f.available ? "#000" : TEXT3, transition: "left 0.2s" } })
-          ),
-          React.createElement("span", { style: { fontWeight: 700, fontSize: 15, color: TEXT } }, "Disponível para transferência")
-        ),
-        React.createElement("button", { onClick: saveProfile, style: btnGold }, "Guardar")
-      ) : React.createElement("div", { style: { color: TEXT2, fontSize: 14 } }, f.available ? "Disponível para transferência." : "Não disponível.")
-    );
-  };
-
   return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
     // Lightbox
     lightbox && React.createElement("div", { onClick: () => setLightbox(null), style: { position: "fixed", inset: 0, background: "#000000ee", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, cursor: "pointer" } },
