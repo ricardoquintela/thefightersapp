@@ -63,8 +63,9 @@ function emailToUsername(email) {
 }
 function daysUntil(dateStr) {
   if (!dateStr) return null;
-  const diff = new Date(dateStr) - new Date();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(dateStr); target.setHours(0,0,0,0);
+  return Math.round((target - today) / (1000 * 60 * 60 * 24));
 }
 
 const inp = { padding: "8px 12px", borderRadius: 6, border: `1px solid ${BORDER}`, background: BG3, color: TEXT, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none" };
@@ -116,7 +117,6 @@ function StatBox({ label, value, color, sub }) {
   );
 }
 
-// ALTERADO: badge de pedidos pendentes
 function Header({ onLogout, user, currentPage, setPage, pendingCount = 0 }) {
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${BORDER}`, position: "relative" } },
     React.createElement(Logo),
@@ -583,7 +583,6 @@ function Login({ onLogin }) {
   );
 }
 
-// ALTERADO: contador dias, fotos de combate, lightbox
 function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setPage, pendingCount }) {
   const [tab, setTab] = useState(0);
   const [f, setF] = useState({ ...fighter, fights: [], upcoming: [], titles: [] });
@@ -597,7 +596,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   const [delTitleId, setDelTitleId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [nf, setNf] = useState({ ...EMPTY_FIGHT });
-  const [nu, setNu] = useState({ opponent: "", event: "", date: "", local: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador" });
+  const [nu, setNu] = useState({ opponent: "", event: "", date: "", local: "", weight: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador" });
   const [nt, setNt] = useState({ name: "", org: "", year: 2026 });
   const [lightbox, setLightbox] = useState(null);
 
@@ -622,16 +621,14 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   const wr = total > 0 ? Math.round(wins / total * 100) : 0;
   const upd = (k, v) => setF(p => ({ ...p, [k]: v }));
 
-  // Próxima luta e contador
   const todayD = new Date(); todayD.setHours(0,0,0,0);
   const nextFight = (f.upcoming || []).filter(u => u.date && new Date(u.date) >= todayD).sort((a,b) => new Date(a.date)-new Date(b.date))[0];
   const daysLeft = nextFight ? daysUntil(nextFight.date) : null;
-
   const combatPhotos = Array.isArray(f.combat_photos) ? f.combat_photos : [];
 
   async function saveProfile() {
     setSaving(true);
-    await db.update("fighters", f.id, { name: f.name, weight: f.weight, category: f.category, contact: f.contact, modality: f.modality, sub_modality: f.sub_modality, level: f.level, available: f.available, photo: f.photo, combat_photos: f.combat_photos });
+    await db.update("fighters", f.id, { name: f.name, weight: f.weight, category: f.category, contact: f.contact, modality: f.modality, sub_modality: f.sub_modality, level: f.level, photo: f.photo, combat_photos: f.combat_photos });
     setSaving(false);
   }
 
@@ -672,12 +669,34 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
     setDelFightId(null);
   }
 
+  // Ao guardar próxima luta, cria evento no calendário se não existir
   async function saveUpcoming() {
     const u = { ...nu, id: `u${Date.now()}`, fighter_id: f.id };
     await db.insert("upcoming", u);
     setF(p => ({ ...p, upcoming: [...p.upcoming, u] }));
+
+    // Liga ao calendário: se tiver nome de evento, verifica se já existe
+    if (nu.event && nu.event.trim()) {
+      const existingEvents = await db.get("events");
+      const alreadyExists = existingEvents.some(ev =>
+        ev.name.toLowerCase().trim() === nu.event.toLowerCase().trim()
+      );
+      if (!alreadyExists) {
+        await db.insert("events", {
+          id: `ev${Date.now()}`,
+          name: nu.event.trim(),
+          date: nu.date || "",
+          local: nu.local || "",
+          city: "",
+          country: "Portugal",
+          organization: "",
+          created_at: new Date().toISOString()
+        });
+      }
+    }
+
     setShowUF(false);
-    setNu({ opponent: "", event: "", date: "", local: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador" });
+    setNu({ opponent: "", event: "", date: "", local: "", weight: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador" });
   }
 
   async function saveTitle() {
@@ -698,7 +717,8 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
     setDelTitleId(null);
   }
 
-  const TABS = ["Perfil", "Histórico", "Próximas Lutas", "Títulos", "Transferência"];
+  // Tab Transferência removido
+  const TABS = ["Perfil", "Histórico", "Próximas Lutas", "Títulos"];
 
   if (loading) return React.createElement("div", { style: { minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" } },
     React.createElement("div", { style: { color: GOLD, fontSize: 14 } }, "A carregar...")
@@ -706,7 +726,6 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
 
   const tabContent = () => {
     if (tab === 0) return React.createElement("div", null,
-      // Fotos de combate
       React.createElement(Card, { style: { marginBottom: 12 } },
         React.createElement("div", { style: { fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, `Fotos em Combate · ${combatPhotos.length}/3`),
         React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
@@ -722,7 +741,6 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
           )
         )
       ),
-      // Dados do perfil
       React.createElement(Card, null,
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
           [["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
@@ -794,15 +812,24 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
         isOwner && React.createElement("button", { onClick: () => setShowUF(p => !p), style: btnOutline }, "+ Adicionar")
       ),
       showUF && React.createElement(Card, { style: { marginBottom: 12 } },
+        React.createElement("div", { style: { fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, "Nova Luta"),
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Adversário"), React.createElement("input", { style: inp, value: nu.opponent, onChange: e => setNu({ ...nu, opponent: e.target.value }) })),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Data"), React.createElement("input", { type: "date", style: inp, value: nu.date, onChange: e => setNu({ ...nu, date: e.target.value }) })),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Evento"), React.createElement("input", { style: inp, value: nu.event, onChange: e => setNu({ ...nu, event: e.target.value }) })),
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Evento"), React.createElement("input", { style: inp, value: nu.event, onChange: e => setNu({ ...nu, event: e.target.value }), placeholder: "nome do evento" })),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Local"), React.createElement("input", { style: inp, value: nu.local, onChange: e => setNu({ ...nu, local: e.target.value }) })),
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Peso (kg)"), React.createElement("input", { type: "number", style: inp, value: nu.weight, onChange: e => setNu({ ...nu, weight: e.target.value }), placeholder: "ex: 70" })),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"), React.createElement("select", { style: inp, value: nu.modality, onChange: e => setNu({ ...nu, modality: e.target.value, sub_modality: MODALITIES[e.target.value][0] }) }, Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Disciplina"), React.createElement("select", { style: inp, value: nu.sub_modality, onChange: e => setNu({ ...nu, sub_modality: e.target.value }) }, (MODALITIES[nu.modality] || []).map(s => React.createElement("option", { key: s }, s))))
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Disciplina"), React.createElement("select", { style: inp, value: nu.sub_modality, onChange: e => setNu({ ...nu, sub_modality: e.target.value }) }, (MODALITIES[nu.modality] || []).map(s => React.createElement("option", { key: s }, s)))),
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: nu.level, onChange: e => setNu({ ...nu, level: e.target.value }) }, LEVELS.map(l => React.createElement("option", { key: l }, l))))
         ),
-        React.createElement("button", { onClick: saveUpcoming, style: btnGold }, "Guardar")
+        nu.event && nu.event.trim() && React.createElement("div", { style: { fontSize: 11, color: GOLD_DIM, marginTop: 10, padding: "6px 10px", background: BG3, borderRadius: 6 } },
+          `📅 Se "${nu.event}" não existir no calendário, será criado automaticamente.`
+        ),
+        React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
+          React.createElement("button", { onClick: saveUpcoming, style: { ...btnGold, marginTop: 0 } }, "Guardar"),
+          React.createElement("button", { onClick: () => setShowUF(false), style: { ...btnGold, marginTop: 0, background: BG4, color: TEXT2, border: `1px solid ${BORDER}` } }, "Cancelar")
+        )
       ),
       f.upcoming.map((u, i) => {
         const days = daysUntil(u.date);
@@ -814,9 +841,12 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
             ),
             React.createElement("div", { style: { flex: 1 } },
               React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: TEXT } }, `vs. ${u.opponent}`),
-              React.createElement("div", { style: { fontSize: 12, color: TEXT2, marginTop: 2 } }, `${u.event} · ${u.local}`),
+              React.createElement("div", { style: { fontSize: 12, color: TEXT2, marginTop: 2 } }, [u.event, u.local].filter(Boolean).join(" · ")),
               React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
-                React.createElement(Badge, null, u.modality), React.createElement(Badge, { type: "gold" }, u.sub_modality), React.createElement(Badge, { type: "blue" }, u.level)
+                React.createElement(Badge, null, u.modality),
+                React.createElement(Badge, { type: "gold" }, u.sub_modality),
+                React.createElement(Badge, { type: "blue" }, u.level),
+                u.weight && React.createElement(Badge, null, `${u.weight}kg`)
               )
             ),
             days !== null && days >= 0 && React.createElement("div", { style: { textAlign: "center", flexShrink: 0 } },
@@ -876,22 +906,9 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
         ))
       )
     );
-
-    if (tab === 4) return React.createElement(Card, null,
-      isOwner ? React.createElement(React.Fragment, null,
-        React.createElement("label", { style: { display: "flex", alignItems: "center", gap: 12, cursor: "pointer", marginBottom: 12 } },
-          React.createElement("div", { onClick: () => upd("available", !f.available), style: { width: 42, height: 24, borderRadius: 12, background: f.available ? GOLD : BG4, border: `1px solid ${f.available ? GOLD : BORDER}`, position: "relative", cursor: "pointer", flexShrink: 0 } },
-            React.createElement("div", { style: { position: "absolute", top: 3, left: f.available ? 20 : 3, width: 16, height: 16, borderRadius: "50%", background: f.available ? "#000" : TEXT3, transition: "left 0.2s" } })
-          ),
-          React.createElement("span", { style: { fontWeight: 700, fontSize: 15, color: TEXT } }, "Disponível para transferência")
-        ),
-        React.createElement("button", { onClick: saveProfile, style: btnGold }, "Guardar")
-      ) : React.createElement("div", { style: { color: TEXT2, fontSize: 14 } }, f.available ? "Disponível para transferência." : "Não disponível.")
-    );
   };
 
   return React.createElement("div", { style: { minHeight: "100vh", background: BG, padding: "20px 16px" } },
-    // Lightbox
     lightbox && React.createElement("div", { onClick: () => setLightbox(null), style: { position: "fixed", inset: 0, background: "#000000ee", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, cursor: "pointer" } },
       React.createElement("img", { src: lightbox, style: { maxWidth: "95vw", maxHeight: "90vh", borderRadius: 8, objectFit: "contain" } })
     ),
@@ -922,7 +939,6 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
               React.createElement(Badge, { type: "blue" }, f.level),
               React.createElement(Badge, null, `${f.weight}kg`)
             ),
-            // Contador próxima luta
             daysLeft !== null && daysLeft >= 0 && React.createElement("div", { style: { marginTop: 10, display: "flex", alignItems: "center", gap: 8, background: BG3, borderRadius: 8, padding: "8px 12px", border: `1px solid ${daysLeft <= 7 ? "#e05555" : daysLeft <= 30 ? GOLD_DIM : BORDER}` } },
               React.createElement("div", { style: { flex: 1 } },
                 React.createElement("div", { style: { fontSize: 10, color: TEXT3, textTransform: "uppercase", letterSpacing: 1 } }, "Próxima luta"),
@@ -1020,8 +1036,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
               React.createElement("div", { style: { flex: 1 } },
                 React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 } },
                   React.createElement("span", { style: { fontWeight: 700, fontSize: 16, color: TEXT } }, f.name),
-                  React.createElement(Badge, { type: "gold" }, f.team),
-                  f.available && React.createElement(Badge, { type: "green" }, "Disponível")
+                  React.createElement(Badge, { type: "gold" }, f.team)
                 ),
                 React.createElement("div", { style: { fontSize: 13, color: TEXT2 } }, `${f.modality} · ${f.sub_modality} · ${f.level} · ${f.weight}kg`),
                 fu && React.createElement("div", { style: { fontSize: 11, color: TEXT3, marginTop: 2 } }, `@${fu.username} · ${f.email}`)
