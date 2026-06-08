@@ -85,7 +85,7 @@ const btnGreen = { padding: "6px 14px", borderRadius: 6, border: `1px solid #4ca
 function Logo() {
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
     React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginBottom: 8, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
-    React.createElement("img", { src: "norteforte.svg", alt: "Norte Forte", style: { height: 70, width: "auto", display: "block", margin: "0 auto" } })
+    React.createElement("img", { src: "norteforte.svg", alt: "Norte Forte", style: { height: 110, width: "auto", display: "block", margin: "0 auto", mixBlendMode: "screen" } })
   );
 }
 
