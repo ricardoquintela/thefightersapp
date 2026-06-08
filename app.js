@@ -77,7 +77,7 @@ function san(val, max = 200) {
 const inp = { padding: "8px 12px", borderRadius: 6, border: `1px solid ${BORDER}`, background: BG3, color: TEXT, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none" };
 const lbl = { fontSize: 11, color: TEXT3, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.5px" };
 const btnGold = { padding: "9px 22px", borderRadius: 6, border: "none", background: GOLD, color: "#000", cursor: "pointer", fontSize: 14, fontWeight: 700, marginTop: 12 };
-const btnOutline = { padding: "6px 14px", borderRadius: 6, border: `1px solid ${GOLD_DIM}`, background: "transparent", cursor: "pointer", fontSize: 13, color: GOLD_DIM, fontWeight: 600 };
+const btnOutline = { padding: "6px 14px", borderRadius: 6, border: `1px solid ${GOLD_DIM}`, background: "transparent", cursor: "pointer", fontSize: 13, color: GOLD, fontWeight: 600 };
 const btnRed = { padding: "6px 14px", borderRadius: 6, border: `1px solid #e0555566`, background: "transparent", cursor: "pointer", fontSize: 13, color: "#e05555", fontWeight: 600 };
 const btnGreen = { padding: "6px 14px", borderRadius: 6, border: `1px solid #4caf7d66`, background: "transparent", cursor: "pointer", fontSize: 13, color: "#4caf7d", fontWeight: 600 };
 
@@ -560,7 +560,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount }) {
   );
 }
 
-// LOGIN com rate limiting corrigido
+// LOGIN com rate limiting + esqueci password
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [pw, setPw] = useState("");
@@ -568,6 +568,10 @@ function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [blocked, setBlocked] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotUsername, setForgotUsername] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [newPassword, setNewPassword] = useState(null);
 
   async function doLogin() {
     if (blocked || loading) return;
@@ -590,6 +594,48 @@ function Login({ onLogin }) {
     }
   }
 
+  async function doForgot() {
+    if (!forgotUsername.trim()) return;
+    setForgotLoading(true);
+    setErr("");
+    const users = await db.get("users", { username: forgotUsername.trim().toLowerCase() });
+    if (users.length === 0) {
+      setForgotLoading(false);
+      setErr("Username não encontrado.");
+      return;
+    }
+    const newPw = generatePassword();
+    await db.update("users", users[0].id, { password: newPw });
+    setForgotLoading(false);
+    setNewPassword(newPw);
+  }
+
+  if (showForgot) return React.createElement("div", { style: { minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" } },
+    React.createElement("div", { style: { width: 340, padding: 16 } },
+      React.createElement("div", { style: { marginBottom: 28 } }, React.createElement(Logo), React.createElement("div", { style: { width: 40, height: 2, background: GOLD, margin: "10px auto 0", borderRadius: 2 } })),
+      React.createElement(Card, { gold: true },
+        newPassword
+          ? React.createElement("div", null,
+              React.createElement("div", { style: { fontSize: 13, color: GOLD, fontWeight: 700, marginBottom: 8 } }, "Nova password gerada!"),
+              React.createElement("div", { style: { fontSize: 13, color: TEXT2, marginBottom: 12 } }, "Copia esta password e usa para entrar:"),
+              React.createElement("div", { style: { fontSize: 22, fontWeight: 700, color: GOLD, textAlign: "center", padding: "14px", background: BG3, borderRadius: 8, marginBottom: 16, letterSpacing: 2 } }, newPassword),
+              React.createElement("div", { style: { fontSize: 11, color: TEXT3, marginBottom: 16, textAlign: "center" } }, "Usa esta password para entrar. Podes alterá-la depois no teu perfil."),
+              React.createElement("button", { onClick: () => { setShowForgot(false); setNewPassword(null); setForgotUsername(""); setErr(""); }, style: { ...btnGold, width: "100%", marginTop: 0 } }, "Ir para o login")
+            )
+          : React.createElement("div", null,
+              React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 12 } }, "Esqueci a password"),
+              React.createElement("div", { style: { fontSize: 13, color: TEXT2, marginBottom: 16 } }, "Indica o teu username e geramos uma nova password."),
+              React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Username"), React.createElement("input", { style: inp, value: forgotUsername, onChange: e => setForgotUsername(e.target.value), onKeyDown: e => e.key === "Enter" && doForgot(), placeholder: "o teu username" })),
+              err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 10 } }, err),
+              React.createElement("button", { onClick: doForgot, disabled: forgotLoading, style: { ...btnGold, width: "100%", marginTop: 0, opacity: forgotLoading ? 0.7 : 1 } }, forgotLoading ? "A gerar..." : "Gerar nova password"),
+              React.createElement("div", { style: { textAlign: "center", marginTop: 12 } },
+                React.createElement("button", { onClick: () => { setShowForgot(false); setErr(""); }, style: { fontSize: 12, color: GOLD_DIM, background: "none", border: "none", cursor: "pointer" } }, "← Voltar ao login")
+              )
+            )
+      )
+    )
+  );
+
   return React.createElement("div", { style: { minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" } },
     React.createElement("div", { style: { width: 340, padding: 16 } },
       React.createElement("div", { style: { marginBottom: 28 } }, React.createElement(Logo), React.createElement("div", { style: { width: 40, height: 2, background: GOLD, margin: "10px auto 0", borderRadius: 2 } })),
@@ -598,7 +644,10 @@ function Login({ onLogin }) {
         React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Password"), React.createElement("input", { type: "password", style: inp, value: pw, onChange: e => setPw(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "••••••••", disabled: blocked })),
         err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 10 } }, err),
         React.createElement("button", { onClick: doLogin, disabled: loading || blocked, style: { ...btnGold, width: "100%", marginTop: 0, padding: "11px", opacity: blocked ? 0.4 : loading ? 0.7 : 1 } }, blocked ? "Bloqueado 30s..." : loading ? "A entrar..." : "Entrar"),
-        React.createElement("div", { style: { textAlign: "center", marginTop: 16 } }, React.createElement("a", { href: "?register=true", style: { fontSize: 12, color: GOLD_DIM, textDecoration: "none" } }, "Quero registar-me →"))
+        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginTop: 16 } },
+          React.createElement("button", { onClick: () => { setShowForgot(true); setErr(""); }, style: { fontSize: 12, color: TEXT3, background: "none", border: "none", cursor: "pointer" } }, "Esqueci a password"),
+          React.createElement("a", { href: "?register=true", style: { fontSize: 12, color: GOLD_DIM, textDecoration: "none" } }, "Quero registar-me →")
+        )
       )
     )
   );
@@ -1001,10 +1050,33 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   const [showNewForm, setShowNewForm] = useState(false);
   const [delId, setDelId] = useState(null);
   const [inviteData, setInviteData] = useState(null);
+  const [resetData, setResetData] = useState(null); // { fighter, newPw }
+
+  async function resetPassword(fighter) {
+    const fu = users.find(u => u.fighter_id === fighter.id);
+    if (!fu) return alert("Este atleta não tem conta associada.");
+    const newPw = generatePassword();
+    await db.update("users", fu.id, { password: newPw });
+    setResetData({ fighter, newPw });
+  }
 
   if (page === "pending") return React.createElement(PendingPage, { onLogout, user, setPage, setUsers, users, pendingCount });
   if (page === "teams") return React.createElement(TeamsPage, { onLogout, user, setPage, pendingCount });
   if (page === "calendar") return React.createElement(CalendarPage, { onLogout, user, setPage, pendingCount });
+
+  // Modal de password redefinida
+  if (resetData) return React.createElement("div", { style: { minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
+    React.createElement(Card, { gold: true, style: { maxWidth: 400, width: "100%" } },
+      React.createElement("div", { style: { fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 } }, `Password redefinida — ${resetData.fighter.name}`),
+      React.createElement(GoldDivider),
+      React.createElement("div", { style: { fontSize: 13, color: TEXT2, marginBottom: 12 } }, "Nova password gerada. Envia ao atleta:"),
+      React.createElement("div", { style: { fontSize: 24, fontWeight: 700, color: GOLD, textAlign: "center", padding: "14px", background: BG3, borderRadius: 8, marginBottom: 16, letterSpacing: 2 } }, resetData.newPw),
+      React.createElement("div", { style: { display: "flex", gap: 8 } },
+        React.createElement("button", { onClick: () => { navigator.clipboard && navigator.clipboard.writeText(resetData.newPw); }, style: { ...btnOutline, flex: 1, marginTop: 0 } }, "📋 Copiar"),
+        React.createElement("button", { onClick: () => setResetData(null), style: { ...btnGold, flex: 1, marginTop: 0 } }, "Fechar")
+      )
+    )
+  );
 
   if (showNewForm) return React.createElement(NewFighterForm, {
     onBack: () => setShowNewForm(false),
@@ -1055,6 +1127,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
             ),
             React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 10, justifyContent: "flex-end" } },
               fu && React.createElement("button", { onClick: () => setInviteData({ fighter: f, user: fu }), style: { ...btnOutline, padding: "4px 12px", fontSize: 12 } }, "✉ Convite"),
+              React.createElement("button", { onClick: () => resetPassword(f), style: { ...btnOutline, padding: "4px 12px", fontSize: 12, borderColor: "#5b8fd4", color: "#5b8fd4" } }, "🔑 Password"),
               React.createElement("button", { onClick: () => setDelId(f.id), style: { ...btnRed, padding: "4px 12px", fontSize: 12 } }, "✕ Eliminar")
             )
           );
