@@ -53,6 +53,7 @@ const LEVELS = ["Amador", "Neo-Profissional", "Profissional"];
 const METHODS = ["KO/TKO", "Decisão Unânime", "Decisão Dividida", "Submissão", "Desqualificação", "Desistência"];
 const EMPTY_FIGHT = { opponent: "", opponent_team: "", result: "V", method: "KO/TKO", event: "", date: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", weight: "" };
 const EMPTY_EVENT = { name: "", local: "", city: "", country: "Portugal", organization: "", date: "" };
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 function generatePassword() {
   const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -67,6 +68,11 @@ function daysUntil(dateStr) {
   const target = new Date(dateStr); target.setHours(0,0,0,0);
   return Math.round((target - today) / (1000 * 60 * 60 * 24));
 }
+// Sanitização: trim + limite de caracteres
+function san(val, max = 200) {
+  if (typeof val !== "string") return val;
+  return val.trim().slice(0, max);
+}
 
 const inp = { padding: "8px 12px", borderRadius: 6, border: `1px solid ${BORDER}`, background: BG3, color: TEXT, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none" };
 const lbl = { fontSize: 11, color: TEXT3, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.5px" };
@@ -75,11 +81,11 @@ const btnOutline = { padding: "6px 14px", borderRadius: 6, border: `1px solid ${
 const btnRed = { padding: "6px 14px", borderRadius: 6, border: `1px solid #e0555566`, background: "transparent", cursor: "pointer", fontSize: 13, color: "#e05555", fontWeight: 600 };
 const btnGreen = { padding: "6px 14px", borderRadius: 6, border: `1px solid #4caf7d66`, background: "transparent", cursor: "pointer", fontSize: 13, color: "#4caf7d", fontWeight: 600 };
 
+// LOGO: usa norteforte.svg + mantém "The Fighters App"
 function Logo() {
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
-    React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginBottom: 4, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
-    React.createElement("div", { style: { fontFamily: "'Arial Black', Impact, sans-serif", fontSize: 34, fontWeight: 900, color: GOLD, lineHeight: 1.0, letterSpacing: 2, textTransform: "uppercase" } }, "Norte Forte"),
-    React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginTop: 4, fontWeight: 600, textTransform: "uppercase" } }, "Porto · Portugal")
+    React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginBottom: 8, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
+    React.createElement("img", { src: "norteforte.svg", alt: "Norte Forte", style: { height: 70, width: "auto", display: "block", margin: "0 auto" } })
   );
 }
 
@@ -208,14 +214,14 @@ function CalendarPage({ onLogout, user, setPage, pendingCount }) {
 
   async function saveEvent() {
     if (!ne.name.trim() || !ne.date) return;
-    const ev = { ...ne, id: `ev${Date.now()}`, created_at: new Date().toISOString() };
+    const ev = { ...ne, name: san(ne.name), local: san(ne.local), city: san(ne.city), organization: san(ne.organization), id: `ev${Date.now()}`, created_at: new Date().toISOString() };
     await db.insert("events", ev);
     setEvents(p => [...p, ev].sort((a, b) => new Date(a.date) - new Date(b.date)));
     setShowForm(false); setNe({ ...EMPTY_EVENT });
   }
 
   async function saveEditEvent() {
-    await db.update("events", editEvent.id, { name: editEvent.name, date: editEvent.date, local: editEvent.local, city: editEvent.city, country: editEvent.country, organization: editEvent.organization });
+    await db.update("events", editEvent.id, { name: san(editEvent.name), date: editEvent.date, local: san(editEvent.local), city: san(editEvent.city), country: san(editEvent.country), organization: san(editEvent.organization) });
     setEvents(p => p.map(x => x.id === editEvent.id ? { ...editEvent } : x).sort((a, b) => new Date(a.date) - new Date(b.date)));
     setEditEvent(null);
   }
@@ -316,10 +322,10 @@ function RegisterPage() {
     if (!f.name.trim()) return setErr("Nome obrigatório.");
     if (!f.email.includes("@")) return setErr("E-mail válido obrigatório.");
     setSaving(true);
-    const existing = await db.get("fighters", { email: f.email });
+    const existing = await db.get("fighters", { email: san(f.email, 100) });
     if (existing.length > 0) { setSaving(false); return setErr("Este e-mail já está registado."); }
     const id = Date.now();
-    await db.insert("fighters", { ...f, id, weight: Number(f.weight) || 0, available: false, status: "pending", registration_date: new Date().toISOString() });
+    await db.insert("fighters", { name: san(f.name, 100), weight: Number(f.weight) || 0, category: san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, contact: san(f.contact, 50), email: san(f.email, 100), team: san(f.team, 100), id, available: false, status: "pending", registration_date: new Date().toISOString() });
     setSaving(false); setDone(true);
   }
 
@@ -554,29 +560,45 @@ function TeamsPage({ onLogout, user, setPage, pendingCount }) {
   );
 }
 
+// LOGIN com rate limiting corrigido
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [pw, setPw] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [blocked, setBlocked] = useState(false);
 
   async function doLogin() {
+    if (blocked || loading) return;
+    if (attempts >= 5) {
+      setBlocked(true);
+      setErr("Demasiadas tentativas. Aguarda 30 segundos.");
+      setTimeout(() => { setBlocked(false); setAttempts(0); setErr(""); }, 30000);
+      return;
+    }
     setLoading(true);
     const users = await db.get("users", { username: username.trim().toLowerCase() });
     setLoading(false);
-    if (users.length > 0 && users[0].password === pw) onLogin(users[0]);
-    else setErr("Credenciais incorretas.");
+    if (users.length > 0 && users[0].password === pw) {
+      setAttempts(0);
+      onLogin(users[0]);
+    } else {
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      setErr(`Credenciais incorretas.${newAttempts >= 3 ? ` (${5 - newAttempts} tentativas restantes)` : ""}`);
+    }
   }
 
   return React.createElement("div", { style: { minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" } },
     React.createElement("div", { style: { width: 340, padding: 16 } },
       React.createElement("div", { style: { marginBottom: 28 } }, React.createElement(Logo), React.createElement("div", { style: { width: 40, height: 2, background: GOLD, margin: "10px auto 0", borderRadius: 2 } })),
       React.createElement(Card, { gold: true },
-        React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Username"), React.createElement("input", { style: inp, value: username, onChange: e => setUsername(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "username" })),
-        React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Password"), React.createElement("input", { type: "password", style: inp, value: pw, onChange: e => setPw(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "••••••••" })),
+        React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Username"), React.createElement("input", { style: inp, value: username, onChange: e => setUsername(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "username", disabled: blocked })),
+        React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Password"), React.createElement("input", { type: "password", style: inp, value: pw, onChange: e => setPw(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "••••••••", disabled: blocked })),
         err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 10 } }, err),
         React.createElement("div", { style: { fontSize: 12, color: TEXT3, marginBottom: 14 } }, "Admin: admin / admin123"),
-        React.createElement("button", { onClick: doLogin, disabled: loading, style: { ...btnGold, width: "100%", marginTop: 0, padding: "11px", opacity: loading ? 0.7 : 1 } }, loading ? "A entrar..." : "Entrar"),
+        React.createElement("button", { onClick: doLogin, disabled: loading || blocked, style: { ...btnGold, width: "100%", marginTop: 0, padding: "11px", opacity: blocked ? 0.4 : loading ? 0.7 : 1 } }, blocked ? "Bloqueado 30s..." : loading ? "A entrar..." : "Entrar"),
         React.createElement("div", { style: { textAlign: "center", marginTop: 16 } }, React.createElement("a", { href: "?register=true", style: { fontSize: 12, color: GOLD_DIM, textDecoration: "none" } }, "Quero registar-me →"))
       )
     )
@@ -628,12 +650,14 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
 
   async function saveProfile() {
     setSaving(true);
-    await db.update("fighters", f.id, { name: f.name, weight: f.weight, category: f.category, contact: f.contact, modality: f.modality, sub_modality: f.sub_modality, level: f.level, photo: f.photo, combat_photos: f.combat_photos });
+    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: san(f.category), contact: san(f.contact, 50), modality: f.modality, sub_modality: f.sub_modality, level: f.level, photo: f.photo, combat_photos: f.combat_photos });
     setSaving(false);
   }
 
+  // Validação 2MB + sanitização nas fotos
   async function addCombatPhoto(e) {
     const file = e.target.files[0]; if (!file) return;
+    if (file.size > MAX_FILE_SIZE) { alert("Foto demasiado grande. Máximo 2MB."); return; }
     if (combatPhotos.length >= 3) return;
     const reader = new FileReader();
     reader.onload = async ev => {
@@ -651,7 +675,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   }
 
   async function saveFight() {
-    const fight = { ...nf, id: `f${Date.now()}`, fighter_id: f.id, flagged: false, flag_note: "" };
+    const fight = { ...nf, opponent: san(nf.opponent, 100), opponent_team: san(nf.opponent_team, 100), event: san(nf.event, 100), id: `f${Date.now()}`, fighter_id: f.id, flagged: false, flag_note: "" };
     await db.insert("fights", fight);
     setF(p => ({ ...p, fights: [fight, ...p.fights] }));
     setShowFF(false); setNf({ ...EMPTY_FIGHT });
@@ -669,29 +693,16 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
     setDelFightId(null);
   }
 
-  // Ao guardar próxima luta, cria evento no calendário se não existir
   async function saveUpcoming() {
-    const u = { ...nu, id: `u${Date.now()}`, fighter_id: f.id };
+    const u = { ...nu, opponent: san(nu.opponent, 100), event: san(nu.event, 100), local: san(nu.local, 100), id: `u${Date.now()}`, fighter_id: f.id };
     await db.insert("upcoming", u);
     setF(p => ({ ...p, upcoming: [...p.upcoming, u] }));
 
-    // Liga ao calendário: se tiver nome de evento, verifica se já existe
     if (nu.event && nu.event.trim()) {
       const existingEvents = await db.get("events");
-      const alreadyExists = existingEvents.some(ev =>
-        ev.name.toLowerCase().trim() === nu.event.toLowerCase().trim()
-      );
+      const alreadyExists = existingEvents.some(ev => ev.name.toLowerCase().trim() === nu.event.toLowerCase().trim());
       if (!alreadyExists) {
-        await db.insert("events", {
-          id: `ev${Date.now()}`,
-          name: nu.event.trim(),
-          date: nu.date || "",
-          local: nu.local || "",
-          city: "",
-          country: "Portugal",
-          organization: "",
-          created_at: new Date().toISOString()
-        });
+        await db.insert("events", { id: `ev${Date.now()}`, name: san(nu.event), date: nu.date || "", local: san(nu.local), city: "", country: "Portugal", organization: "", created_at: new Date().toISOString() });
       }
     }
 
@@ -700,13 +711,13 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   }
 
   async function saveTitle() {
-    const res = await db.insert("titles", { ...nt, year: Number(nt.year), fighter_id: f.id });
+    const res = await db.insert("titles", { name: san(nt.name, 100), org: san(nt.org, 100), year: Number(nt.year), fighter_id: f.id });
     setF(p => ({ ...p, titles: [...p.titles, res[0] || nt] }));
     setShowTF(false); setNt({ name: "", org: "", year: 2026 });
   }
 
   async function saveEditTitle() {
-    await db.update("titles", editTitle.id, { name: editTitle.name, org: editTitle.org, year: Number(editTitle.year) });
+    await db.update("titles", editTitle.id, { name: san(editTitle.name, 100), org: san(editTitle.org, 100), year: Number(editTitle.year) });
     setF(p => ({ ...p, titles: p.titles.map(x => x.id === editTitle.id ? { ...editTitle } : x) }));
     setEditTitle(null);
   }
@@ -717,7 +728,6 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
     setDelTitleId(null);
   }
 
-  // Tab Transferência removido
   const TABS = ["Perfil", "Histórico", "Próximas Lutas", "Títulos"];
 
   if (loading) return React.createElement("div", { style: { minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" } },
@@ -735,8 +745,9 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
               isOwner && React.createElement("button", { onClick: () => removeCombatPhoto(idx), style: { position: "absolute", top: -6, right: -6, background: "#e05555", border: "none", borderRadius: "50%", width: 20, height: 20, color: "#fff", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 } }, "×")
             )
           ),
-          isOwner && combatPhotos.length < 3 && React.createElement("label", { style: { width: 90, height: 90, border: `2px dashed ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: TEXT3, fontSize: 28 } },
+          isOwner && combatPhotos.length < 3 && React.createElement("label", { style: { width: 90, height: 90, border: `2px dashed ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: TEXT3, fontSize: 28, flexDirection: "column", gap: 4 } },
             "+",
+            React.createElement("span", { style: { fontSize: 9, color: TEXT3, textAlign: "center" } }, "máx 2MB"),
             React.createElement("input", { type: "file", accept: "image/*", style: { display: "none" }, onChange: addCombatPhoto })
           )
         )
@@ -923,6 +934,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
               "📷",
               React.createElement("input", { type: "file", accept: "image/*", style: { display: "none" }, onChange: e => {
                 const file = e.target.files[0]; if (!file) return;
+                if (file.size > MAX_FILE_SIZE) { alert("Foto demasiado grande. Máximo 2MB."); return; }
                 const reader = new FileReader();
                 reader.onload = async ev => { upd("photo", ev.target.result); await db.update("fighters", f.id, { photo: ev.target.result }); };
                 reader.readAsDataURL(file);
@@ -1079,8 +1091,8 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames }) {
     let base = username; let i = 2;
     while (existingUsernames.includes(username)) { username = base + i; i++; }
     const password = generatePassword();
-    const newUser = { id: `user_${id}`, name: f.name, role: "athlete", fighter_id: id, username, password, email: f.email };
-    await onSave({ ...f, id, weight: Number(f.weight) || 0 }, newUser);
+    const newUser = { id: `user_${id}`, name: san(f.name, 100), role: "athlete", fighter_id: id, username, password, email: san(f.email, 100) };
+    await onSave({ ...f, name: san(f.name, 100), email: san(f.email, 100), team: san(f.team, 100), id, weight: Number(f.weight) || 0 }, newUser);
     setSaving(false);
   }
 
