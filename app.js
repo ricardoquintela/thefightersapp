@@ -77,7 +77,7 @@ function san(val, max = 200) {
 const inp = { padding: "8px 12px", borderRadius: 6, border: `1px solid ${BORDER}`, background: BG3, color: TEXT, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none" };
 const lbl = { fontSize: 11, color: TEXT3, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.5px" };
 const btnGold = { padding: "9px 22px", borderRadius: 6, border: "none", background: GOLD, color: "#000", cursor: "pointer", fontSize: 14, fontWeight: 700, marginTop: 12 };
-const btnOutline = { padding: "6px 14px", borderRadius: 6, border: `1px solid ${GOLD_DIM}`, background: "transparent", cursor: "pointer", fontSize: 13, color: GOLD, fontWeight: 600 };
+const btnOutline = { padding: "6px 14px", borderRadius: 6, border: `1px solid ${GOLD_DIM}`, background: "transparent", cursor: "pointer", fontSize: 13, color: GOLD_DIM, fontWeight: 600 };
 const btnRed = { padding: "6px 14px", borderRadius: 6, border: `1px solid #e0555566`, background: "transparent", cursor: "pointer", fontSize: 13, color: "#e05555", fontWeight: 600 };
 const btnGreen = { padding: "6px 14px", borderRadius: 6, border: `1px solid #4caf7d66`, background: "transparent", cursor: "pointer", fontSize: 13, color: "#4caf7d", fontWeight: 600 };
 
