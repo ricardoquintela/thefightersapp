@@ -140,7 +140,7 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0 }) {
         pendingCount > 0 && React.createElement("span", { style: { position: "absolute", top: -7, right: -7, background: "#e05555", color: "#fff", borderRadius: "50%", width: 17, height: 17, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 } }, pendingCount > 9 ? "9+" : pendingCount)
       ),
       user.role === "admin" && React.createElement("button", { onClick: () => setPage("teams"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "teams" ? GOLD_DIM : "transparent", color: currentPage === "teams" ? "#fff" : GOLD } }, "Equipas"),
-      React.createElement("button", { onClick: () => setPage("calendar"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : GOLD } }, "📅 Calendário")
+      React.createElement("button", { onClick: () => setPage("calendar"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : GOLD } }, "Calendário")
     )
   );
 }
