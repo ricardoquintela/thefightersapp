@@ -124,10 +124,10 @@ function StatBox({ label, value, color, sub }) {
 }
 
 function Header({ onLogout, user, currentPage, setPage, pendingCount = 0 }) {
-  return React.createElement("div", { style: { textAlign: "center", marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${BORDER}`, position: "relative" } },
+  return React.createElement("div", { style: { textAlign: "center", marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${BORDER}` } },
     React.createElement(Logo),
-    user && React.createElement("div", { style: { position: "absolute", right: 0, top: 0, display: "flex", alignItems: "center", gap: 8 } },
-      React.createElement("div", { style: { textAlign: "right" } },
+    user && React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 10 } },
+      React.createElement("div", { style: { textAlign: "center" } },
         React.createElement("div", { style: { fontSize: 12, color: TEXT, fontWeight: 600 } }, user.name),
         React.createElement("div", { style: { fontSize: 11, color: user.role === "admin" ? GOLD : TEXT2 } }, user.role === "admin" ? "Admin" : "Atleta")
       ),
@@ -140,7 +140,7 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0 }) {
         pendingCount > 0 && React.createElement("span", { style: { position: "absolute", top: -7, right: -7, background: "#e05555", color: "#fff", borderRadius: "50%", width: 17, height: 17, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 } }, pendingCount > 9 ? "9+" : pendingCount)
       ),
       user.role === "admin" && React.createElement("button", { onClick: () => setPage("teams"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "teams" ? GOLD_DIM : "transparent", color: currentPage === "teams" ? "#fff" : GOLD } }, "Equipas"),
-      React.createElement("button", { onClick: () => setPage("calendar"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : GOLD } }, "Calendário")
+      React.createElement("button", { onClick: () => setPage("calendar"), style: { ...btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : GOLD } }, "📅 Calendário")
     )
   );
 }
@@ -306,7 +306,8 @@ function CalendarPage({ onLogout, user, setPage, pendingCount }) {
         React.createElement(GoldDivider),
         React.createElement("div", { style: { fontSize: 11, color: TEXT3, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 } }, `Realizadas · ${past.length}`),
         past.map(ev => React.createElement(EventCard, { key: ev.id, ev }))
-      )
+      ),
+      React.createElement(Footer)
     )
   );
 }
@@ -415,7 +416,8 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount })
             React.createElement("button", { onClick: () => reject(f.id), style: { ...btnRed, padding: "5px 14px", fontSize: 12 } }, "✕ Rejeitar")
           )
         )
-      ))
+      )),
+      React.createElement(Footer)
     )
   );
 }
@@ -555,7 +557,8 @@ function TeamsPage({ onLogout, user, setPage, pendingCount }) {
             React.createElement("div", { style: { fontSize: 20, color: TEXT3 } }, "›")
           )
         );
-      })
+      }),
+      React.createElement(Footer)
     )
   );
 }
@@ -1022,7 +1025,8 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       React.createElement("div", { style: { display: "flex", gap: 4, marginBottom: 16, background: BG2, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 4 } },
         TABS.map((t, i) => React.createElement("button", { key: t, onClick: () => setTab(i), style: { flex: 1, padding: "7px 4px", borderRadius: 6, border: "none", background: tab === i ? GOLD : "transparent", color: tab === i ? "#000" : TEXT2, cursor: "pointer", fontSize: 12, fontWeight: tab === i ? 700 : 400 } }, t))
       ),
-      tabContent()
+      tabContent(),
+      React.createElement(Footer)
     )
   );
 }
