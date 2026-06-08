@@ -597,7 +597,6 @@ function Login({ onLogin }) {
         React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Username"), React.createElement("input", { style: inp, value: username, onChange: e => setUsername(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "username", disabled: blocked })),
         React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Password"), React.createElement("input", { type: "password", style: inp, value: pw, onChange: e => setPw(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "••••••••", disabled: blocked })),
         err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 10 } }, err),
-        React.createElement("div", { style: { fontSize: 12, color: TEXT3, marginBottom: 14 } }, "Admin: admin / admin123"),
         React.createElement("button", { onClick: doLogin, disabled: loading || blocked, style: { ...btnGold, width: "100%", marginTop: 0, padding: "11px", opacity: blocked ? 0.4 : loading ? 0.7 : 1 } }, blocked ? "Bloqueado 30s..." : loading ? "A entrar..." : "Entrar"),
         React.createElement("div", { style: { textAlign: "center", marginTop: 16 } }, React.createElement("a", { href: "?register=true", style: { fontSize: 12, color: GOLD_DIM, textDecoration: "none" } }, "Quero registar-me →"))
       )
