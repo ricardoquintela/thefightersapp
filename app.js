@@ -326,7 +326,7 @@ function RegisterPage() {
     const existing = await db.get("fighters", { email: san(f.email, 100) });
     if (existing.length > 0) { setSaving(false); return setErr("Este e-mail já está registado."); }
     const id = Date.now();
-    await db.insert("fighters", { name: san(f.name, 100), weight: Number(f.weight) || 0, category: san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, contact: san(f.contact, 50), email: san(f.email, 100), team: san(f.team, 100), id, available: false, status: "pending", registration_date: new Date().toISOString() });
+    await db.insert("fighters", { name: san(f.name, 100), weight: Number(f.weight) || 0, category: san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, contact: san(f.contact, 50), email: san(f.email, 100), team: san(f.team, 100), gender: f.gender || "", id, available: false, status: "pending", registration_date: new Date().toISOString() });
     setSaving(false); setDone(true);
   }
 
@@ -356,7 +356,14 @@ function RegisterPage() {
             React.createElement("input", { style: { ...inp, borderColor: GOLD_DIM }, value: f.email, onChange: e => upd("email", e.target.value), placeholder: "o teu e-mail" })
           ),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"), React.createElement("select", { style: inp, value: f.modality, onChange: e => upd("modality", e.target.value) }, Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: f.level, onChange: e => upd("level", e.target.value) }, LEVELS.map(l => React.createElement("option", { key: l }, l))))
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: f.level, onChange: e => upd("level", e.target.value) }, LEVELS.map(l => React.createElement("option", { key: l }, l)))),
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Género"),
+            React.createElement("select", { style: inp, value: f.gender || "", onChange: e => upd("gender", e.target.value) },
+              React.createElement("option", { value: "" }, "Selecionar..."),
+              React.createElement("option", { value: "Masculino" }, "Masculino"),
+              React.createElement("option", { value: "Feminino" }, "Feminino")
+            )
+          )
         ),
         err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginTop: 10 } }, err),
         React.createElement("button", { onClick: handleRegister, disabled: saving, style: { ...btnGold, width: "100%", marginTop: 16, opacity: saving ? 0.7 : 1 } }, saving ? "A enviar..." : "Enviar Pedido de Registo")
@@ -701,7 +708,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
 
   async function saveProfile() {
     setSaving(true);
-    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: san(f.category), contact: san(f.contact, 50), modality: f.modality, sub_modality: f.sub_modality, level: f.level, photo: f.photo, combat_photos: f.combat_photos });
+    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: san(f.category), contact: san(f.contact, 50), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, combat_photos: f.combat_photos });
     setSaving(false);
   }
 
@@ -810,6 +817,16 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
               React.createElement("label", { style: lbl }, l),
               isOwner ? React.createElement("input", { style: inp, value: f[k] || "", onChange: e => upd(k, e.target.value) }) : React.createElement("div", { style: { fontSize: 14, color: TEXT, padding: "8px 0" } }, f[k])
             )
+          ),
+          React.createElement("div", { key: "gender" },
+            React.createElement("label", { style: lbl }, "Género"),
+            isOwner
+              ? React.createElement("select", { style: inp, value: f.gender || "", onChange: e => upd("gender", e.target.value) },
+                  React.createElement("option", { value: "" }, "Selecionar..."),
+                  React.createElement("option", { value: "Masculino" }, "Masculino"),
+                  React.createElement("option", { value: "Feminino" }, "Feminino")
+                )
+              : React.createElement("div", { style: { fontSize: 14, color: TEXT, padding: "8px 0" } }, f.gender || "—")
           ),
           isOwner && React.createElement(React.Fragment, null,
             React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"), React.createElement("select", { style: inp, value: f.modality || "Kickboxing", onChange: e => upd("modality", e.target.value) }, Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))),
@@ -1085,7 +1102,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   if (showNewForm) return React.createElement(NewFighterForm, {
     onBack: () => setShowNewForm(false),
     onSave: async (fighter, newUser) => {
-      await db.insert("fighters", { id: fighter.id, name: fighter.name, weight: fighter.weight, category: fighter.category, modality: fighter.modality, sub_modality: fighter.sub_modality, level: fighter.level, contact: fighter.contact, email: fighter.email, team: fighter.team, available: false, status: "approved" });
+      await db.insert("fighters", { id: fighter.id, name: fighter.name, weight: fighter.weight, category: fighter.category, modality: fighter.modality, sub_modality: fighter.sub_modality, level: fighter.level, contact: fighter.contact, email: fighter.email, team: fighter.team, gender: fighter.gender || "", available: false, status: "approved" });
       await db.insert("users", newUser);
       setFighters(p => [...p, fighter]); setUsers(p => [...p, newUser]);
       setShowNewForm(false); setInviteData({ fighter, user: newUser });
@@ -1168,7 +1185,7 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames }) {
     while (existingUsernames.includes(username)) { username = base + i; i++; }
     const password = generatePassword();
     const newUser = { id: `user_${id}`, name: san(f.name, 100), role: "athlete", fighter_id: id, username, password, email: san(f.email, 100) };
-    await onSave({ ...f, name: san(f.name, 100), email: san(f.email, 100), team: san(f.team, 100), id, weight: Number(f.weight) || 0 }, newUser);
+    await onSave({ ...f, name: san(f.name, 100), email: san(f.email, 100), team: san(f.team, 100), gender: f.gender || "", id, weight: Number(f.weight) || 0 }, newUser);
     setSaving(false);
   }
 
@@ -1188,7 +1205,14 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames }) {
             React.createElement("input", { style: { ...inp, borderColor: GOLD_DIM }, value: f.email, onChange: e => upd("email", e.target.value), placeholder: "atleta@email.com" })
           ),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"), React.createElement("select", { style: inp, value: f.modality, onChange: e => upd("modality", e.target.value) }, Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: f.level, onChange: e => upd("level", e.target.value) }, LEVELS.map(l => React.createElement("option", { key: l }, l))))
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: f.level, onChange: e => upd("level", e.target.value) }, LEVELS.map(l => React.createElement("option", { key: l }, l)))),
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Género"),
+            React.createElement("select", { style: inp, value: f.gender || "", onChange: e => upd("gender", e.target.value) },
+              React.createElement("option", { value: "" }, "Selecionar..."),
+              React.createElement("option", { value: "Masculino" }, "Masculino"),
+              React.createElement("option", { value: "Feminino" }, "Feminino")
+            )
+          )
         ),
         err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginTop: 10 } }, err),
         React.createElement("div", { style: { fontSize: 12, color: TEXT2, marginTop: 12, padding: "8px 12px", background: BG3, borderRadius: 6 } }, "ℹ️ Credenciais geradas automaticamente."),
