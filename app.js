@@ -858,12 +858,17 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   }
 
   useEffect(() => {
+    setLoading(true);
     async function load() {
-      const [fights, upcoming, titles] = await Promise.all([db.get("fights", { fighter_id: fighter.id }), db.get("upcoming", { fighter_id: fighter.id }), db.get("titles", { fighter_id: fighter.id })]);
-      setF(p => ({ ...p, fights, upcoming, titles })); setLoading(false);
+      const [fights, upcoming, titles] = await Promise.all([
+        db.get("fights", { fighter_id: fighter.id }),
+        db.get("upcoming", { fighter_id: fighter.id }),
+        db.get("titles", { fighter_id: fighter.id })
+      ]);
+      setF(p => ({ ...p, fights, upcoming, titles }));
+      setLoading(false);
     }
     load();
-    // Carregar próximas provas do calendário
     const today = new Date(); today.setHours(0,0,0,0);
     db.get("events").then(evs => setCalendarEvents(evs.filter(e => new Date(e.date) >= today).sort((a,b) => new Date(a.date)-new Date(b.date))));
   }, [fighter.id]);
@@ -940,7 +945,8 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       if (!evs.some(ev => ev.name.toLowerCase().trim() === nu.event.toLowerCase().trim()))
         await db.insert("events", { id: `ev${Date.now()}`, name: san(nu.event), date: nu.date || "", local: san(nu.local), city: "", country: "Portugal", organization: "", created_at: new Date().toISOString() });
     }
-    setShowUF(false); setNu({ opponent: "", event: "", date: "", local: "", weight: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador" });
+    setShowUF(false); setNu({ opponent: "", event: "", date: "", local: "", weight: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", _eventId: "" });
+    if (onSave) onSave(f);
   }
 
   async function saveTitle() { const res = await db.insert("titles", { name: san(nt.name, 100), org: san(nt.org, 100), year: Number(nt.year), fighter_id: f.id }); setF(p => ({ ...p, titles: [...p.titles, res[0] || nt] })); setShowTF(false); setNt({ name: "", org: "", year: 2026 }); }
@@ -1407,13 +1413,14 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
 
 function AthleteView({ fighters, user, onLogout, setPage, pendingCount, club, clubs }) {
   const fighter = fighters.find(f => f.id === user.fighter_id);
+  const [refreshKey, setRefreshKey] = React.useState(0);
   if (!fighter) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "", setPage, pendingCount, club }),
       React.createElement(Card, null, React.createElement("div", { style: { color: T.TEXT2, textAlign: "center", padding: "24px 0" } }, "Perfil ainda não criado. Contacta o admin."))
     )
   );
-  return React.createElement(FighterProfile, { fighter, onBack: null, onSave: () => {}, user, isOwner: true, onLogout, setPage, pendingCount, club, clubs });
+  return React.createElement(FighterProfile, { key: refreshKey, fighter, onBack: null, onSave: () => setRefreshKey(k => k+1), user, isOwner: true, onLogout, setPage, pendingCount, club, clubs });
 }
 
 // ─── APP ROOT ──────────────────────────────────────────────
