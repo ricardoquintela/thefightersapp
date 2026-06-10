@@ -90,7 +90,7 @@ function Logo({ club, large }) {
   const tfaLogo = React.createElement("img", {
     src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/tfa_logo.jpeg",
     alt: "The Fighters App",
-    style: { height: large ? 80 : 44, width: "auto", display: "block", margin: "0 auto 6px", opacity: 0.92 },
+    style: { height: large ? 120 : 44, width: large ? "80%" : "auto", display: "block", margin: "0 auto 6px", opacity: 0.92 },
     onError: e => { e.target.style.display = "none"; }
   });
   // Sem clube = página de login = logo neutro
