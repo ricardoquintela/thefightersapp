@@ -87,14 +87,22 @@ const getStyles = () => ({
 
 // ─── COMPONENTES BASE ─────────────────────────────────────
 function Logo({ club }) {
-  const isNF = !club || club.id === "norteforte";
+  // Sem clube = página de login = logo neutro
+  if (!club) return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
+    React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginBottom: 4, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
+    React.createElement("div", { style: { fontSize: 42, margin: "8px 0 4px" } }, "🥊"),
+    React.createElement("div", { style: { fontSize: 22, fontWeight: 900, color: T.GOLD, letterSpacing: 3, textTransform: "uppercase" } }, "Fighters App")
+  );
+  // Com clube = logo do clube
+  if (club.id === "norteforte") return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
+    React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginBottom: 8, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
+    React.createElement("img", { src: "norteforte.svg", alt: "Norte Forte", style: { height: 110, width: "auto", display: "block", margin: "0 auto", mixBlendMode: "screen" } })
+  );
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
     React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginBottom: 8, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
-    isNF
-      ? React.createElement("img", { src: "norteforte.svg", alt: "Norte Forte", style: { height: 110, width: "auto", display: "block", margin: "0 auto", mixBlendMode: "screen" } })
-      : club.logo_url
-        ? React.createElement("img", { src: club.logo_url, alt: club.name, style: { height: 90, width: "auto", display: "block", margin: "0 auto", mixBlendMode: "screen" } })
-        : React.createElement("div", { style: { height: 90, width: 90, borderRadius: "50%", background: `linear-gradient(135deg, ${T.GOLD_DIM}, ${T.GOLD})`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 28, fontWeight: 900, color: "#fff" } }, club.short_name || club.name.slice(0, 3))
+    club.logo_url
+      ? React.createElement("img", { src: club.logo_url, alt: club.name, style: { height: 90, width: "auto", display: "block", margin: "0 auto", mixBlendMode: "screen" } })
+      : React.createElement("div", { style: { height: 90, width: 90, borderRadius: "50%", background: `linear-gradient(135deg, ${T.GOLD_DIM}, ${T.GOLD})`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 28, fontWeight: 900, color: "#fff" } }, club.short_name || club.name.slice(0, 3))
   );
 }
 
