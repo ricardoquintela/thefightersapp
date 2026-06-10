@@ -862,6 +862,8 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
     await db.delete("upcoming", id);
     setF(p => ({ ...p, upcoming: p.upcoming.filter(u => u.id !== id) }));
   }
+
+  async function searchOpponent(name) {
     if (!name || name.length < 2) { setOpponentSuggestions([]); return; }
     const all = await db.get("fighters");
     const q = name.toLowerCase();
