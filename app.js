@@ -405,7 +405,7 @@ function Login({ onLogin, clubs }) {
 
   if (showForgot) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center" } },
     React.createElement("div", { style: { width: 340, padding: 16 } },
-      React.createElement("div", { style: { marginBottom: 28 } }, React.createElement(Logo, { club: null }), React.createElement("div", { style: { width: 40, height: 2, background: T.GOLD, margin: "10px auto 0", borderRadius: 2 } })),
+      React.createElement("div", { style: { marginBottom: 28 } }, React.createElement(Logo, { club: null })),
       React.createElement(Card, { gold: true },
         newPassword
           ? React.createElement("div", null,
@@ -430,7 +430,7 @@ function Login({ onLogin, clubs }) {
 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center" } },
     React.createElement("div", { style: { width: 340, padding: 16 } },
-      React.createElement("div", { style: { marginBottom: 28 } }, React.createElement(Logo, { club: null }), React.createElement("div", { style: { width: 40, height: 2, background: T.GOLD, margin: "10px auto 0", borderRadius: 2 } })),
+      React.createElement("div", { style: { marginBottom: 28 } }, React.createElement(Logo, { club: null })),
       React.createElement(Card, { gold: true },
         React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Username"), React.createElement("input", { style: inp, value: username, onChange: e => setUsername(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "username", disabled: blocked })),
         React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Password"), React.createElement("input", { type: "password", style: inp, value: pw, onChange: e => setPw(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "••••••••", disabled: blocked })),
