@@ -90,8 +90,8 @@ function Logo({ club }) {
   // Sem clube = página de login = logo neutro
   if (!club) return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
     React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginBottom: 4, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
-    React.createElement("div", { style: { fontSize: 42, margin: "8px 0 4px" } },),
-    
+    React.createElement("div", { style: { fontSize: 42, margin: "8px 0 4px" } }, "🥊"),
+    React.createElement("div", { style: { fontSize: 22, fontWeight: 900, color: T.GOLD, letterSpacing: 3, textTransform: "uppercase" } }, "Fighters App")
   );
   // Com clube = logo do clube
   if (club.id === "norteforte") return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
@@ -864,7 +864,25 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
     if (file.size > MAX_FILE_SIZE) { alert("Foto demasiado grande. Máximo 2MB."); return; }
     if (combatPhotos.length >= 3) return;
     const reader = new FileReader();
-    reader.onload = async ev => { const np = [...combatPhotos, ev.target.result]; upd("combat_photos", np); await db.update("fighters", f.id, { combat_photos: np }); };
+    reader.onload = async ev => {
+      const img = new window.Image();
+      img.onload = async () => {
+        const canvas = document.createElement("canvas");
+        const MAX = 800;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL("image/jpeg", 0.75);
+        const np = [...combatPhotos, compressed];
+        upd("combat_photos", np);
+        await db.update("fighters", f.id, { combat_photos: np });
+      };
+      img.src = ev.target.result;
+    };
     reader.readAsDataURL(file);
   }
 
@@ -905,7 +923,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
         React.createElement("div", { style: { fontSize: 12, color: T.GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, `Fotos em Combate · ${combatPhotos.length}/3`),
         React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
           combatPhotos.map((photo, idx) => React.createElement("div", { key: idx, style: { position: "relative", width: 90, height: 90 } },
-            React.createElement("img", { src: photo, onClick: () => setLightbox(photo), style: { width: 90, height: 90, objectFit: "cover", borderRadius: 8, cursor: "pointer", border: `1px solid ${T.GOLD_DIM}` } }),
+            React.createElement("img", { src: photo, onClick: () => setLightbox(photo), style: { width: 90, height: 90, objectFit: "cover", objectPosition: "center", borderRadius: 8, cursor: "pointer", border: `1px solid ${T.GOLD_DIM}` } }),
             isOwner && React.createElement("button", { onClick: () => removeCombatPhoto(idx), style: { position: "absolute", top: -6, right: -6, background: "#e05555", border: "none", borderRadius: "50%", width: 20, height: 20, color: "#fff", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, "×")
           )),
           isOwner && combatPhotos.length < 3 && React.createElement("label", { style: { width: 90, height: 90, border: `2px dashed ${T.BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: T.TEXT3, fontSize: 28, flexDirection: "column", gap: 4 } },
