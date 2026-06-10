@@ -396,7 +396,7 @@ function Login({ onLogin, clubs }) {
       React.createElement(Card, { gold: true },
         newPassword
           ? React.createElement("div", null,
-              React.createElement("div", { style: { fontSize: 32, textAlign: "center", marginBottom: 12 } },),
+              React.createElement("div", { style: { fontSize: 32, textAlign: "center", marginBottom: 12 } }, "✅"),
               React.createElement("div", { style: { fontSize: 16, color: T.GOLD, fontWeight: 700, marginBottom: 8, textAlign: "center" } }, "E-mail enviado!"),
               React.createElement("div", { style: { fontSize: 13, color: T.TEXT2, marginBottom: 16, textAlign: "center" } }, "Verifica a tua caixa de entrada. A nova password foi enviada para o teu e-mail."),
               React.createElement("button", { onClick: () => { setShowForgot(false); setNewPassword(null); setForgotUsername(""); setErr(""); }, style: { ...s.btnGold, width: "100%", marginTop: 0 } }, "Ir para o login")
@@ -841,10 +841,12 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   const [editTitle, setEditTitle] = useState(null);
   const [delTitleId, setDelTitleId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [savedSnapshot, setSavedSnapshot] = useState(null);
   const [nf, setNf] = useState({ ...EMPTY_FIGHT });
   const [nu, setNu] = useState({ opponent: "", event: "", date: "", local: "", weight: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador" });
   const [nt, setNt] = useState({ name: "", org: "", year: 2026 });
   const [lightbox, setLightbox] = useState(null);
+  const [calendarEvents, setCalendarEvents] = useState([]);
 
   useEffect(() => {
     async function load() {
@@ -852,7 +854,15 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       setF(p => ({ ...p, fights, upcoming, titles })); setLoading(false);
     }
     load();
+    // Carregar próximas provas do calendário
+    const today = new Date(); today.setHours(0,0,0,0);
+    db.get("events").then(evs => setCalendarEvents(evs.filter(e => new Date(e.date) >= today).sort((a,b) => new Date(a.date)-new Date(b.date))));
   }, [fighter.id]);
+
+  // Snapshot dos campos editáveis para detectar alterações
+  const profileFields = ["name","team","weight","category","contact","gender","modality","level"];
+  const snapshot = savedSnapshot || profileFields.reduce((o,k) => ({...o,[k]: fighter[k]}), {});
+  const isDirty = profileFields.some(k => String(f[k]||"") !== String(snapshot[k]||""));
 
   const wins = f.fights.filter(x => x.result === "V").length;
   const losses = f.fights.filter(x => x.result === "D").length;
@@ -870,6 +880,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   async function saveProfile() {
     setSaving(true);
     await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: san(f.category), contact: san(f.contact, 50), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, combat_photos: f.combat_photos });
+    setSavedSnapshot(profileFields.reduce((o,k) => ({...o,[k]: f[k]}), {}));
     setSaving(false);
   }
 
@@ -963,7 +974,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
             React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: f.level || "Amador", onChange: e => upd("level", e.target.value) }, LEVELS.map(l => React.createElement("option", { key: l }, l))))
           )
         ),
-        isOwner && React.createElement("button", { onClick: saveProfile, disabled: saving, style: { ...s.btnGold, opacity: saving ? 0.7 : 1 } }, saving ? "A guardar..." : "Guardar alterações")
+        isOwner && isDirty && React.createElement("button", { onClick: saveProfile, disabled: saving, style: { ...s.btnGold, opacity: saving ? 0.7 : 1 } }, saving ? "A guardar..." : "Guardar alterações")
       )
     );
 
@@ -1020,22 +1031,43 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       ),
       showUF && React.createElement(Card, { style: { marginBottom: 12 } },
         React.createElement("div", { style: { fontSize: 12, color: T.GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, "Nova Luta"),
+        // Selector de prova do calendário
+        calendarEvents.length > 0 && React.createElement("div", { style: { marginBottom: 12 } },
+          React.createElement("label", { style: { ...lbl, color: T.GOLD } }, "Ligar a uma Prova do Calendário"),
+          React.createElement("select", { style: { ...inp, borderColor: T.GOLD_DIM },
+            value: nu._eventId || "",
+            onChange: e => {
+              const ev = calendarEvents.find(x => x.id === e.target.value);
+              if (ev) setNu({ ...nu, _eventId: ev.id, event: ev.name, date: ev.date || nu.date, local: ev.local || nu.local });
+              else setNu({ ...nu, _eventId: "", event: "", date: "", local: "" });
+            }
+          },
+            React.createElement("option", { value: "" }, "— Seleccionar prova —"),
+            calendarEvents.map(ev => React.createElement("option", { key: ev.id, value: ev.id },
+              `${ev.name}${ev.date ? " · " + ev.date.slice(8,10) + "/" + ev.date.slice(5,7) + "/" + ev.date.slice(0,4) : ""}${ev.city ? " · " + ev.city : ""}`
+            )),
+            React.createElement("option", { value: "manual" }, "✏️ Outro evento...")
+          )
+        ),
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Adversário"), React.createElement("input", { style: inp, value: nu.opponent, onChange: e => setNu({ ...nu, opponent: e.target.value }) })),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Data"), React.createElement("input", { type: "date", style: inp, value: nu.date, onChange: e => setNu({ ...nu, date: e.target.value }) })),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Evento"), React.createElement("input", { style: inp, value: nu.event, onChange: e => setNu({ ...nu, event: e.target.value }) })),
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Evento"), React.createElement("input", { style: inp, value: nu.event, onChange: e => setNu({ ...nu, event: e.target.value, _eventId: "" }) })),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Local"), React.createElement("input", { style: inp, value: nu.local, onChange: e => setNu({ ...nu, local: e.target.value }) })),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Peso (kg)"), React.createElement("input", { type: "number", style: inp, value: nu.weight, onChange: e => setNu({ ...nu, weight: e.target.value }) })),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"), React.createElement("select", { style: inp, value: nu.modality, onChange: e => setNu({ ...nu, modality: e.target.value, sub_modality: MODALITIES[e.target.value][0] }) }, Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Disciplina"), React.createElement("select", { style: inp, value: nu.sub_modality, onChange: e => setNu({ ...nu, sub_modality: e.target.value }) }, (MODALITIES[nu.modality] || []).map(s => React.createElement("option", { key: s }, s)))),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: nu.level, onChange: e => setNu({ ...nu, level: e.target.value }) }, LEVELS.map(l => React.createElement("option", { key: l }, l))))
         ),
-        nu.event && nu.event.trim() && React.createElement("div", { style: { fontSize: 11, color: T.GOLD_DIM, marginTop: 10, padding: "6px 10px", background: T.BG3, borderRadius: 6 } },
+        nu.event && nu.event.trim() && !nu._eventId && React.createElement("div", { style: { fontSize: 11, color: T.GOLD_DIM, marginTop: 10, padding: "6px 10px", background: T.BG3, borderRadius: 6 } },
           `📅 Se "${nu.event}" não existir no calendário, será criado automaticamente.`
+        ),
+        nu._eventId && React.createElement("div", { style: { fontSize: 11, color: "#4caf7d", marginTop: 10, padding: "6px 10px", background: "#0a1a0e", borderRadius: 6 } },
+          `✅ Ligado à prova "${nu.event}"`
         ),
         React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
           React.createElement("button", { onClick: saveUpcoming, style: { ...s.btnGold, marginTop: 0 } }, "Guardar"),
-          React.createElement("button", { onClick: () => setShowUF(false), style: { ...s.btnGold, marginTop: 0, background: T.BG4, color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Cancelar")
+          React.createElement("button", { onClick: () => { setShowUF(false); setNu({ opponent: "", event: "", date: "", local: "", weight: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", _eventId: "" }); }, style: { ...s.btnGold, marginTop: 0, background: T.BG4, color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Cancelar")
         )
       ),
       f.upcoming.map((u, i) => {
