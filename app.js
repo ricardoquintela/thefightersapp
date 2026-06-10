@@ -939,14 +939,26 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
 
   async function saveUpcoming() {
     const u = { ...nu, opponent: san(nu.opponent, 100), event: san(nu.event, 100), local: san(nu.local, 100), id: `u${Date.now()}`, fighter_id: f.id };
-    await db.insert("upcoming", u); setF(p => ({ ...p, upcoming: [...p.upcoming, u] }));
+    await db.insert("upcoming", u);
+    // Se o adversário existe na plataforma, criar a luta também no perfil dele
+    if (nu._opponentId) {
+      const oppUser = await db.get("users", { fighter_id: nu._opponentId });
+      const opp = await db.get("fighters", { id: nu._opponentId });
+      if (opp && opp[0]) {
+        const oppFight = { ...u, id: `u${Date.now()+1}`, fighter_id: nu._opponentId, opponent: f.name, opponent_team: f.team || "" };
+        await db.insert("upcoming", oppFight);
+      }
+    }
     if (nu.event && nu.event.trim()) {
       const evs = await db.get("events");
       if (!evs.some(ev => ev.name.toLowerCase().trim() === nu.event.toLowerCase().trim()))
         await db.insert("events", { id: `ev${Date.now()}`, name: san(nu.event), date: nu.date || "", local: san(nu.local), city: "", country: "Portugal", organization: "", created_at: new Date().toISOString() });
     }
-    setShowUF(false); setNu({ opponent: "", event: "", date: "", local: "", weight: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", _eventId: "" });
-    if (onSave) onSave(f);
+    // Recarregar upcoming do servidor para garantir consistência
+    const fresh = await db.get("upcoming", { fighter_id: f.id });
+    setF(p => ({ ...p, upcoming: fresh }));
+    setShowUF(false);
+    setNu({ opponent: "", event: "", date: "", local: "", weight: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", _eventId: "", _opponentId: "" });
   }
 
   async function saveTitle() { const res = await db.insert("titles", { name: san(nt.name, 100), org: san(nt.org, 100), year: Number(nt.year), fighter_id: f.id }); setF(p => ({ ...p, titles: [...p.titles, res[0] || nt] })); setShowTF(false); setNt({ name: "", org: "", year: 2026 }); }
