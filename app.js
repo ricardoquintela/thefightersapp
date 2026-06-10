@@ -86,11 +86,11 @@ const getStyles = () => ({
 });
 
 // ─── COMPONENTES BASE ─────────────────────────────────────
-function Logo({ club }) {
+function Logo({ club, large }) {
   const tfaLogo = React.createElement("img", {
     src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/tfa_logo.jpeg",
     alt: "The Fighters App",
-    style: { height: 44, width: "auto", display: "block", margin: "0 auto 6px", opacity: 0.92 },
+    style: { height: large ? 80 : 44, width: "auto", display: "block", margin: "0 auto 6px", opacity: 0.92 },
     onError: e => { e.target.style.display = "none"; }
   });
   // Sem clube = página de login = logo neutro
@@ -430,7 +430,7 @@ function Login({ onLogin, clubs }) {
 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center" } },
     React.createElement("div", { style: { width: 340, padding: 16 } },
-      React.createElement("div", { style: { marginBottom: 28 } }, React.createElement(Logo, { club: null })),
+      React.createElement("div", { style: { marginBottom: 28 } }, React.createElement(Logo, { club: null, large: true })),
       React.createElement(Card, { gold: true },
         React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Username"), React.createElement("input", { style: inp, value: username, onChange: e => setUsername(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "username", disabled: blocked })),
         React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Password"), React.createElement("input", { type: "password", style: inp, value: pw, onChange: e => setPw(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "••••••••", disabled: blocked })),
