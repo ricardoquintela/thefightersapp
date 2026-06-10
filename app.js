@@ -167,9 +167,66 @@ function Footer() {
 // PARTE 2: HEADER, FORMS, CALENDAR
 // ═══════════════════════════════════════════════════════════
 
+function AccountModal({ user, onClose }) {
+  const s = getStyles();
+  const { inp, lbl } = s;
+  const [currentPw, setCurrentPw] = React.useState("");
+  const [newPw, setNewPw] = React.useState("");
+  const [confirmPw, setConfirmPw] = React.useState("");
+  const [msg, setMsg] = React.useState(null);
+  const [err, setErr] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+
+  async function changePassword() {
+    setErr(""); setMsg(null);
+    if (!currentPw || !newPw || !confirmPw) { setErr("Preenche todos os campos."); return; }
+    if (newPw !== confirmPw) { setErr("As passwords não coincidem."); return; }
+    if (newPw.length < 6) { setErr("A nova password deve ter pelo menos 6 caracteres."); return; }
+    setSaving(true);
+    const users = await db.get("users", { username: user.username });
+    if (!users[0] || users[0].password !== currentPw) { setErr("Password actual incorrecta."); setSaving(false); return; }
+    await db.update("users", users[0].id, { password: newPw });
+    setMsg("Password alterada com sucesso!");
+    setCurrentPw(""); setNewPw(""); setConfirmPw("");
+    setSaving(false);
+  }
+
+  return React.createElement("div", { style: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }, onClick: onClose },
+    React.createElement("div", { style: { background: T.BG2, border: `1px solid ${T.BORDER}`, borderRadius: 12, padding: 24, width: 340, maxWidth: "90vw" }, onClick: e => e.stopPropagation() },
+      React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 } },
+        React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.GOLD, textTransform: "uppercase", letterSpacing: 1 } }, "Minha Conta"),
+        React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", color: T.TEXT2, fontSize: 20, cursor: "pointer" } }, "×")
+      ),
+      React.createElement("div", { style: { marginBottom: 20, padding: "12px 16px", background: T.BG3, borderRadius: 8 } },
+        React.createElement("div", { style: { fontSize: 13, color: T.TEXT, fontWeight: 600 } }, user.name),
+        React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `@${user.username}`),
+        user.email && React.createElement("div", { style: { fontSize: 12, color: T.TEXT3, marginTop: 2 } }, user.email)
+      ),
+      React.createElement("div", { style: { fontSize: 12, color: T.GOLD, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 } }, "Alterar Password"),
+      React.createElement("div", { style: { marginBottom: 10 } },
+        React.createElement("label", { style: lbl }, "Password actual"),
+        React.createElement("input", { type: "password", style: inp, value: currentPw, onChange: e => setCurrentPw(e.target.value), placeholder: "••••••••" })
+      ),
+      React.createElement("div", { style: { marginBottom: 10 } },
+        React.createElement("label", { style: lbl }, "Nova password"),
+        React.createElement("input", { type: "password", style: inp, value: newPw, onChange: e => setNewPw(e.target.value), placeholder: "••••••••" })
+      ),
+      React.createElement("div", { style: { marginBottom: 14 } },
+        React.createElement("label", { style: lbl }, "Confirmar nova password"),
+        React.createElement("input", { type: "password", style: inp, value: confirmPw, onChange: e => setConfirmPw(e.target.value), placeholder: "••••••••", onKeyDown: e => e.key === "Enter" && changePassword() })
+      ),
+      err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 10 } }, err),
+      msg && React.createElement("div", { style: { fontSize: 13, color: "#4caf7d", marginBottom: 10 } }, msg),
+      React.createElement("button", { onClick: changePassword, disabled: saving, style: { ...s.btnGold, width: "100%", marginTop: 0, opacity: saving ? 0.7 : 1 } }, saving ? "A guardar..." : "Guardar")
+    )
+  );
+}
+
 function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club }) {
   const s = getStyles();
+  const [showAccount, setShowAccount] = React.useState(false);
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${T.BORDER}` } },
+    showAccount && React.createElement(AccountModal, { user, onClose: () => setShowAccount(false) }),
     React.createElement(Logo, { club }),
     user && React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 10 } },
       React.createElement("div", { style: { textAlign: "center" } },
@@ -178,6 +235,7 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club }
           user.role === "superadmin" ? "⭐ Super Admin" : user.role === "admin" ? "Admin" : "Atleta"
         )
       ),
+      React.createElement("button", { onClick: () => setShowAccount(true), style: { padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.GOLD_DIM}`, background: "transparent", color: T.GOLD, cursor: "pointer", fontSize: 12 } }, "Conta"),
       React.createElement("button", { onClick: onLogout, style: { padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.BORDER}`, background: "transparent", color: T.TEXT2, cursor: "pointer", fontSize: 12 } }, "Sair")
     ),
     user && setPage && React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", marginTop: 12, flexWrap: "wrap" } },
