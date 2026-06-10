@@ -89,9 +89,8 @@ const getStyles = () => ({
 function Logo({ club }) {
   // Sem clube = página de login = logo neutro
   if (!club) return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
-    React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginBottom: 4, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
-    React.createElement("div", { style: { fontSize: 42, margin: "8px 0 4px" } }, "🥊"),
-    React.createElement("div", { style: { fontSize: 22, fontWeight: 900, color: T.GOLD, letterSpacing: 3, textTransform: "uppercase" } }, "Fighters App")
+    React.createElement("div", { style: { fontSize: 13, color: "#aaa", letterSpacing: 6, marginBottom: 12, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
+    React.createElement("div", { style: { width: 40, height: 2, background: T.GOLD, margin: "0 auto 12px", borderRadius: 2 } })
   );
   // Com clube = logo do clube
   if (club.id === "norteforte") return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
