@@ -849,7 +849,19 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [opponentSuggestions, setOpponentSuggestions] = useState([]);
 
-  async function searchOpponent(name) {
+  const [editUpcoming, setEditUpcoming] = useState(null);
+
+  async function saveEditUpcoming() {
+    const { _eventId, _opponentId, ...clean } = editUpcoming;
+    await db.update("upcoming", clean.id, clean);
+    setF(p => ({ ...p, upcoming: p.upcoming.map(u => u.id === clean.id ? clean : u) }));
+    setEditUpcoming(null);
+  }
+
+  async function deleteUpcoming(id) {
+    await db.delete("upcoming", id);
+    setF(p => ({ ...p, upcoming: p.upcoming.filter(u => u.id !== id) }));
+  }
     if (!name || name.length < 2) { setOpponentSuggestions([]); return; }
     const all = await db.get("fighters");
     const q = name.toLowerCase();
@@ -1110,25 +1122,46 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       ),
       f.upcoming.map((u, i) => {
         const days = daysUntil(u.date);
+        const isEditing = editUpcoming?.id === u.id;
         return React.createElement(Card, { key: i, style: { marginBottom: 8 } },
-          React.createElement("div", { style: { display: "flex", gap: 12, alignItems: "center" } },
-            React.createElement("div", { style: { background: T.BG3, border: `1px solid ${T.GOLD_DIM}`, borderRadius: 8, padding: "8px 12px", textAlign: "center", minWidth: 48 } },
-              React.createElement("div", { style: { fontSize: 18, fontWeight: 700, color: T.GOLD } }, u.date?.slice(8, 10)),
-              React.createElement("div", { style: { fontSize: 10, color: T.TEXT2 } }, `${u.date?.slice(5, 7)}/${u.date?.slice(2, 4)}`)
-            ),
-            React.createElement("div", { style: { flex: 1 } },
-              React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: T.TEXT } }, `vs. ${u.opponent}`),
-              React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, [u.event, u.local].filter(Boolean).join(" · ")),
-              React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
-                React.createElement(Badge, null, u.modality), React.createElement(Badge, { type: "gold" }, u.sub_modality),
-                React.createElement(Badge, { type: "blue" }, u.level), u.weight && React.createElement(Badge, null, `${u.weight}kg`)
+          isEditing
+            ? React.createElement("div", null,
+                React.createElement("div", { style: { fontSize: 12, color: T.GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, "Editar Luta"),
+                React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
+                  React.createElement("div", null, React.createElement("label", { style: lbl }, "Adversário"), React.createElement("input", { style: inp, value: editUpcoming.opponent || "", onChange: e => setEditUpcoming({ ...editUpcoming, opponent: e.target.value }) })),
+                  React.createElement("div", null, React.createElement("label", { style: lbl }, "Data"), React.createElement("input", { type: "date", style: inp, value: editUpcoming.date || "", onChange: e => setEditUpcoming({ ...editUpcoming, date: e.target.value }) })),
+                  React.createElement("div", null, React.createElement("label", { style: lbl }, "Evento"), React.createElement("input", { style: inp, value: editUpcoming.event || "", onChange: e => setEditUpcoming({ ...editUpcoming, event: e.target.value }) })),
+                  React.createElement("div", null, React.createElement("label", { style: lbl }, "Local"), React.createElement("input", { style: inp, value: editUpcoming.local || "", onChange: e => setEditUpcoming({ ...editUpcoming, local: e.target.value }) })),
+                  React.createElement("div", null, React.createElement("label", { style: lbl }, "Peso (kg)"), React.createElement("input", { type: "number", style: inp, value: editUpcoming.weight || "", onChange: e => setEditUpcoming({ ...editUpcoming, weight: e.target.value }) })),
+                  React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: editUpcoming.level || "Amador", onChange: e => setEditUpcoming({ ...editUpcoming, level: e.target.value }) }, LEVELS.map(l => React.createElement("option", { key: l }, l))))
+                ),
+                React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 10 } },
+                  React.createElement("button", { onClick: saveEditUpcoming, style: { ...s.btnGold, marginTop: 0 } }, "Guardar"),
+                  React.createElement("button", { onClick: () => setEditUpcoming(null), style: { ...s.btnGold, marginTop: 0, background: T.BG4, color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Cancelar")
+                )
               )
-            ),
-            days !== null && days >= 0 && React.createElement("div", { style: { textAlign: "center", flexShrink: 0 } },
-              React.createElement("div", { style: { fontSize: 20, fontWeight: 700, color: days <= 7 ? "#e05555" : days <= 30 ? T.GOLD : "#4caf7d" } }, days),
-              React.createElement("div", { style: { fontSize: 9, color: T.TEXT3, textTransform: "uppercase" } }, "dias")
-            )
-          )
+            : React.createElement("div", { style: { display: "flex", gap: 12, alignItems: "center" } },
+                React.createElement("div", { style: { background: T.BG3, border: `1px solid ${T.GOLD_DIM}`, borderRadius: 8, padding: "8px 12px", textAlign: "center", minWidth: 48 } },
+                  React.createElement("div", { style: { fontSize: 18, fontWeight: 700, color: T.GOLD } }, u.date?.slice(8, 10)),
+                  React.createElement("div", { style: { fontSize: 10, color: T.TEXT2 } }, `${u.date?.slice(5, 7)}/${u.date?.slice(2, 4)}`)
+                ),
+                React.createElement("div", { style: { flex: 1 } },
+                  React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: T.TEXT } }, `vs. ${u.opponent}`),
+                  React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, [u.event, u.local].filter(Boolean).join(" · ")),
+                  React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
+                    React.createElement(Badge, null, u.modality), React.createElement(Badge, { type: "gold" }, u.sub_modality),
+                    React.createElement(Badge, { type: "blue" }, u.level), u.weight && React.createElement(Badge, null, `${u.weight}kg`)
+                  ),
+                  isOwner && React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 8 } },
+                    React.createElement("button", { onClick: () => setEditUpcoming({ ...u }), style: { ...s.btnOutline, fontSize: 11, padding: "3px 10px" } }, "Editar"),
+                    React.createElement("button", { onClick: () => deleteUpcoming(u.id), style: { ...s.btnOutline, fontSize: 11, padding: "3px 10px", borderColor: "#e05555", color: "#e05555" } }, "Eliminar")
+                  )
+                ),
+                days !== null && days >= 0 && React.createElement("div", { style: { textAlign: "center", flexShrink: 0 } },
+                  React.createElement("div", { style: { fontSize: 20, fontWeight: 700, color: days <= 7 ? "#e05555" : days <= 30 ? T.GOLD : "#4caf7d" } }, days),
+                  React.createElement("div", { style: { fontSize: 9, color: T.TEXT3, textTransform: "uppercase" } }, "dias")
+                )
+              )
         );
       })
     );
