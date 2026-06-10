@@ -87,21 +87,26 @@ const getStyles = () => ({
 
 // ─── COMPONENTES BASE ─────────────────────────────────────
 function Logo({ club }) {
+  const tfaLogo = React.createElement("img", {
+    src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/tfa_logo.jpeg",
+    alt: "The Fighters App",
+    style: { height: 44, width: "auto", display: "block", margin: "0 auto 6px", opacity: 0.92 },
+    onError: e => { e.target.style.display = "none"; }
+  });
   // Sem clube = página de login = logo neutro
   if (!club) return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
-    React.createElement("div", { style: { fontSize: 13, color: "#aaa", letterSpacing: 6, marginBottom: 12, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
-    React.createElement("div", { style: { width: 40, height: 2, background: T.GOLD, margin: "0 auto 12px", borderRadius: 2 } })
+    tfaLogo
   );
-  // Com clube = logo do clube
+  // Com clube = logo do clube + TFA subtil
   if (club.id === "norteforte") return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
-    React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginBottom: 8, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
-    React.createElement("img", { src: "norteforte.svg", alt: "Norte Forte", style: { height: 110, width: "auto", display: "block", margin: "0 auto", mixBlendMode: "screen" } })
+    React.createElement("img", { src: "norteforte.svg", alt: "Norte Forte", style: { height: 110, width: "auto", display: "block", margin: "0 auto 8px", mixBlendMode: "screen" } }),
+    tfaLogo
   );
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 6 } },
-    React.createElement("div", { style: { fontSize: 10, color: "#aaa", letterSpacing: 5, marginBottom: 8, fontWeight: 600, textTransform: "uppercase" } }, "The Fighters App"),
     club.logo_url
-      ? React.createElement("img", { src: club.logo_url, alt: club.name, style: { height: 90, width: "auto", display: "block", margin: "0 auto", mixBlendMode: "screen" } })
-      : React.createElement("div", { style: { height: 90, width: 90, borderRadius: "50%", background: `linear-gradient(135deg, ${T.GOLD_DIM}, ${T.GOLD})`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 28, fontWeight: 900, color: "#fff" } }, club.short_name || club.name.slice(0, 3))
+      ? React.createElement("img", { src: club.logo_url, alt: club.name, style: { height: 90, width: "auto", display: "block", margin: "0 auto 8px", mixBlendMode: "screen" } })
+      : React.createElement("div", { style: { height: 90, width: 90, borderRadius: "50%", background: `linear-gradient(135deg, ${T.GOLD_DIM}, ${T.GOLD})`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px", fontSize: 28, fontWeight: 900, color: "#fff" } }, club.short_name || club.name.slice(0, 3)),
+    tfaLogo
   );
 }
 
@@ -146,8 +151,16 @@ function ClubTag({ clubId, clubs }) {
 }
 
 function Footer() {
-  return React.createElement("div", { style: { textAlign: "center", padding: "24px 16px", borderTop: `1px solid #2a2a2a`, marginTop: 20, fontSize: 11, color: "#555", letterSpacing: 1 } },
-    "The Fighters App · Designed & developed by Ricardo Quintela · © 2026"
+  return React.createElement("div", { style: { textAlign: "center", padding: "28px 16px 20px", borderTop: `1px solid #1e1e1e`, marginTop: 20 } },
+    React.createElement("img", { 
+      src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/tfa_logo.jpeg",
+      alt: "The Fighters App",
+      style: { height: 36, opacity: 0.75, marginBottom: 8 },
+      onError: e => { e.target.style.display = "none"; }
+    }),
+    React.createElement("div", { style: { fontSize: 10, color: "#444", letterSpacing: 1.5, textTransform: "uppercase" } },
+      "Designed & developed by Ricardo Quintela · © 2026"
+    )
   );
 }
 // ═══════════════════════════════════════════════════════════
