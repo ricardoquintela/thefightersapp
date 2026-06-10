@@ -88,7 +88,7 @@ const getStyles = () => ({
 // ─── COMPONENTES BASE ─────────────────────────────────────
 function Logo({ club }) {
   const tfaLogo = React.createElement("img", {
-    src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/E8DE65E2-9B70-4036-8A63-52C30BB2AB2D_1_201_a.jpeg",
+    src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/tfa_logo.jpeg",
     alt: "The Fighters App",
     style: { height: 44, width: "auto", display: "block", margin: "0 auto 6px", opacity: 0.92 },
     onError: e => { e.target.style.display = "none"; }
@@ -153,7 +153,7 @@ function ClubTag({ clubId, clubs }) {
 function Footer() {
   return React.createElement("div", { style: { textAlign: "center", padding: "28px 16px 20px", borderTop: `1px solid #1e1e1e`, marginTop: 20 } },
     React.createElement("img", { 
-      src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/E8DE65E2-9B70-4036-8A63-52C30BB2AB2D_1_201_a.jpeg",
+      src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/tfa_logo.jpeg",
       alt: "The Fighters App",
       style: { height: 36, opacity: 0.75, marginBottom: 8 },
       onError: e => { e.target.style.display = "none"; }
