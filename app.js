@@ -497,15 +497,15 @@ function Login({ onLogin, clubs }) {
     }),
 
     // ── TAGLINE ──
-    React.createElement("p", { style: { fontSize: 13, color: "#555", textAlign: "center", lineHeight: 1.8, margin: "0 0 32px", maxWidth: 280 } },
+    React.createElement("p", { style: { fontSize: 13, color: "#888", textAlign: "center", lineHeight: 1.8, margin: "0 0 32px", maxWidth: 280 } },
       "A plataforma digital dos atletas de desportos de combate. Regista a tua carreira. Acompanha a tua evolução."
     ),
 
     // ── FEATURES ──
     React.createElement("div", { style: { marginBottom: 40, textAlign: "center" } },
-      React.createElement("p", { style: { fontSize: 10, color: "#2a2a2a", letterSpacing: 2, textTransform: "uppercase", margin: "0 0 10px" } }, "O que podes fazer"),
-      React.createElement("span", { style: { fontSize: 12, color: "#3a3a3a", display: "block", lineHeight: 2 } }, "Histórico de combates · Títulos · Próximas lutas"),
-      React.createElement("span", { style: { fontSize: 12, color: "#3a3a3a", display: "block", lineHeight: 2 } }, "Estatísticas · Calendário · Gestão de equipa")
+      React.createElement("p", { style: { fontSize: 10, color: "#555", letterSpacing: 2, textTransform: "uppercase", margin: "0 0 10px" } }, "O que podes fazer"),
+      React.createElement("span", { style: { fontSize: 12, color: "#666", display: "block", lineHeight: 2 } }, "Histórico de combates · Títulos · Próximas lutas"),
+      React.createElement("span", { style: { fontSize: 12, color: "#666", display: "block", lineHeight: 2 } }, "Estatísticas · Calendário · Gestão de equipa")
     ),
 
     // ── INPUTS SUBTIS ──
@@ -535,13 +535,13 @@ function Login({ onLogin, clubs }) {
 
     // ── LINKS ──
     React.createElement("div", { style: { display: "flex", justifyContent: "space-between", width: "100%", maxWidth: 280, marginBottom: 52 } },
-      React.createElement("button", { onClick: () => { setShowForgot(true); setErr(""); }, style: { fontSize: 11, color: "#2a2a2a", background: "none", border: "none", cursor: "pointer", letterSpacing: 0.5 } }, "Esqueci a password"),
-      React.createElement("a", { href: "?register=true", style: { fontSize: 11, color: "#3a2e10", textDecoration: "none" } }, "Registar →")
+      React.createElement("button", { onClick: () => { setShowForgot(true); setErr(""); }, style: { fontSize: 11, color: "#555", background: "none", border: "none", cursor: "pointer", letterSpacing: 0.5 } }, "Esqueci a password"),
+      React.createElement("a", { href: "?register=true", style: { fontSize: 11, color: "#6a5a30", textDecoration: "none" } }, "Registar →")
     ),
 
     // ── LOGOS CLUBES ──
     clubs && clubs.filter(c => c.active).length > 0 && React.createElement("div", { style: { textAlign: "center" } },
-      React.createElement("div", { style: { fontSize: 9, color: "#1e1e1e", letterSpacing: 3, textTransform: "uppercase", marginBottom: 14 } }, "Clubes na plataforma"),
+      React.createElement("div", { style: { fontSize: 9, color: "#444", letterSpacing: 3, textTransform: "uppercase", marginBottom: 14 } }, "Clubes na plataforma"),
       React.createElement("div", { style: { display: "flex", gap: 18, justifyContent: "center", alignItems: "center", opacity: 0.4 } },
         clubs.filter(c => c.active).map(c =>
           c.logo_url
@@ -552,7 +552,7 @@ function Login({ onLogin, clubs }) {
     ),
 
     // ── FOOTER ──
-    React.createElement("div", { style: { marginTop: 36, fontSize: 9, color: "#1e1e1e", textAlign: "center", letterSpacing: 1 } },
+    React.createElement("div", { style: { marginTop: 36, fontSize: 9, color: "#444", textAlign: "center", letterSpacing: 1 } },
       "Designed & developed by Ricardo Quintela · © 2026"
     )
   );
