@@ -510,36 +510,48 @@ function Login({ onLogin, clubs }) {
       setTimeout(() => { setBlocked(false); setAttempts(0); setErr(""); }, 30000); return;
     }
     setLoading(true);
-    const users = await db.get("users", { username: username.trim().toLowerCase() });
-    setLoading(false);
-    if (users.length > 0 && users[0].password === pw) {
-      setAttempts(0);
-      const userClub = (clubs || []).find(c => c.id === users[0].club_id) || null;
-      T = buildTheme(userClub);
-      onLogin(users[0], userClub);
-    } else {
-      const na = attempts + 1; setAttempts(na);
-      setErr(`Credenciais incorretas.${na >= 3 ? ` (${5 - na} tentativas restantes)` : ""}`);
+    try {
+      const r = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim().toLowerCase(), password: pw })
+      });
+      const data = await r.json();
+      setLoading(false);
+      if (r.ok && data.user) {
+        setAttempts(0);
+        const userClub = (clubs || []).find(c => c.id === data.user.club_id) || null;
+        T = buildTheme(userClub);
+        onLogin(data.user, userClub);
+      } else {
+        const na = attempts + 1; setAttempts(na);
+        setErr(data.error || `Credenciais incorretas.${na >= 3 ? ` (${5 - na} tentativas restantes)` : ""}`);
+      }
+    } catch(e) {
+      setLoading(false);
+      setErr("Erro de ligação. Tenta novamente.");
     }
   }
 
   async function doForgot() {
     if (!forgotUsername.trim()) return;
     setForgotLoading(true); setErr("");
-    const users = await db.get("users", { username: forgotUsername.trim().toLowerCase() });
-    if (users.length === 0) { setForgotLoading(false); setErr("Username não encontrado."); return; }
-    if (!users[0].email) { setForgotLoading(false); setErr("Este utilizador não tem e-mail associado. Contacta o administrador."); return; }
-    const newPw = generatePassword();
-    await db.update("users", users[0].id, { password: newPw });
-    // Enviar email via API
     try {
-      await fetch("/api/reset-password", {
+      const newPw = generatePassword();
+      const r = await fetch("/api/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: users[0].email, username: users[0].username, newPassword: newPw })
+        body: JSON.stringify({ username: forgotUsername.trim().toLowerCase(), newPassword: newPw })
       });
-    } catch(e) {}
-    setForgotLoading(false); setNewPassword(true);
+      const data = await r.json();
+      if (r.ok) {
+        setForgotLoading(false); setNewPassword(true);
+      } else {
+        setForgotLoading(false); setErr(data.error || "Erro ao enviar. Tenta novamente.");
+      }
+    } catch(e) {
+      setForgotLoading(false); setErr("Erro de ligação. Tenta novamente.");
+    }
   }
 
   if (showForgot) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center" } },
@@ -1876,3 +1888,81 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(React.createElement(App));
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: "Missing fields" });
+
+  const SUPABASE_URL = "https://iwjpunazbezxqwftcned.supabase.co";
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+
+  // Buscar utilizador pelo username
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username.toLowerCase().trim())}&select=*`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  const users = await r.json();
+
+  if (!users || users.length === 0) return res.status(401).json({ error: "Username ou password incorrectos." });
+
+  const user = users[0];
+  if (user.password !== password) return res.status(401).json({ error: "Username ou password incorrectos." });
+
+  // Devolver dados sem a password
+  const { password: _, ...safeUser } = user;
+  res.status(200).json({ user: safeUser });
+}
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  const { username, newPassword, email } = req.body;
+  if (!username || !newPassword) return res.status(400).json({ error: "Missing fields" });
+
+  const SUPABASE_URL = "https://iwjpunazbezxqwftcned.supabase.co";
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+  const RESEND_API_KEY = process.env.RESEND_API_KEY;
+
+  // Buscar utilizador
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username.toLowerCase().trim())}&select=*`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  const users = await r.json();
+  if (!users || users.length === 0) return res.status(404).json({ error: "Username não encontrado." });
+
+  const user = users[0];
+  if (!user.email) return res.status(400).json({ error: "Sem e-mail associado." });
+
+  // Actualizar password
+  await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+    method: "PATCH",
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ password: newPassword })
+  });
+
+  // Enviar email
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "The Fighters App <onboarding@resend.dev>",
+      to: user.email,
+      subject: "A tua nova password — The Fighters App",
+      html: `<div style="background:#0a0a0a;padding:32px;font-family:Arial,sans-serif;max-width:480px;margin:0 auto;border-radius:10px;">
+        <p style="color:#aaa;font-size:11px;letter-spacing:4px;text-transform:uppercase;text-align:center">The Fighters App</p>
+        <div style="width:40px;height:2px;background:#C9A84C;margin:8px auto 24px"></div>
+        <h2 style="color:#C9A84C;margin:0 0 8px">Nova password gerada</h2>
+        <div style="background:#141414;border:1px solid #C9A84C44;border-radius:8px;padding:16px;margin:16px 0">
+          <p style="color:#555;font-size:11px;text-transform:uppercase;margin:0 0 4px">Username</p>
+          <p style="color:#f0f0f0;font-size:16px;font-weight:700;margin:0 0 16px">${user.username}</p>
+          <p style="color:#555;font-size:11px;text-transform:uppercase;margin:0 0 4px">Nova Password</p>
+          <p style="color:#C9A84C;font-size:22px;font-weight:700;letter-spacing:3px;margin:0">${newPassword}</p>
+        </div>
+        <a href="https://thefightersapp.vercel.app" style="display:block;text-align:center;background:#C9A84C;color:#000;padding:12px;border-radius:6px;text-decoration:none;font-weight:700">Entrar na App</a>
+      </div>`
+    })
+  });
+
+  res.status(200).json({ success: true });
+}
