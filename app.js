@@ -548,7 +548,7 @@ function Login({ onLogin, clubs }) {
       React.createElement(Card, { gold: true },
         newPassword
           ? React.createElement("div", null,
-              React.createElement("div", { style: { fontSize: 32, textAlign: "center", marginBottom: 12 } },),
+              React.createElement("div", { style: { fontSize: 32, textAlign: "center", marginBottom: 12 } }, "✅"),
               React.createElement("div", { style: { fontSize: 16, color: T.GOLD, fontWeight: 700, marginBottom: 8, textAlign: "center" } }, "E-mail enviado!"),
               React.createElement("div", { style: { fontSize: 13, color: T.TEXT2, marginBottom: 16, textAlign: "center" } }, "Verifica a tua caixa de entrada. A nova password foi enviada para o teu e-mail."),
               React.createElement("button", { onClick: () => { setShowForgot(false); setNewPassword(null); setForgotUsername(""); setErr(""); }, style: { ...s.btnGold, width: "100%", marginTop: 0 } }, "Ir para o login")
@@ -682,7 +682,7 @@ function RegisterPage({ clubs }) {
       if (existing.some(x => x.email && x.email.toLowerCase() === f.email.toLowerCase().trim())) {
         setSaving(false); return setErr("Este e-mail já está registado.");
       }
-      await db.insert("fighters", { name: san(f.name, 100), weight: f.weight, category: autoEscalao, modality: f.modality, sub_modality: f.sub_modality, level: f.level, email: san(f.email, 100), team: san(selectedClub?.name || "", 100), club_id: f.club_id, gender: f.gender, birthdate: f.birthdate, id: Date.now(), available: false, status: "pending", registration_date: new Date().toISOString() });
+      await db.insert("fighters", { name: san(f.name, 100), category: autoEscalao, modality: f.modality, sub_modality: f.sub_modality, level: f.level, email: san(f.email, 100), team: san(selectedClub?.name || "", 100), club_id: f.club_id, gender: f.gender, birthdate: f.birthdate, id: Date.now(), available: false, status: "pending", registration_date: new Date().toISOString() });
       setSaving(false); setDone(true);
     } catch(e) {
       console.error("Register error:", e);
