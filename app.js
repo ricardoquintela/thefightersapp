@@ -1103,9 +1103,32 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   }, [fighter.id]);
 
   // Snapshot dos campos editáveis para detectar alterações
-  const profileFields = ["name","team","weight","category","gender","modality","level"];
+  const profileFields = ["name","team","weight","category","gender","modality","sub_modality","level","birthdate"];
   const snapshot = savedSnapshot || profileFields.reduce((o,k) => ({...o,[k]: fighter[k]}), {});
   const isDirty = profileFields.some(k => String(f[k]||"") !== String(snapshot[k]||""));
+
+  // Calcular escalão automaticamente a partir da data de nascimento
+  function calcEscalao(birthdate, modality, subModality) {
+    if (!birthdate) return "";
+    const year = new Date(birthdate).getFullYear();
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - year;
+    const isRing = RING_DISCIPLINES.includes(subModality);
+    if (!isRing) {
+      // Tatami e Muay Thai
+      if (age <= 9) return "Crianças (7-9 anos)";
+      if (age <= 12) return "Cadetes Jovens (10-12 anos)";
+      if (age <= 15) return "Cadetes Mais Velhos (13-15 anos)";
+      if (age <= 18) return "Juniores (16-18 anos)";
+      if (age <= 40) return "Seniores (19-40 anos)";
+      return "Veteranos/Masters (41-55 anos)";
+    } else {
+      // Ring
+      if (age <= 16) return "Juniores Mais Jovens (15-16 anos)";
+      if (age <= 18) return "Juniores Mais Velhos (17-18 anos)";
+      return "Seniores (19-40 anos)";
+    }
+  }
 
   const wins = f.fights.filter(x => x.result === "V").length;
   const losses = f.fights.filter(x => x.result === "D").length;
@@ -1122,7 +1145,8 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
 
   async function saveProfile() {
     setSaving(true);
-    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, combat_photos: f.combat_photos });
+    const autoCategory = calcEscalao(f.birthdate, f.modality, f.sub_modality);
+    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: autoCategory || san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, combat_photos: f.combat_photos, birthdate: f.birthdate || "" });
     setSavedSnapshot(profileFields.reduce((o,k) => ({...o,[k]: f[k]}), {}));
     setSaving(false);
   }
@@ -1216,18 +1240,9 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       ),
       React.createElement(Card, null,
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-          // Equipa
-          React.createElement("div", { key: "team" }, React.createElement("label", { style: lbl }, "Equipa"),
-            isOwner ? React.createElement("input", { style: inp, value: f.team || "", onChange: e => upd("team", e.target.value) }) : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.team)
-          ),
-          // Género
-          React.createElement("div", { key: "gender" }, React.createElement("label", { style: lbl }, "Género"),
-            isOwner
-              ? React.createElement("select", { style: inp, value: f.gender || "", onChange: e => upd("gender", e.target.value) },
-                  React.createElement("option", { value: "" }, "Selecionar..."),
-                  React.createElement("option", { value: "Masculino" }, "Masculino"),
-                  React.createElement("option", { value: "Feminino" }, "Feminino"))
-              : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.gender || "—")
+          // Nome Completo
+          React.createElement("div", { key: "name", style: { gridColumn: "1 / -1" } }, React.createElement("label", { style: lbl }, "Nome Completo"),
+            isOwner ? React.createElement("input", { style: inp, value: f.name || "", onChange: e => upd("name", e.target.value) }) : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.name)
           ),
           // Modalidade
           React.createElement("div", { key: "modality" }, React.createElement("label", { style: lbl }, "Modalidade"),
@@ -1243,28 +1258,45 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
                   (MODALITIES[f.modality || "Kickboxing"] || MODALITIES["Kickboxing"]).map(s => React.createElement("option", { key: s }, s)))
               : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.sub_modality)
           ),
-          // Nível
-          React.createElement("div", { key: "level" }, React.createElement("label", { style: lbl }, "Nível"),
+          // Género
+          React.createElement("div", { key: "gender" }, React.createElement("label", { style: lbl }, "Género"),
+            isOwner
+              ? React.createElement("select", { style: inp, value: f.gender || "", onChange: e => upd("gender", e.target.value) },
+                  React.createElement("option", { value: "" }, "Selecionar..."),
+                  React.createElement("option", { value: "Masculino" }, "Masculino"),
+                  React.createElement("option", { value: "Feminino" }, "Feminino"))
+              : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.gender || "—")
+          ),
+          // Data de Nascimento
+          React.createElement("div", { key: "birthdate" }, React.createElement("label", { style: lbl }, "Data de Nascimento"),
+            isOwner
+              ? React.createElement("input", { type: "date", style: inp, value: f.birthdate || "", onChange: e => upd("birthdate", e.target.value) })
+              : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.birthdate || "—")
+          ),
+          // Escalão (calculado automaticamente)
+          React.createElement("div", { key: "category" }, React.createElement("label", { style: lbl }, "Escalão"),
+            React.createElement("div", { style: { fontSize: 13, color: f.birthdate ? T.GOLD : T.TEXT3, padding: "8px 0", fontStyle: f.birthdate ? "normal" : "italic" } },
+              f.birthdate ? calcEscalao(f.birthdate, f.modality, f.sub_modality) || "—" : "Preenche a data de nascimento"
+            )
+          ),
+          // Classe
+          React.createElement("div", { key: "level" }, React.createElement("label", { style: lbl }, "Classe"),
             isOwner
               ? React.createElement("select", { style: inp, value: f.level || "Amador", onChange: e => upd("level", e.target.value) },
                   LEVELS.map(l => React.createElement("option", { key: l }, l)))
               : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.level)
           ),
-          // Escalão
-          React.createElement("div", { key: "category" }, React.createElement("label", { style: lbl }, "Escalão"),
-            isOwner
-              ? React.createElement("select", { style: inp, value: f.category || "", onChange: e => upd("category", e.target.value) },
-                  React.createElement("option", { value: "" }, "Selecionar..."),
-                  getEscaloes(f.modality || "Kickboxing", f.sub_modality || "K1").map(e => React.createElement("option", { key: e }, e)))
-              : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.category)
-          ),
-          // Categoria de peso
-          React.createElement("div", { key: "weight", style: { gridColumn: "1 / -1" } }, React.createElement("label", { style: lbl }, "Categoria de Peso"),
+          // Categoria de Peso
+          React.createElement("div", { key: "weight", style: { gridColumn: "1 / -1" } }, React.createElement("label", { style: lbl }, "Categoria de Peso (kg)"),
             isOwner
               ? React.createElement("select", { style: inp, value: f.weight || "", onChange: e => upd("weight", e.target.value) },
                   React.createElement("option", { value: "" }, "Selecionar..."),
-                  getWeightCategories(f.sub_modality || "K1", f.category, f.gender, f.level || "Amador").map(w => React.createElement("option", { key: w }, w)))
+                  getWeightCategories(f.sub_modality || "K1", calcEscalao(f.birthdate, f.modality, f.sub_modality) || f.category, f.gender, f.level || "Amador").map(w => React.createElement("option", { key: w }, w)))
               : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.weight)
+          ),
+          // Equipa
+          React.createElement("div", { key: "team", style: { gridColumn: "1 / -1" } }, React.createElement("label", { style: lbl }, "Equipa"),
+            isOwner ? React.createElement("input", { style: inp, value: f.team || "", onChange: e => upd("team", e.target.value) }) : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.team)
           )
         ),
         isOwner && isDirty && React.createElement("button", { onClick: saveProfile, disabled: saving, style: { ...s.btnGold, opacity: saving ? 0.7 : 1 } }, saving ? "A guardar..." : "Guardar alterações")
