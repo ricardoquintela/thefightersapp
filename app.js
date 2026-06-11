@@ -682,7 +682,7 @@ function RegisterPage({ clubs }) {
       if (existing.some(x => x.email && x.email.toLowerCase() === f.email.toLowerCase().trim())) {
         setSaving(false); return setErr("Este e-mail já está registado.");
       }
-      await db.insert("fighters", { name: san(f.name, 100), weight: f.weight, category: autoEscalao, modality: f.modality, sub_modality: f.sub_modality, level: f.level, email: san(f.email, 100), team: san(selectedClub?.name || "", 100), club_id: f.club_id, gender: f.gender, birthdate: f.birthdate, id: `r${Date.now()}`, available: false, status: "pending", registration_date: new Date().toISOString() });
+      await db.insert("fighters", { name: san(f.name, 100), weight: f.weight, category: autoEscalao, modality: f.modality, sub_modality: f.sub_modality, level: f.level, email: san(f.email, 100), team: san(selectedClub?.name || "", 100), club_id: f.club_id, gender: f.gender, birthdate: f.birthdate, id: Date.now(), available: false, status: "pending", registration_date: new Date().toISOString() });
       setSaving(false); setDone(true);
     } catch(e) {
       console.error("Register error:", e);
@@ -694,7 +694,7 @@ function RegisterPage({ clubs }) {
     React.createElement("div", { style: { textAlign: "center", maxWidth: 400 } },
       React.createElement(Logo, { club: selectedClub }),
       React.createElement("div", { style: { marginTop: 24, padding: 24, background: T.BG2, borderRadius: 10, border: `1px solid ${T.GOLD_DIM}` } },
-        React.createElement("div", { style: { fontSize: 32, marginBottom: 12 } },),
+        React.createElement("div", { style: { fontSize: 32, marginBottom: 12 } }, "✅"),
         React.createElement("div", { style: { fontSize: 18, fontWeight: 700, color: T.GOLD, marginBottom: 8 } }, "Pedido enviado!"),
         React.createElement("div", { style: { fontSize: 14, color: T.TEXT2, marginBottom: 16 } }, "O teu pedido foi enviado ao administrador. Receberás as tuas credenciais após aprovação."),
         React.createElement("a", { href: "/", style: { fontSize: 13, color: T.GOLD_DIM, textDecoration: "none" } }, "← Ir para o login")
