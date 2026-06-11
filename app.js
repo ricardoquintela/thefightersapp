@@ -52,10 +52,91 @@ let T = buildTheme(null);
 
 // ─── CONSTANTES ───────────────────────────────────────────
 const MODALITIES = {
-  Kickboxing: ["K1", "Low Kick", "Full Contact", "Kick Light", "Light Contact"],
-  "Muay Thai": ["Muay Thai"],
+  "Kickboxing": ["Point Fighting", "Kick Light", "Light Contact", "Low Kick", "Full Contact", "K1"],
+  "Muay Thai": ["Muay Thai"]
 };
 const LEVELS = ["Amador", "Neo-Profissional", "Profissional"];
+
+const TATAMI_DISCIPLINES = ["Point Fighting", "Kick Light", "Light Contact"];
+const RING_DISCIPLINES = ["Low Kick", "Full Contact", "K1"];
+
+const ESCALOES_TATAMI = ["Crianças (7-9 anos)", "Cadetes Jovens (10-12 anos)", "Cadetes Mais Velhos (13-15 anos)", "Juniores (16-18 anos)", "Seniores (19-40 anos)", "Veteranos/Masters (41-55 anos)"];
+const ESCALOES_RING = ["Juniores Mais Jovens (15-16 anos)", "Juniores Mais Velhos (17-18 anos)", "Seniores (19-40 anos)"];
+
+const WEIGHT_CATEGORIES = {
+  "Point Fighting": {
+    "Crianças (7-9 anos)": { M: ["-18kg","-21kg","-24kg","-27kg","-30kg","-33kg","-36kg","+36kg"], F: ["-18kg","-21kg","-24kg","-27kg","-30kg","-33kg","-36kg","+36kg"] },
+    "Cadetes Jovens (10-12 anos)": { M: ["-28kg","-32kg","-37kg","-42kg","-47kg","+47kg"], F: ["-28kg","-32kg","-37kg","-42kg","-47kg","+47kg"] },
+    "Cadetes Mais Velhos (13-15 anos)": { M: ["-32kg","-37kg","-42kg","-47kg","-52kg","-57kg","-63kg","-69kg","+69kg"], F: ["-32kg","-37kg","-42kg","-46kg","-50kg","-55kg","-60kg","-65kg","+65kg"] },
+    "Juniores (16-18 anos)": { M: ["-57kg","-63kg","-69kg","-74kg","-79kg","-84kg","-89kg","-94kg","+94kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Seniores (19-40 anos)": { M: ["-57kg","-63kg","-69kg","-74kg","-79kg","-84kg","-89kg","-94kg","+94kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Veteranos/Masters (41-55 anos)": { M: ["-63kg","-74kg","-84kg","-94kg","+94kg"], F: ["-55kg","-65kg","+65kg"] }
+  },
+  "Kick Light": {
+    "Cadetes Mais Velhos (13-15 anos)": { M: ["-32kg","-37kg","-42kg","-47kg","-52kg","-57kg","-63kg","-69kg","+69kg"], F: ["-32kg","-37kg","-42kg","-46kg","-50kg","-55kg","-60kg","-65kg","+65kg"] },
+    "Juniores (16-18 anos)": { M: ["-57kg","-63kg","-69kg","-74kg","-79kg","-84kg","-89kg","-94kg","+94kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Seniores (19-40 anos)": { M: ["-57kg","-63kg","-69kg","-74kg","-79kg","-84kg","-89kg","-94kg","+94kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Veteranos/Masters (41-55 anos)": { M: ["-63kg","-74kg","-84kg","-94kg","+94kg"], F: ["-55kg","-65kg","+65kg"] }
+  },
+  "Light Contact": {
+    "Cadetes Mais Velhos (13-15 anos)": { M: ["-32kg","-37kg","-42kg","-47kg","-52kg","-57kg","-63kg","-69kg","+69kg"], F: ["-32kg","-37kg","-42kg","-46kg","-50kg","-55kg","-60kg","-65kg","+65kg"] },
+    "Juniores (16-18 anos)": { M: ["-57kg","-63kg","-69kg","-74kg","-79kg","-84kg","-89kg","-94kg","+94kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Seniores (19-40 anos)": { M: ["-57kg","-63kg","-69kg","-74kg","-79kg","-84kg","-89kg","-94kg","+94kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Veteranos/Masters (41-55 anos)": { M: ["-63kg","-74kg","-84kg","-94kg","+94kg"], F: ["-55kg","-65kg","+65kg"] }
+  },
+  "Low Kick": {
+    "Juniores Mais Jovens (15-16 anos)": { M: ["-57kg","-63kg","-69kg","-74kg","-79kg","-84kg","+84kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Juniores Mais Velhos (17-18 anos)": { M: ["-57kg","-63kg","-69kg","-74kg","-79kg","-84kg","-89kg","-94kg","+94kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Seniores (19-40 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-48kg","-52kg","-56kg","-60kg","-65kg","-70kg","+70kg"] }
+  },
+  "Full Contact": {
+    "Juniores Mais Jovens (15-16 anos)": { M: ["-57kg","-63kg","-69kg","-74kg","-79kg","-84kg","+84kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Juniores Mais Velhos (17-18 anos)": { M: ["-57kg","-63kg","-69kg","-74kg","-79kg","-84kg","-89kg","-94kg","+94kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Seniores (19-40 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-48kg","-52kg","-56kg","-60kg","-65kg","-70kg","+70kg"] }
+  },
+  "K1": {
+    "Juniores Mais Jovens (15-16 anos)": { M: ["-57kg","-63kg","-69kg","-74kg","-79kg","-84kg","+84kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Juniores Mais Velhos (17-18 anos)": { M: ["-57kg","-63kg","-69kg","-74kg","-79kg","-84kg","-89kg","-94kg","+94kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Seniores (19-40 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-48kg","-52kg","-56kg","-60kg","-65kg","-70kg","+70kg"] }
+  },
+  "Muay Thai": {
+    "Crianças (7-9 anos)": { M: ["-18kg","-21kg","-24kg","-27kg","-30kg","+30kg"], F: ["-18kg","-21kg","-24kg","-27kg","-30kg","+30kg"] },
+    "Cadetes Jovens (10-12 anos)": { M: ["-27kg","-30kg","-33kg","-36kg","-39kg","-42kg","-45kg","-48kg","+48kg"], F: ["-27kg","-30kg","-33kg","-36kg","-39kg","-42kg","-45kg","-48kg","+48kg"] },
+    "Cadetes Mais Velhos (13-15 anos)": { M: ["-39kg","-42kg","-45kg","-48kg","-51kg","-54kg","-57kg","-60kg","-63kg","-66kg","-69kg","+69kg"], F: ["-39kg","-42kg","-45kg","-48kg","-51kg","-54kg","-57kg","-60kg","-63kg","+63kg"] },
+    "Juniores (16-18 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-48kg","-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","+71kg"] },
+    "Seniores (19-40 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-48kg","-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","+71kg"] },
+    "Veteranos/Masters (41-55 anos)": { M: ["-60kg","-67kg","-75kg","-86kg","+86kg"], F: ["-54kg","-60kg","-67kg","+67kg"] }
+  }
+};
+
+function getEscaloes(modality, subModality) {
+  if (modality === "Muay Thai") return ESCALOES_TATAMI;
+  if (RING_DISCIPLINES.includes(subModality)) return ESCALOES_RING;
+  return ESCALOES_TATAMI;
+}
+
+const WEIGHT_CATEGORIES_PRO = {
+  // WAKO Pro — mesmas categorias para Full Contact, Low Kick, K1
+  ring: {
+    M: ["-52.7kg (Atom)","-54.5kg (Fly)","-56.4kg (Bantam)","-58.2kg (Feather)","-60kg (Light)","-62.2kg (Super Light)","-64.5kg (Light Welter)","-66.8kg (Welter)","-69.1kg (Super Welter)","-71.8kg (Light Middle)","-75kg (Middle)","-78.1kg (Super Middle)","-81.4kg (Light Heavy)","-85.1kg (Light Cruiser)","-88.6kg (Heavy)","-94.1kg (Cruiser Heavy)","+94.1kg (Super Heavy)"],
+    F: ["-48kg (Light Fly)","-50kg (Fly)","-52kg (Bantam)","-55kg (Feather)","-57.5kg (Super Feather)","-60kg (Light)","-62kg (Welter)","-65kg (Middle)","-68kg (Light Heavy)","-71kg (Heavy)","-74kg (Cruiser)","+74kg (Super Heavy)"]
+  }
+};
+
+function getWeightCategories(subModality, escalao, gender, level) {
+  const g = gender === "Feminino" ? "F" : "M";
+  // Profissional → WAKO Pro (só ring)
+  if (level === "Profissional") {
+    if (RING_DISCIPLINES.includes(subModality)) return WEIGHT_CATEGORIES_PRO.ring[g];
+    // Tatami pro usa as mesmas da WAKO amador
+  }
+  // Amador e Neo-Pro → WAKO 2025
+  const disc = WEIGHT_CATEGORIES[subModality];
+  if (!disc || !escalao) return [];
+  const esc = disc[escalao];
+  if (!esc) return [];
+  return esc[g] || [];
+}
 const METHODS = ["KO/TKO", "Decisão Unânime", "Decisão Dividida", "Submissão", "Desqualificação", "Desistência"];
 const EMPTY_FIGHT = { opponent: "", opponent_team: "", result: "V", method: "KO/TKO", event: "", date: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", weight: "" };
 const EMPTY_EVENT = { name: "", local: "", city: "", country: "Portugal", organization: "", date: "" };
@@ -1135,19 +1216,55 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       ),
       React.createElement(Card, null,
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-          [["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"]].map(([l, k]) =>
-            React.createElement("div", { key: k }, React.createElement("label", { style: lbl }, l),
-              isOwner ? React.createElement("input", { style: inp, value: f[k] || "", onChange: e => upd(k, e.target.value) }) : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f[k])
-            )
+          // Equipa
+          React.createElement("div", { key: "team" }, React.createElement("label", { style: lbl }, "Equipa"),
+            isOwner ? React.createElement("input", { style: inp, value: f.team || "", onChange: e => upd("team", e.target.value) }) : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.team)
           ),
+          // Género
           React.createElement("div", { key: "gender" }, React.createElement("label", { style: lbl }, "Género"),
             isOwner
-              ? React.createElement("select", { style: inp, value: f.gender || "", onChange: e => upd("gender", e.target.value) }, React.createElement("option", { value: "" }, "Selecionar..."), React.createElement("option", { value: "Masculino" }, "Masculino"), React.createElement("option", { value: "Feminino" }, "Feminino"))
+              ? React.createElement("select", { style: inp, value: f.gender || "", onChange: e => upd("gender", e.target.value) },
+                  React.createElement("option", { value: "" }, "Selecionar..."),
+                  React.createElement("option", { value: "Masculino" }, "Masculino"),
+                  React.createElement("option", { value: "Feminino" }, "Feminino"))
               : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.gender || "—")
           ),
-          isOwner && React.createElement(React.Fragment, null,
-            React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"), React.createElement("select", { style: inp, value: f.modality || "Kickboxing", onChange: e => upd("modality", e.target.value) }, Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))),
-            React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: f.level || "Amador", onChange: e => upd("level", e.target.value) }, LEVELS.map(l => React.createElement("option", { key: l }, l))))
+          // Modalidade
+          React.createElement("div", { key: "modality" }, React.createElement("label", { style: lbl }, "Modalidade"),
+            isOwner
+              ? React.createElement("select", { style: inp, value: f.modality || "Kickboxing", onChange: e => upd("modality", e.target.value) },
+                  Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))
+              : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.modality)
+          ),
+          // Disciplina
+          React.createElement("div", { key: "sub_modality" }, React.createElement("label", { style: lbl }, "Disciplina"),
+            isOwner
+              ? React.createElement("select", { style: inp, value: f.sub_modality || "", onChange: e => upd("sub_modality", e.target.value) },
+                  (MODALITIES[f.modality] || MODALITIES["Kickboxing"]).map(s => React.createElement("option", { key: s }, s)))
+              : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.sub_modality)
+          ),
+          // Nível
+          React.createElement("div", { key: "level" }, React.createElement("label", { style: lbl }, "Nível"),
+            isOwner
+              ? React.createElement("select", { style: inp, value: f.level || "Amador", onChange: e => upd("level", e.target.value) },
+                  LEVELS.map(l => React.createElement("option", { key: l }, l)))
+              : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.level)
+          ),
+          // Escalão
+          React.createElement("div", { key: "category" }, React.createElement("label", { style: lbl }, "Escalão"),
+            isOwner
+              ? React.createElement("select", { style: inp, value: f.category || "", onChange: e => upd("category", e.target.value) },
+                  React.createElement("option", { value: "" }, "Selecionar..."),
+                  getEscaloes(f.modality, f.sub_modality).map(e => React.createElement("option", { key: e }, e)))
+              : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.category)
+          ),
+          // Categoria de peso
+          React.createElement("div", { key: "weight", style: { gridColumn: "1 / -1" } }, React.createElement("label", { style: lbl }, "Categoria de Peso"),
+            isOwner
+              ? React.createElement("select", { style: inp, value: f.weight || "", onChange: e => upd("weight", e.target.value) },
+                  React.createElement("option", { value: "" }, "Selecionar..."),
+                  getWeightCategories(f.sub_modality, f.category, f.gender, f.level).map(w => React.createElement("option", { key: w }, w)))
+              : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.weight)
           )
         ),
         isOwner && isDirty && React.createElement("button", { onClick: saveProfile, disabled: saving, style: { ...s.btnGold, opacity: saving ? 0.7 : 1 } }, saving ? "A guardar..." : "Guardar alterações")
