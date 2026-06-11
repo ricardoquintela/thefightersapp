@@ -486,19 +486,74 @@ function Login({ onLogin, clubs }) {
     )
   );
 
-  return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center" } },
-    React.createElement("div", { style: { width: 340, padding: 16 } },
-      React.createElement("div", { style: { marginBottom: 28 } }, React.createElement(Logo, { club: null, large: true })),
-      React.createElement(Card, { gold: true },
-        React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Username"), React.createElement("input", { style: inp, value: username, onChange: e => setUsername(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "username", disabled: blocked })),
-        React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("label", { style: lbl }, "Password"), React.createElement("input", { type: "password", style: inp, value: pw, onChange: e => setPw(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(), placeholder: "••••••••", disabled: blocked })),
-        err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 10 } }, err),
-        React.createElement("button", { onClick: doLogin, disabled: loading || blocked, style: { ...s.btnGold, width: "100%", marginTop: 0, padding: "11px", opacity: blocked ? 0.4 : loading ? 0.7 : 1 } }, blocked ? "Bloqueado 30s..." : loading ? "A entrar..." : "Entrar"),
-        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginTop: 16 } },
-          React.createElement("button", { onClick: () => { setShowForgot(true); setErr(""); }, style: { fontSize: 12, color: T.TEXT3, background: "none", border: "none", cursor: "pointer" } }, "Esqueci a password"),
-          React.createElement("a", { href: "?register=true", style: { fontSize: 12, color: T.GOLD_DIM, textDecoration: "none" } }, "Quero registar-me →")
+  return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px 32px" } },
+
+    // ── LOGO TFA ──
+    React.createElement("img", {
+      src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/tfa_logo.jpeg",
+      alt: "The Fighters App",
+      style: { height: 90, width: "auto", display: "block", margin: "0 auto 32px", opacity: 0.93 },
+      onError: e => { e.target.style.display = "none"; }
+    }),
+
+    // ── TAGLINE ──
+    React.createElement("p", { style: { fontSize: 13, color: "#555", textAlign: "center", lineHeight: 1.8, margin: "0 0 32px", maxWidth: 280 } },
+      "A plataforma digital dos atletas de desportos de combate. Regista a tua carreira. Acompanha a tua evolução."
+    ),
+
+    // ── FEATURES ──
+    React.createElement("div", { style: { marginBottom: 40, textAlign: "center" } },
+      React.createElement("p", { style: { fontSize: 10, color: "#2a2a2a", letterSpacing: 2, textTransform: "uppercase", margin: "0 0 10px" } }, "O que podes fazer"),
+      React.createElement("span", { style: { fontSize: 12, color: "#3a3a3a", display: "block", lineHeight: 2 } }, "Histórico de combates · Títulos · Próximas lutas"),
+      React.createElement("span", { style: { fontSize: 12, color: "#3a3a3a", display: "block", lineHeight: 2 } }, "Estatísticas · Calendário · Gestão de equipa")
+    ),
+
+    // ── INPUTS SUBTIS ──
+    React.createElement("div", { style: { width: "100%", maxWidth: 280, marginBottom: 4 } },
+      React.createElement("input", {
+        style: { width: "100%", background: "transparent", border: "none", borderBottom: "1px solid #1e1e1e", padding: "10px 0", color: "#888", fontSize: 13, boxSizing: "border-box", outline: "none", letterSpacing: 1 },
+        value: username, onChange: e => setUsername(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(),
+        placeholder: "USERNAME", disabled: blocked
+      })
+    ),
+    React.createElement("div", { style: { width: "100%", maxWidth: 280, marginBottom: 4 } },
+      React.createElement("input", {
+        type: "password",
+        style: { width: "100%", background: "transparent", border: "none", borderBottom: "1px solid #1e1e1e", padding: "10px 0", color: "#888", fontSize: 13, boxSizing: "border-box", outline: "none", letterSpacing: 1 },
+        value: pw, onChange: e => setPw(e.target.value), onKeyDown: e => e.key === "Enter" && doLogin(),
+        placeholder: "PASSWORD", disabled: blocked
+      })
+    ),
+
+    err && React.createElement("div", { style: { fontSize: 12, color: "#e05555", margin: "8px 0", textAlign: "center", maxWidth: 280 } }, err),
+
+    // ── BOTÃO ──
+    React.createElement("button", {
+      onClick: doLogin, disabled: loading || blocked,
+      style: { width: "100%", maxWidth: 280, background: "transparent", border: "1px solid #3a2e10", borderRadius: 4, padding: 11, color: T.GOLD, fontSize: 12, letterSpacing: 3, textTransform: "uppercase", cursor: "pointer", margin: "20px 0 14px", opacity: blocked ? 0.4 : loading ? 0.7 : 1 }
+    }, blocked ? "BLOQUEADO..." : loading ? "A ENTRAR..." : "ENTRAR"),
+
+    // ── LINKS ──
+    React.createElement("div", { style: { display: "flex", justifyContent: "space-between", width: "100%", maxWidth: 280, marginBottom: 52 } },
+      React.createElement("button", { onClick: () => { setShowForgot(true); setErr(""); }, style: { fontSize: 11, color: "#2a2a2a", background: "none", border: "none", cursor: "pointer", letterSpacing: 0.5 } }, "Esqueci a password"),
+      React.createElement("a", { href: "?register=true", style: { fontSize: 11, color: "#3a2e10", textDecoration: "none" } }, "Registar →")
+    ),
+
+    // ── LOGOS CLUBES ──
+    clubs && clubs.filter(c => c.active).length > 0 && React.createElement("div", { style: { textAlign: "center" } },
+      React.createElement("div", { style: { fontSize: 9, color: "#1e1e1e", letterSpacing: 3, textTransform: "uppercase", marginBottom: 14 } }, "Clubes na plataforma"),
+      React.createElement("div", { style: { display: "flex", gap: 18, justifyContent: "center", alignItems: "center", opacity: 0.4 } },
+        clubs.filter(c => c.active).map(c =>
+          c.logo_url
+            ? React.createElement("img", { key: c.id, src: c.logo_url, alt: c.name, title: c.name, style: { width: 28, height: 28, objectFit: "contain" } })
+            : React.createElement("div", { key: c.id, title: c.name, style: { width: 28, height: 28, borderRadius: "50%", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, color: "#555", fontWeight: 700 } }, c.short_name || c.name.slice(0,2))
         )
       )
+    ),
+
+    // ── FOOTER ──
+    React.createElement("div", { style: { marginTop: 36, fontSize: 9, color: "#1e1e1e", textAlign: "center", letterSpacing: 1 } },
+      "Designed & developed by Ricardo Quintela · © 2026"
     )
   );
 }
