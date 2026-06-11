@@ -90,7 +90,7 @@ const WEIGHT_CATEGORIES = {
     "Seniores (19-40 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-48kg","-52kg","-56kg","-60kg","-65kg","-70kg","+70kg"] }
   },
   "Full Contact": {
-   "Juniores Mais Jovens (15-16 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
+    "Juniores Mais Jovens (15-16 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
     "Juniores Mais Velhos (17-18 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
     "Seniores (19-40 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-48kg","-52kg","-56kg","-60kg","-65kg","-70kg","+70kg"] }
   },
@@ -262,14 +262,18 @@ function AccountModal({ user, onClose }) {
     setErr(""); setMsg(null);
     if (!currentPw || !newPw || !confirmPw) { setErr("Preenche todos os campos."); return; }
     if (newPw !== confirmPw) { setErr("As passwords não coincidem."); return; }
-    if (newPw.length < 6) { setErr("A nova password deve ter pelo menos 6 caracteres."); return; }
+    if (newPw.length < 6) { setErr("Mínimo 6 caracteres."); return; }
     setSaving(true);
-    const users = await db.get("users", { username: user.username });
-    if (!users[0] || users[0].password !== currentPw) { setErr("Password actual incorrecta."); setSaving(false); return; }
-    await db.update("users", users[0].id, { password: newPw });
-    setMsg("Password alterada com sucesso!");
-    setCurrentPw(""); setNewPw(""); setConfirmPw("");
+    const token = localStorage.getItem("tfa_token");
+    const r = await fetch("/api/auth?action=change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, currentPassword: currentPw, newPassword: newPw })
+    });
+    const data = await r.json();
     setSaving(false);
+    if (r.ok) { setMsg("Password alterada com sucesso!"); setCurrentPw(""); setNewPw(""); setConfirmPw(""); }
+    else { setErr(data.error || "Erro ao alterar password."); }
   }
 
   return React.createElement("div", { style: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }, onClick: onClose },
@@ -511,7 +515,7 @@ function Login({ onLogin, clubs }) {
     }
     setLoading(true);
     try {
-      const r = await fetch("/api/login", {
+      const r = await fetch("/api/auth?action=login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: username.trim().toLowerCase(), password: pw })
@@ -520,6 +524,7 @@ function Login({ onLogin, clubs }) {
       setLoading(false);
       if (r.ok && data.user) {
         setAttempts(0);
+        localStorage.setItem("tfa_token", data.token);
         const userClub = (clubs || []).find(c => c.id === data.user.club_id) || null;
         T = buildTheme(userClub);
         onLogin(data.user, userClub);
@@ -537,18 +542,15 @@ function Login({ onLogin, clubs }) {
     if (!forgotUsername.trim()) return;
     setForgotLoading(true); setErr("");
     try {
-      const newPw = generatePassword();
-      const r = await fetch("/api/reset-password", {
+      const r = await fetch("/api/auth?action=reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: forgotUsername.trim().toLowerCase(), newPassword: newPw })
+        body: JSON.stringify({ username: forgotUsername.trim().toLowerCase() })
       });
       const data = await r.json();
-      if (r.ok) {
-        setForgotLoading(false); setNewPassword(true);
-      } else {
-        setForgotLoading(false); setErr(data.error || "Erro ao enviar. Tenta novamente.");
-      }
+      setForgotLoading(false);
+      if (r.ok) { setNewPassword(true); }
+      else { setErr(data.error || "Erro ao enviar. Tenta novamente."); }
     } catch(e) {
       setForgotLoading(false); setErr("Erro de ligação. Tenta novamente.");
     }
@@ -560,7 +562,7 @@ function Login({ onLogin, clubs }) {
       React.createElement(Card, { gold: true },
         newPassword
           ? React.createElement("div", null,
-              React.createElement("div", { style: { fontSize: 32, textAlign: "center", marginBottom: 12 } },),
+              React.createElement("div", { style: { fontSize: 32, textAlign: "center", marginBottom: 12 } }, "✅"),
               React.createElement("div", { style: { fontSize: 16, color: T.GOLD, fontWeight: 700, marginBottom: 8, textAlign: "center" } }, "E-mail enviado!"),
               React.createElement("div", { style: { fontSize: 13, color: T.TEXT2, marginBottom: 16, textAlign: "center" } }, "Verifica a tua caixa de entrada. A nova password foi enviada para o teu e-mail."),
               React.createElement("button", { onClick: () => { setShowForgot(false); setNewPassword(null); setForgotUsername(""); setErr(""); }, style: { ...s.btnGold, width: "100%", marginTop: 0 } }, "Ir para o login")
@@ -706,7 +708,6 @@ function RegisterPage({ clubs }) {
     React.createElement("div", { style: { textAlign: "center", maxWidth: 400 } },
       React.createElement(Logo, { club: selectedClub }),
       React.createElement("div", { style: { marginTop: 24, padding: 24, background: T.BG2, borderRadius: 10, border: `1px solid ${T.GOLD_DIM}` } },
-        React.createElement("div", { style: { fontSize: 32, marginBottom: 12 } }, "✅"),
         React.createElement("div", { style: { fontSize: 18, fontWeight: 700, color: T.GOLD, marginBottom: 8 } }, "Pedido enviado!"),
         React.createElement("div", { style: { fontSize: 14, color: T.TEXT2, marginBottom: 16 } }, "O teu pedido foi enviado ao administrador. Receberás as tuas credenciais após aprovação."),
         React.createElement("a", { href: "/", style: { fontSize: 13, color: T.GOLD_DIM, textDecoration: "none" } }, "← Ir para o login")
@@ -1825,31 +1826,50 @@ function App() {
   const [allFighters, setAllFighters] = useState([]);
   const [allFights, setAllFights] = useState([]);
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState("fighters");
   const [pendingCount, setPendingCount] = useState(0);
 
   const isRegister = window.location.search.includes("register=true");
 
-  // Carregar clubes sempre (necessário para register e login)
+  // Carregar clubes sempre
   useEffect(() => { db.get("clubs").then(c => setClubs(c.filter(x => x.active))); }, []);
+
+  // Restaurar sessão se houver token guardado
+  useEffect(() => {
+    if (isRegister) { setLoading(false); return; }
+    const token = localStorage.getItem("tfa_token");
+    if (!token) { setLoading(false); return; }
+    fetch("/api/auth?action=verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token })
+    }).then(r => r.json()).then(data => {
+      if (data.user) {
+        db.get("clubs").then(allClubs => {
+          const userClub = allClubs.find(c => c.id === data.user.club_id) || null;
+          T = buildTheme(userClub);
+          setUser(data.user);
+          setClub(userClub);
+        });
+      }
+      setLoading(false);
+    }).catch(() => { localStorage.removeItem("tfa_token"); setLoading(false); });
+  }, []);
 
   if (isRegister) return React.createElement(RegisterPage, { clubs });
 
   useEffect(() => {
     if (!user) return;
     async function load() {
-      setLoading(true);
       const [f, u, fi] = await Promise.all([db.get("fighters"), db.get("users"), db.get("fights")]);
       const approved = f.filter(x => x.status !== "pending" && x.status !== "rejected");
       const pending = f.filter(x => x.status === "pending");
       setAllFighters(approved);
       setAllFights(fi);
-      // Admin vê só o seu clube; superadmin vê tudo
       setFighters(user.role === "superadmin" ? approved : approved.filter(x => x.club_id === user.club_id));
       setPendingCount(user.role === "superadmin" ? pending.length : pending.filter(x => x.club_id === user.club_id).length);
       setUsers(u);
-      setLoading(false);
     }
     load();
   }, [user]);
@@ -1862,16 +1882,17 @@ function App() {
   }
 
   function handleLogout() {
+    localStorage.removeItem("tfa_token");
     setUser(null); setClub(null);
     T = buildTheme(null);
     setPage("fighters");
   }
 
-  if (!user) return React.createElement(Login, { onLogin: handleLogin, clubs });
-
-  if (loading) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center" } },
-    React.createElement("div", { style: { color: T.GOLD, fontSize: 14 } }, "A carregar dados...")
+  if (loading) return React.createElement("div", { style: { minHeight: "100vh", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center" } },
+    React.createElement("img", { src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/tfa_logo.jpeg", style: { height: 60, opacity: 0.7 } })
   );
+
+  if (!user) return React.createElement(Login, { onLogin: handleLogin, clubs });
 
   if (page === "calendar") return React.createElement(CalendarPage, { onLogout: handleLogout, user, setPage, pendingCount, club });
 
@@ -1888,81 +1909,3 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(React.createElement(App));
-
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-  const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ error: "Missing fields" });
-
-  const SUPABASE_URL = "https://iwjpunazbezxqwftcned.supabase.co";
-  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
-
-  // Buscar utilizador pelo username
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username.toLowerCase().trim())}&select=*`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-  });
-  const users = await r.json();
-
-  if (!users || users.length === 0) return res.status(401).json({ error: "Username ou password incorrectos." });
-
-  const user = users[0];
-  if (user.password !== password) return res.status(401).json({ error: "Username ou password incorrectos." });
-
-  // Devolver dados sem a password
-  const { password: _, ...safeUser } = user;
-  res.status(200).json({ user: safeUser });
-}
-
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-  const { username, newPassword, email } = req.body;
-  if (!username || !newPassword) return res.status(400).json({ error: "Missing fields" });
-
-  const SUPABASE_URL = "https://iwjpunazbezxqwftcned.supabase.co";
-  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
-  const RESEND_API_KEY = process.env.RESEND_API_KEY;
-
-  // Buscar utilizador
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username.toLowerCase().trim())}&select=*`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-  });
-  const users = await r.json();
-  if (!users || users.length === 0) return res.status(404).json({ error: "Username não encontrado." });
-
-  const user = users[0];
-  if (!user.email) return res.status(400).json({ error: "Sem e-mail associado." });
-
-  // Actualizar password
-  await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
-    method: "PATCH",
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ password: newPassword })
-  });
-
-  // Enviar email
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "The Fighters App <onboarding@resend.dev>",
-      to: user.email,
-      subject: "A tua nova password — The Fighters App",
-      html: `<div style="background:#0a0a0a;padding:32px;font-family:Arial,sans-serif;max-width:480px;margin:0 auto;border-radius:10px;">
-        <p style="color:#aaa;font-size:11px;letter-spacing:4px;text-transform:uppercase;text-align:center">The Fighters App</p>
-        <div style="width:40px;height:2px;background:#C9A84C;margin:8px auto 24px"></div>
-        <h2 style="color:#C9A84C;margin:0 0 8px">Nova password gerada</h2>
-        <div style="background:#141414;border:1px solid #C9A84C44;border-radius:8px;padding:16px;margin:16px 0">
-          <p style="color:#555;font-size:11px;text-transform:uppercase;margin:0 0 4px">Username</p>
-          <p style="color:#f0f0f0;font-size:16px;font-weight:700;margin:0 0 16px">${user.username}</p>
-          <p style="color:#555;font-size:11px;text-transform:uppercase;margin:0 0 4px">Nova Password</p>
-          <p style="color:#C9A84C;font-size:22px;font-weight:700;letter-spacing:3px;margin:0">${newPassword}</p>
-        </div>
-        <a href="https://thefightersapp.vercel.app" style="display:block;text-align:center;background:#C9A84C;color:#000;padding:12px;border-radius:6px;text-decoration:none;font-weight:700">Entrar na App</a>
-      </div>`
-    })
-  });
-
-  res.status(200).json({ success: true });
-}
