@@ -93,7 +93,7 @@ const WEIGHT_CATEGORIES = {
    "Juniores Mais Jovens (15-16 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
     "Juniores Mais Velhos (17-18 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
     "Seniores (19-40 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-48kg","-52kg","-56kg","-60kg","-65kg","-70kg","+70kg"] }
-
+  },
   "K1": {
     "Juniores Mais Jovens (15-16 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
     "Juniores Mais Velhos (17-18 anos)": { M: ["-51kg","-54kg","-57kg","-60kg","-63.5kg","-67kg","-71kg","-75kg","-81kg","-86kg","-91kg","+91kg"], F: ["-50kg","-55kg","-60kg","-65kg","-70kg","+70kg"] },
