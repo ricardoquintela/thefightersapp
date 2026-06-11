@@ -1239,8 +1239,8 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
           // Disciplina
           React.createElement("div", { key: "sub_modality" }, React.createElement("label", { style: lbl }, "Disciplina"),
             isOwner
-              ? React.createElement("select", { style: inp, value: f.sub_modality || "", onChange: e => upd("sub_modality", e.target.value) },
-                  (MODALITIES[f.modality] || MODALITIES["Kickboxing"]).map(s => React.createElement("option", { key: s }, s)))
+              ? React.createElement("select", { style: inp, value: f.sub_modality || "K1", onChange: e => upd("sub_modality", e.target.value) },
+                  (MODALITIES[f.modality || "Kickboxing"] || MODALITIES["Kickboxing"]).map(s => React.createElement("option", { key: s }, s)))
               : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.sub_modality)
           ),
           // Nível
@@ -1255,7 +1255,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
             isOwner
               ? React.createElement("select", { style: inp, value: f.category || "", onChange: e => upd("category", e.target.value) },
                   React.createElement("option", { value: "" }, "Selecionar..."),
-                  getEscaloes(f.modality, f.sub_modality).map(e => React.createElement("option", { key: e }, e)))
+                  getEscaloes(f.modality || "Kickboxing", f.sub_modality || "K1").map(e => React.createElement("option", { key: e }, e)))
               : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.category)
           ),
           // Categoria de peso
@@ -1263,7 +1263,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
             isOwner
               ? React.createElement("select", { style: inp, value: f.weight || "", onChange: e => upd("weight", e.target.value) },
                   React.createElement("option", { value: "" }, "Selecionar..."),
-                  getWeightCategories(f.sub_modality, f.category, f.gender, f.level).map(w => React.createElement("option", { key: w }, w)))
+                  getWeightCategories(f.sub_modality || "K1", f.category, f.gender, f.level || "Amador").map(w => React.createElement("option", { key: w }, w)))
               : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.weight)
           )
         ),
