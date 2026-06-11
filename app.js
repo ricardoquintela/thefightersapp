@@ -574,17 +574,25 @@ function RegisterPage({ clubs }) {
     if (!f.email.includes("@")) return setErr("E-mail válido obrigatório.");
     if (!f.club_id) return setErr("Selecciona o teu clube.");
     setSaving(true);
-    const existing = await db.get("fighters", { email: san(f.email, 100) });
-    if (existing.length > 0) { setSaving(false); return setErr("Este e-mail já está registado."); }
-    await db.insert("fighters", { name: san(f.name, 100), weight: Number(f.weight) || 0, category: san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, contact: san(f.contact, 50), email: san(f.email, 100), team: san(f.team || selectedClub?.name || "", 100), club_id: f.club_id, gender: f.gender || "", id: Date.now(), available: false, status: "pending", registration_date: new Date().toISOString() });
-    setSaving(false); setDone(true);
+    try {
+      const existing = await db.get("fighters");
+      if (existing.some(x => x.email && x.email.toLowerCase() === f.email.toLowerCase().trim())) {
+        setSaving(false); return setErr("Este e-mail já está registado.");
+      }
+      const result = await db.insert("fighters", { name: san(f.name, 100), weight: Number(f.weight) || 0, category: san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, contact: san(f.contact, 50), email: san(f.email, 100), team: san(f.team || selectedClub?.name || "", 100), club_id: f.club_id, gender: f.gender || "", id: `r${Date.now()}`, available: false, status: "pending", registration_date: new Date().toISOString() });
+      console.log("Register result:", result);
+      setSaving(false); setDone(true);
+    } catch(e) {
+      console.error("Register error:", e);
+      setSaving(false); setErr("Erro ao enviar pedido. Tenta novamente.");
+    }
   }
 
   if (done) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
     React.createElement("div", { style: { textAlign: "center", maxWidth: 400 } },
       React.createElement(Logo, { club: selectedClub }),
       React.createElement("div", { style: { marginTop: 24, padding: 24, background: T.BG2, borderRadius: 10, border: `1px solid ${T.GOLD_DIM}` } },
-        React.createElement("div", { style: { fontSize: 32, marginBottom: 12 } },),
+        React.createElement("div", { style: { fontSize: 32, marginBottom: 12 } }, "✅"),
         React.createElement("div", { style: { fontSize: 18, fontWeight: 700, color: T.GOLD, marginBottom: 8 } }, "Pedido enviado!"),
         React.createElement("div", { style: { fontSize: 14, color: T.TEXT2, marginBottom: 16 } }, "O teu pedido foi enviado ao administrador. Receberás as tuas credenciais após aprovação."),
         React.createElement("a", { href: "/", style: { fontSize: 13, color: T.GOLD_DIM, textDecoration: "none" } }, "← Ir para o login")
@@ -606,7 +614,7 @@ function RegisterPage({ clubs }) {
           )
         ),
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-          [["Nome completo", "name"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["TELEMOVEL", "contact"]].map(([l, k]) =>
+          [["Nome completo", "name"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
             React.createElement("div", { key: k }, React.createElement("label", { style: lbl }, l), React.createElement("input", { style: inp, value: f[k], onChange: e => upd(k, e.target.value) }))
           ),
           React.createElement("div", { style: { gridColumn: "1 / -1" } },
@@ -1127,7 +1135,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       ),
       React.createElement(Card, null,
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-          [["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["TELEMOVEL", "contact"]].map(([l, k]) =>
+          [["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
             React.createElement("div", { key: k }, React.createElement("label", { style: lbl }, l),
               isOwner ? React.createElement("input", { style: inp, value: f[k] || "", onChange: e => upd(k, e.target.value) }) : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f[k])
             )
@@ -1462,7 +1470,7 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames, clu
               (clubs || []).filter(c => c.active).map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))
             )
           ),
-          [["Nome completo", "name"], ["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["TELEMOVEL", "contact"]].map(([l, k]) =>
+          [["Nome completo", "name"], ["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
             React.createElement("div", { key: k }, React.createElement("label", { style: lbl }, l), React.createElement("input", { style: inp, value: f[k], onChange: e => upd(k, e.target.value) }))
           ),
           React.createElement("div", { style: { gridColumn: "1 / -1" } },
