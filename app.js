@@ -606,7 +606,7 @@ function RegisterPage({ clubs }) {
           )
         ),
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-          [["Nome completo", "name"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
+          [["Nome completo", "name"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["TELEMOVEL", "contact"]].map(([l, k]) =>
             React.createElement("div", { key: k }, React.createElement("label", { style: lbl }, l), React.createElement("input", { style: inp, value: f[k], onChange: e => upd(k, e.target.value) }))
           ),
           React.createElement("div", { style: { gridColumn: "1 / -1" } },
@@ -1127,7 +1127,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       ),
       React.createElement(Card, null,
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-          [["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
+          [["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["TELEMOVEL", "contact"]].map(([l, k]) =>
             React.createElement("div", { key: k }, React.createElement("label", { style: lbl }, l),
               isOwner ? React.createElement("input", { style: inp, value: f[k] || "", onChange: e => upd(k, e.target.value) }) : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f[k])
             )
@@ -1462,7 +1462,7 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames, clu
               (clubs || []).filter(c => c.active).map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))
             )
           ),
-          [["Nome completo", "name"], ["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
+          [["Nome completo", "name"], ["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["TELEMOVEL", "contact"]].map(([l, k]) =>
             React.createElement("div", { key: k }, React.createElement("label", { style: lbl }, l), React.createElement("input", { style: inp, value: f[k], onChange: e => upd(k, e.target.value) }))
           ),
           React.createElement("div", { style: { gridColumn: "1 / -1" } },
