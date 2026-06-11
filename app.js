@@ -584,7 +584,7 @@ function RegisterPage({ clubs }) {
     React.createElement("div", { style: { textAlign: "center", maxWidth: 400 } },
       React.createElement(Logo, { club: selectedClub }),
       React.createElement("div", { style: { marginTop: 24, padding: 24, background: T.BG2, borderRadius: 10, border: `1px solid ${T.GOLD_DIM}` } },
-        React.createElement("div", { style: { fontSize: 32, marginBottom: 12 } }, "✅"),
+        React.createElement("div", { style: { fontSize: 32, marginBottom: 12 } },),
         React.createElement("div", { style: { fontSize: 18, fontWeight: 700, color: T.GOLD, marginBottom: 8 } }, "Pedido enviado!"),
         React.createElement("div", { style: { fontSize: 14, color: T.TEXT2, marginBottom: 16 } }, "O teu pedido foi enviado ao administrador. Receberás as tuas credenciais após aprovação."),
         React.createElement("a", { href: "/", style: { fontSize: 13, color: T.GOLD_DIM, textDecoration: "none" } }, "← Ir para o login")
