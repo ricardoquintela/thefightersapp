@@ -639,29 +639,50 @@ function Login({ onLogin, clubs }) {
   );
 }
 
+function calcEscalaoGlobal(birthdate, modality, subModality) {
+  if (!birthdate) return "";
+  const year = new Date(birthdate).getFullYear();
+  const age = new Date().getFullYear() - year;
+  const isRing = RING_DISCIPLINES.includes(subModality);
+  if (!isRing) {
+    if (age <= 9) return "Crianças (7-9 anos)";
+    if (age <= 12) return "Cadetes Jovens (10-12 anos)";
+    if (age <= 15) return "Cadetes Mais Velhos (13-15 anos)";
+    if (age <= 18) return "Juniores (16-18 anos)";
+    if (age <= 40) return "Seniores (19-40 anos)";
+    return "Veteranos/Masters (41-55 anos)";
+  } else {
+    if (age <= 16) return "Juniores Mais Jovens (15-16 anos)";
+    if (age <= 18) return "Juniores Mais Velhos (17-18 anos)";
+    return "Seniores (19-40 anos)";
+  }
+}
+
 function RegisterPage({ clubs }) {
   const s = getStyles();
   const { inp, lbl } = s;
-  const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", email: "", team: "", club_id: "", gender: "" });
+  const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", email: "", club_id: "", gender: "", birthdate: "" });
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const upd = (k, v) => setF(p => ({ ...p, [k]: v }));
   const activeClubs = (clubs || []).filter(c => c.active);
   const selectedClub = activeClubs.find(c => c.id === f.club_id) || null;
+  const autoEscalao = calcEscalaoGlobal(f.birthdate, f.modality, f.sub_modality);
 
   async function handleRegister() {
     if (!f.name.trim()) return setErr("Nome obrigatório.");
     if (!f.email.includes("@")) return setErr("E-mail válido obrigatório.");
     if (!f.club_id) return setErr("Selecciona o teu clube.");
+    if (!f.gender) return setErr("Selecciona o género.");
+    if (!f.birthdate) return setErr("Data de nascimento obrigatória.");
     setSaving(true);
     try {
       const existing = await db.get("fighters");
       if (existing.some(x => x.email && x.email.toLowerCase() === f.email.toLowerCase().trim())) {
         setSaving(false); return setErr("Este e-mail já está registado.");
       }
-      const result = await db.insert("fighters", { name: san(f.name, 100), weight: Number(f.weight) || 0, category: san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, email: san(f.email, 100), team: san(f.team || selectedClub?.name || "", 100), club_id: f.club_id, gender: f.gender || "", id: `r${Date.now()}`, available: false, status: "pending", registration_date: new Date().toISOString() });
-      console.log("Register result:", result);
+      await db.insert("fighters", { name: san(f.name, 100), weight: f.weight, category: autoEscalao, modality: f.modality, sub_modality: f.sub_modality, level: f.level, email: san(f.email, 100), team: san(selectedClub?.name || "", 100), club_id: f.club_id, gender: f.gender, birthdate: f.birthdate, id: `r${Date.now()}`, available: false, status: "pending", registration_date: new Date().toISOString() });
       setSaving(false); setDone(true);
     } catch(e) {
       console.error("Register error:", e);
@@ -695,21 +716,50 @@ function RegisterPage({ clubs }) {
           )
         ),
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-          [["Nome completo", "name"], ["Peso (kg)", "weight"], ["Escalão", "category"]].map(([l, k]) =>
-            React.createElement("div", { key: k }, React.createElement("label", { style: lbl }, l), React.createElement("input", { style: inp, value: f[k], onChange: e => upd(k, e.target.value) }))
+          React.createElement("div", { style: { gridColumn: "1 / -1" } },
+            React.createElement("label", { style: lbl }, "Nome Completo"),
+            React.createElement("input", { style: inp, value: f.name, onChange: e => upd("name", e.target.value) })
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Modalidade"),
+            React.createElement("select", { style: inp, value: f.modality, onChange: e => upd("modality", e.target.value) },
+              Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Disciplina"),
+            React.createElement("select", { style: inp, value: f.sub_modality, onChange: e => upd("sub_modality", e.target.value) },
+              (MODALITIES[f.modality] || MODALITIES["Kickboxing"]).map(s => React.createElement("option", { key: s }, s)))
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Género"),
+            React.createElement("select", { style: inp, value: f.gender, onChange: e => upd("gender", e.target.value) },
+              React.createElement("option", { value: "" }, "Selecionar..."),
+              React.createElement("option", { value: "Masculino" }, "Masculino"),
+              React.createElement("option", { value: "Feminino" }, "Feminino"))
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Data de Nascimento"),
+            React.createElement("input", { type: "date", style: inp, value: f.birthdate, onChange: e => upd("birthdate", e.target.value) })
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Escalão"),
+            React.createElement("div", { style: { fontSize: 13, color: autoEscalao ? T.GOLD : T.TEXT3, padding: "8px 0", fontStyle: autoEscalao ? "normal" : "italic" } },
+              autoEscalao || "Preenche a data de nascimento")
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Classe"),
+            React.createElement("select", { style: inp, value: f.level, onChange: e => upd("level", e.target.value) },
+              LEVELS.map(l => React.createElement("option", { key: l }, l)))
+          ),
+          React.createElement("div", { style: { gridColumn: "1 / -1" } },
+            React.createElement("label", { style: lbl }, "Categoria de Peso (kg)"),
+            React.createElement("select", { style: inp, value: f.weight, onChange: e => upd("weight", e.target.value) },
+              React.createElement("option", { value: "" }, "Selecionar..."),
+              getWeightCategories(f.sub_modality || "K1", autoEscalao, f.gender, f.level).map(w => React.createElement("option", { key: w }, w)))
           ),
           React.createElement("div", { style: { gridColumn: "1 / -1" } },
             React.createElement("label", { style: { ...lbl, color: T.GOLD } }, "E-mail"),
             React.createElement("input", { style: { ...inp, borderColor: T.GOLD_DIM }, value: f.email, onChange: e => upd("email", e.target.value), placeholder: "o teu e-mail" })
-          ),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"), React.createElement("select", { style: inp, value: f.modality, onChange: e => upd("modality", e.target.value) }, Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: f.level, onChange: e => upd("level", e.target.value) }, LEVELS.map(l => React.createElement("option", { key: l }, l)))),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Género"),
-            React.createElement("select", { style: inp, value: f.gender, onChange: e => upd("gender", e.target.value) },
-              React.createElement("option", { value: "" }, "Selecionar..."),
-              React.createElement("option", { value: "Masculino" }, "Masculino"),
-              React.createElement("option", { value: "Feminino" }, "Feminino")
-            )
           )
         ),
         err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginTop: 10 } }, err),
