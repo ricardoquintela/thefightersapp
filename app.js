@@ -561,7 +561,7 @@ function Login({ onLogin, clubs }) {
 function RegisterPage({ clubs }) {
   const s = getStyles();
   const { inp, lbl } = s;
-  const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", contact: "", email: "", team: "", club_id: "", gender: "" });
+  const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", email: "", team: "", club_id: "", gender: "" });
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
@@ -579,7 +579,7 @@ function RegisterPage({ clubs }) {
       if (existing.some(x => x.email && x.email.toLowerCase() === f.email.toLowerCase().trim())) {
         setSaving(false); return setErr("Este e-mail já está registado.");
       }
-      const result = await db.insert("fighters", { name: san(f.name, 100), weight: Number(f.weight) || 0, category: san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, contact: san(f.contact, 50), email: san(f.email, 100), team: san(f.team || selectedClub?.name || "", 100), club_id: f.club_id, gender: f.gender || "", id: `r${Date.now()}`, available: false, status: "pending", registration_date: new Date().toISOString() });
+      const result = await db.insert("fighters", { name: san(f.name, 100), weight: Number(f.weight) || 0, category: san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, email: san(f.email, 100), team: san(f.team || selectedClub?.name || "", 100), club_id: f.club_id, gender: f.gender || "", id: `r${Date.now()}`, available: false, status: "pending", registration_date: new Date().toISOString() });
       console.log("Register result:", result);
       setSaving(false); setDone(true);
     } catch(e) {
@@ -614,7 +614,7 @@ function RegisterPage({ clubs }) {
           )
         ),
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-          [["Nome completo", "name"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
+          [["Nome completo", "name"], ["Peso (kg)", "weight"], ["Escalão", "category"]].map(([l, k]) =>
             React.createElement("div", { key: k }, React.createElement("label", { style: lbl }, l), React.createElement("input", { style: inp, value: f[k], onChange: e => upd(k, e.target.value) }))
           ),
           React.createElement("div", { style: { gridColumn: "1 / -1" } },
@@ -1022,7 +1022,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   }, [fighter.id]);
 
   // Snapshot dos campos editáveis para detectar alterações
-  const profileFields = ["name","team","weight","category","contact","gender","modality","level"];
+  const profileFields = ["name","team","weight","category","gender","modality","level"];
   const snapshot = savedSnapshot || profileFields.reduce((o,k) => ({...o,[k]: fighter[k]}), {});
   const isDirty = profileFields.some(k => String(f[k]||"") !== String(snapshot[k]||""));
 
@@ -1041,7 +1041,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
 
   async function saveProfile() {
     setSaving(true);
-    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: san(f.category), contact: san(f.contact, 50), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, combat_photos: f.combat_photos });
+    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, combat_photos: f.combat_photos });
     setSavedSnapshot(profileFields.reduce((o,k) => ({...o,[k]: f[k]}), {}));
     setSaving(false);
   }
@@ -1135,7 +1135,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       ),
       React.createElement(Card, null,
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-          [["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
+          [["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"]].map(([l, k]) =>
             React.createElement("div", { key: k }, React.createElement("label", { style: lbl }, l),
               isOwner ? React.createElement("input", { style: inp, value: f[k] || "", onChange: e => upd(k, e.target.value) }) : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f[k])
             )
@@ -1436,7 +1436,7 @@ function InviteModal({ fighter, user, onClose }) {
 function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames, club, clubs }) {
   const s = getStyles();
   const { inp, lbl } = s;
-  const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", contact: "", email: "", team: club?.name || "", club_id: user.club_id || club?.id || "", gender: "" });
+  const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", email: "", team: club?.name || "", club_id: user.club_id || club?.id || "", gender: "" });
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
   const upd = (k, v) => setF(p => ({ ...p, [k]: v }));
@@ -1470,7 +1470,7 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames, clu
               (clubs || []).filter(c => c.active).map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))
             )
           ),
-          [["Nome completo", "name"], ["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"], ["Contacto", "contact"]].map(([l, k]) =>
+          [["Nome completo", "name"], ["Equipa", "team"], ["Peso (kg)", "weight"], ["Escalão", "category"]].map(([l, k]) =>
             React.createElement("div", { key: k }, React.createElement("label", { style: lbl }, l), React.createElement("input", { style: inp, value: f[k], onChange: e => upd(k, e.target.value) }))
           ),
           React.createElement("div", { style: { gridColumn: "1 / -1" } },
