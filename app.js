@@ -562,7 +562,7 @@ function Login({ onLogin, clubs }) {
       React.createElement(Card, { gold: true },
         newPassword
           ? React.createElement("div", null,
-              React.createElement("div", { style: { fontSize: 32, textAlign: "center", marginBottom: 12 } }, "✅"),
+              React.createElement("div", { style: { fontSize: 32, textAlign: "center", marginBottom: 12 } },),
               React.createElement("div", { style: { fontSize: 16, color: T.GOLD, fontWeight: 700, marginBottom: 8, textAlign: "center" } }, "E-mail enviado!"),
               React.createElement("div", { style: { fontSize: 13, color: T.TEXT2, marginBottom: 16, textAlign: "center" } }, "Verifica a tua caixa de entrada. A nova password foi enviada para o teu e-mail."),
               React.createElement("button", { onClick: () => { setShowForgot(false); setNewPassword(null); setForgotUsername(""); setErr(""); }, style: { ...s.btnGold, width: "100%", marginTop: 0 } }, "Ir para o login")
