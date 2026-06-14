@@ -1059,7 +1059,7 @@ function DashboardPage({ onLogout, user, setPage, pendingCount, clubs, allFighte
   );
 }
 
-function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes }) {
+function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const { inp, lbl } = s;
   const [showForm, setShowForm] = useState(false);
@@ -1081,7 +1081,7 @@ function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes }) 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "clubs", setPage, pendingCount, club: null }),
-      inviteClub && React.createElement(InviteModal, { onClose: () => setInviteClub(null), user, club: inviteClub, clubs }),
+      inviteClub && React.createElement(InviteModal, { onClose: () => setInviteClub(null), user, club: inviteClub, clubs, defaultClubId: inviteClub.id, defaultRole: "admin", defaultEmail: "" }),
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: "#ff9900", textTransform: "uppercase", letterSpacing: 1 } }, `Clubes · ${(clubs || []).length}`),
         React.createElement("button", { onClick: () => setShowForm(p => !p), style: { ...s.btnOutline, borderColor: "#ff990066", color: "#ff9900" } }, "+ Novo Clube")
@@ -1120,7 +1120,11 @@ function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes }) 
             React.createElement("div", { style: { fontWeight: 700, color: club.primary_color, fontSize: 15 } }, club.name),
             React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `ID: ${club.id} · ${club.short_name || "—"}`)
           ),
-          React.createElement("div", { style: { display: "flex", gap: 8 } },
+          React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+            React.createElement("button", { onClick: () => { setViewAsClub(club); setPage("fighters"); }, style: { padding: "5px 14px", borderRadius: 6, border: "1px solid #5b8fd444", background: "transparent", color: "#5b8fd4", cursor: "pointer", fontSize: 12, fontWeight: 700 } }, React.createElement("span", { style: { display: "flex", alignItems: "center", gap: 4 } }, React.createElement("svg", { width: 14, height: 14, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "inline", verticalAlign: "middle", marginRight: 4 } },
+              React.createElement("path", { d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" }),
+              React.createElement("circle", { cx: 12, cy: 12, r: 3 })
+            ), "Ver como")),
             React.createElement("button", { onClick: () => toggleActive(club), style: { padding: "5px 14px", borderRadius: 6, border: `1px solid ${club.active ? "#4caf7d44" : "#e0555544"}`, background: "transparent", color: club.active ? "#4caf7d" : "#e05555", cursor: "pointer", fontSize: 12, fontWeight: 700 } }, club.active ? "Ativo" : "Inativo"),
             React.createElement("button", { onClick: () => setInviteClub(club), style: { padding: "5px 14px", borderRadius: 6, border: "1px solid #4caf7d44", background: "transparent", color: "#4caf7d", cursor: "pointer", fontSize: 12, fontWeight: 700 } }, "✉ Admin")
           )
@@ -2031,12 +2035,12 @@ function AcceptInvitePage({ token, clubs }) {
   );
 }
 
-function InviteModal({ onClose, user, club, clubs, defaultEmail, fighters, users }) {
+function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, defaultRole, fighters, users }) {
   const s = getStyles();
   const { inp, lbl } = s;
   const [email, setEmail] = React.useState(defaultEmail || "");
-  const [role, setRole] = React.useState("athlete");
-  const [clubId, setClubId] = React.useState(user.club_id || "");
+  const [role, setRole] = React.useState(defaultRole || "athlete");
+  const [clubId, setClubId] = React.useState(defaultClubId || user.club_id || "");
 
   // Atletas sem conta ou sem convite enviado
   const pendingFighters = (fighters || []).filter(f => {
@@ -2186,7 +2190,7 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames, clu
 // PARTE 6: ADMIN DASHBOARD, ATHLETE VIEW, APP ROOT
 // ═══════════════════════════════════════════════════════════
 
-function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user, page, setPage, pendingCount, club, clubs, setClubes, allFighters, allFights }) {
+function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user, page, setPage, pendingCount, club, clubs, setClubes, allFighters, allFights, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const [selected, setSelected] = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
@@ -2215,7 +2219,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   if (page === "teams") return React.createElement(TeamsPage, { onLogout, user, setPage, pendingCount, club, clubs });
   if (page === "calendar") return React.createElement(CalendarPage, { onLogout, user, setPage, pendingCount, club });
   if (page === "dashboard") return React.createElement(DashboardPage, { onLogout, user, setPage, pendingCount, clubs, allFighters, allFights });
-  if (page === "clubs") return React.createElement(ClubsPage, { onLogout, user, setPage, pendingCount, clubs, setClubes });
+  if (page === "clubs") return React.createElement(ClubsPage, { onLogout, user, setPage, pendingCount, clubs, setClubes, viewAsClub, setViewAsClub });
 
   // Modal password redefinida
   if (resetData) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
@@ -2249,6 +2253,15 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
+      viewAsClub && React.createElement("div", { style: { background: "#1a0f00", border: "1px solid #ff990066", borderRadius: 8, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" } },
+        React.createElement("div", { style: { fontSize: 13, color: "#ff9900" } },
+          React.createElement("span", { style: { display: "flex", alignItems: "center", gap: 6 } }, React.createElement("svg", { width: 14, height: 14, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "inline", verticalAlign: "middle", marginRight: 4 } },
+              React.createElement("path", { d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" }),
+              React.createElement("circle", { cx: 12, cy: 12, r: 3 })
+            ), "A ver como ", React.createElement("strong", null, viewAsClub.name))
+        ),
+        React.createElement("button", { onClick: () => { setViewAsClub(null); setPage("clubs"); }, style: { fontSize: 12, color: "#ff9900", background: "transparent", border: "1px solid #ff990066", borderRadius: 6, padding: "4px 12px", cursor: "pointer" } }, "← Voltar ao superadmin")
+      ),
       React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club }),
       React.createElement("input", { style: { ...s.inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Nome ou modalidade...", value: search, onChange: e => setSearch(e.target.value) }),
       showInvite && React.createElement(InviteModal, { onClose: () => setShowInvite(false), user, club, clubs, defaultEmail: inviteData?.fighter?.email || "", fighters, users }),
@@ -2452,6 +2465,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState("fighters");
   const [pendingCount, setPendingCount] = useState(0);
+  const [viewAsClub, setViewAsClub] = useState(null);
 
   const isRegister = window.location.search.includes("register=true");
   const inviteToken = new URLSearchParams(window.location.search).get("invite");
@@ -2521,12 +2535,19 @@ function App() {
 
   if (page === "calendar") return React.createElement(CalendarPage, { onLogout: handleLogout, user, setPage, pendingCount, club });
 
+  // Superadmin a ver como outro clube
+  const effectiveClub = viewAsClub || club;
+  const effectiveFighters = viewAsClub
+    ? allFighters.filter(f => f.club_id === viewAsClub.id)
+    : fighters;
+
   if (user.role === "admin" || user.role === "superadmin") return React.createElement(AdminDashboard, {
-    fighters, setFighters, users, setUsers,
+    fighters: effectiveFighters, setFighters, users, setUsers,
     onLogout: handleLogout,
     user, page, setPage, pendingCount,
-    club, clubs, setClubes: setClubs,
-    allFighters, allFights
+    club: effectiveClub, clubs, setClubes: setClubs,
+    allFighters, allFights,
+    viewAsClub, setViewAsClub
   });
 
   return React.createElement(AthleteView, { fighters, user, onLogout: handleLogout, setPage, pendingCount, club, clubs });
