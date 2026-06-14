@@ -1747,10 +1747,10 @@ function AcceptInvitePage({ token, clubs }) {
   );
 }
 
-function InviteModal({ onClose, user, club, clubs }) {
+function InviteModal({ onClose, user, club, clubs, defaultEmail }) {
   const s = getStyles();
   const { inp, lbl } = s;
-  const [email, setEmail] = React.useState("");
+  const [email, setEmail] = React.useState(defaultEmail || "");
   const [role, setRole] = React.useState("athlete");
   const [clubId, setClubId] = React.useState(user.club_id || "");
   const [sending, setSending] = React.useState(false);
@@ -1940,7 +1940,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club }),
-      showInvite && React.createElement(InviteModal, { onClose: () => setShowInvite(false), user, club, clubs }),
+      showInvite && React.createElement(InviteModal, { onClose: () => setShowInvite(false), user, club, clubs, defaultEmail: inviteData?.fighter?.email || "" }),
       inviteData && React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 10, padding: "12px 16px", marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 13, color: "#4caf7d", marginBottom: 8, fontWeight: 700 } }, `✓ Perfil criado — ${inviteData.fighter.name}`),
         React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginBottom: 8 } }, `Username: ${inviteData.user.username} · Password: ${inviteData.user.password}`),
