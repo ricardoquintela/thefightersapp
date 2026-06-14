@@ -1970,7 +1970,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club }),
-      React.createElement("input", { style: { ...s.inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Nome, equipa ou modalidade...", value: search, onChange: e => setSearch(e.target.value) }),
+      React.createElement("input", { style: { ...s.inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Nome ou modalidade...", value: search, onChange: e => setSearch(e.target.value) }),
       showInvite && React.createElement(InviteModal, { onClose: () => setShowInvite(false), user, club, clubs, defaultEmail: inviteData?.fighter?.email || "", fighters, users }),
       inviteData && React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 10, padding: "12px 16px", marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 13, color: "#4caf7d", marginBottom: 8, fontWeight: 700 } }, `✓ Perfil criado — ${inviteData.fighter.name}`),
@@ -1981,7 +1981,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
         )
       ),
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
-        React.createElement("span", { style: { fontSize: 13, color: T.TEXT2, textTransform: "uppercase", letterSpacing: 1 } }, `${fighters.filter(f => { const q = search.toLowerCase(); return !search || f.name?.toLowerCase().includes(q) || f.team?.toLowerCase().includes(q) || f.modality?.toLowerCase().includes(q); }).length} lutadores`),
+        React.createElement("span", { style: { fontSize: 13, color: T.TEXT2, textTransform: "uppercase", letterSpacing: 1 } }, `${fighters.filter(f => { const q = search.toLowerCase(); return !search || f.name?.toLowerCase().includes(q) || f.modality?.toLowerCase().includes(q) || f.sub_modality?.toLowerCase().includes(q); }).length} lutadores`),
         React.createElement("div", { style: { display: "flex", gap: 8 } },
           React.createElement("button", { onClick: () => setShowInvite(true), style: { ...s.btnOutline, borderColor: "#4caf7d44", color: "#4caf7d" } }, "✉ Convidar"),
           React.createElement("button", { onClick: () => setShowNewForm(true), style: s.btnOutline }, "+ Novo Lutador")
@@ -1995,7 +1995,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
         )
       ),
       React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
-        fighters.filter(f => { const q = search.toLowerCase(); return !search || f.name?.toLowerCase().includes(q) || f.team?.toLowerCase().includes(q) || f.modality?.toLowerCase().includes(q); }).map(f => {
+        fighters.filter(f => { const q = search.toLowerCase(); return !search || f.name?.toLowerCase().includes(q) || f.modality?.toLowerCase().includes(q) || f.sub_modality?.toLowerCase().includes(q); }).map(f => {
           const fu = users.find(u => u.fighter_id === f.id);
           return React.createElement("div", { key: f.id, style: { background: T.BG2, border: `1px solid ${T.BORDER}`, borderRadius: 10, padding: "14px 16px" }, onMouseEnter: e => e.currentTarget.style.borderColor = T.GOLD_DIM, onMouseLeave: e => e.currentTarget.style.borderColor = T.BORDER },
             React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }, onClick: () => setSelected(f) },
