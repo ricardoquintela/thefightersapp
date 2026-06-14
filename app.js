@@ -1007,7 +1007,7 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
             React.createElement("div", { style: { flex: 1 } },
               React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: T.TEXT } }, f.name),
               fClub && React.createElement("div", { style: { fontSize: 11, color: fClub.primary_color, fontWeight: 700, marginTop: 1 } }, fClub.name),
-              React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `${f.email} · ${f.modality} · ${f.level} · ${f.weight}kg`),
+              React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `${f.email} · ${f.modality} · ${f.level} · ${f.weight}`),
               React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 2 } }, `Pedido: ${f.registration_date ? new Date(f.registration_date).toLocaleDateString("pt-PT") : "—"}`)
             ),
             React.createElement("div", { style: { display: "flex", gap: 8 } },
@@ -1186,7 +1186,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs }) {
                 React.createElement(Badge, null, selFighter.modality),
                 selFighter.sub_modality && React.createElement(Badge, { type: "gold" }, selFighter.sub_modality),
                 React.createElement(Badge, { type: "blue" }, selFighter.level),
-                React.createElement(Badge, null, `${selFighter.weight}kg`)
+                React.createElement(Badge, null, selFighter.weight)
               )
             )
           ),
@@ -1212,7 +1212,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs }) {
                     fight.sub_modality && React.createElement(Badge, { type: "gold" }, fight.sub_modality),
                     React.createElement(Badge, { type: "blue" }, fight.level),
                     React.createElement(Badge, null, fight.method),
-                    fight.weight && React.createElement(Badge, null, `${fight.weight}kg`)
+                    fight.weight && React.createElement(Badge, null, fight.weight)
                   )
                 )
               )
@@ -1584,7 +1584,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
             React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
               React.createElement(Badge, null, fight.modality), fight.sub_modality && React.createElement(Badge, { type: "gold" }, fight.sub_modality),
               React.createElement(Badge, { type: "blue" }, fight.level), React.createElement(Badge, null, fight.method),
-              fight.weight && React.createElement(Badge, null, `${fight.weight}kg`),
+              fight.weight && React.createElement(Badge, null, fight.weight),
               fight.federation && React.createElement(Badge, { type: "orange" }, fight.federation)
             ),
             delFightId === fight.id && React.createElement("div", { style: { marginTop: 10, display: "flex", gap: 8, alignItems: "center" } },
@@ -1701,7 +1701,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
                   React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, [u.event, u.local].filter(Boolean).join(" · ")),
                   React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
                     React.createElement(Badge, null, u.modality), React.createElement(Badge, { type: "gold" }, u.sub_modality),
-                    React.createElement(Badge, { type: "blue" }, u.level), u.weight && React.createElement(Badge, null, `${u.weight}kg`),
+                    React.createElement(Badge, { type: "blue" }, u.level), u.weight && React.createElement(Badge, null, u.weight),
                     u.federation && React.createElement(Badge, { type: "orange" }, u.federation)
                   ),
                   isOwner && React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 8 } },
@@ -2286,7 +2286,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
                   React.createElement(ClubTag, { clubId: f.club_id, clubs }),
                   React.createElement(Badge, { type: "gold" }, f.team)
                 ),
-                React.createElement("div", { style: { fontSize: 13, color: T.TEXT2 } }, `${f.modality} · ${f.sub_modality} · ${f.level} · ${f.weight}kg`),
+                React.createElement("div", { style: { fontSize: 13, color: T.TEXT2 } }, `${f.modality} · ${f.sub_modality} · ${f.level} · ${f.weight}`),
                 fu && React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 2 } }, `@${fu.username} · ${f.email}`)
               )
             ),
