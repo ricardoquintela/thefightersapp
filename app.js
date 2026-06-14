@@ -1244,7 +1244,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs }) {
                   React.createElement(Badge, null, f.modality),
                   f.sub_modality && React.createElement(Badge, { type: "gold" }, f.sub_modality),
                   React.createElement(Badge, { type: "blue" }, f.level),
-                  React.createElement(Badge, null, `${f.weight}kg`)
+                  React.createElement(Badge, null, f.weight)
                 ),
                 React.createElement("div", { style: { display: "flex", gap: 12, fontSize: 13 } },
                   React.createElement("span", { style: { color: "#4caf7d", fontWeight: 700 } }, `${rec.wins}V`),
@@ -1443,7 +1443,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
 
   async function saveUpcoming() {
     const { _eventId, _opponentId, ...nuClean } = nu;
-    const u = { ...nuClean, opponent: san(nuClean.opponent, 100), event: san(nuClean.event, 100), local: san(nuClean.local, 100), id: `u${Date.now()}`, fighter_id: f.id };
+    const u = { ...nuClean, opponent: san(nuClean.opponent, 100), opponent_team: san(nuClean.opponent_team || "", 100), event: san(nuClean.event, 100), local: san(nuClean.local, 100), id: `u${Date.now()}`, fighter_id: f.id };
     const result = await db.insert("upcoming", u);
     console.log("insert result:", result);
     // Se o adversário existe na plataforma, criar a luta também no perfil dele
@@ -1639,6 +1639,13 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
             )
           ),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Data"), React.createElement("input", { type: "date", style: inp, value: nu.date, onChange: e => setNu({ ...nu, date: e.target.value }) })),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Equipa do Adversário"),
+            React.createElement("input", { style: inp, list: "clubs-list", value: nu.opponent_team || "", onChange: e => setNu({ ...nu, opponent_team: e.target.value }), placeholder: "Clube ou equipa..." }),
+            React.createElement("datalist", { id: "clubs-list" },
+              (clubs || []).map(c => React.createElement("option", { key: c.id, value: c.name }))
+            )
+          ),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Evento"), React.createElement("input", { style: inp, value: nu.event, onChange: e => setNu({ ...nu, event: e.target.value, _eventId: "" }) })),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Local"), React.createElement("input", { style: inp, value: nu.local, onChange: e => setNu({ ...nu, local: e.target.value }) })),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Peso (kg)"), React.createElement("input", { type: "number", style: inp, value: nu.weight, onChange: e => setNu({ ...nu, weight: e.target.value }) })),
@@ -1661,7 +1668,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
         ),
         React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
           React.createElement("button", { onClick: saveUpcoming, style: { ...s.btnGold, marginTop: 0 } }, "Guardar"),
-          React.createElement("button", { onClick: () => { setShowUF(false); setNu({ opponent: "", event: "", date: "", local: "", weight: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", _eventId: "" }); }, style: { ...s.btnGold, marginTop: 0, background: T.BG4, color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Cancelar")
+          React.createElement("button", { onClick: () => { setShowUF(false); setNu({ opponent: "", opponent_team: "", event: "", date: "", local: "", weight: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", _eventId: "" }); }, style: { ...s.btnGold, marginTop: 0, background: T.BG4, color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Cancelar")
         )
       ),
       f.upcoming.map((u, i) => {
@@ -1690,7 +1697,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
                   React.createElement("div", { style: { fontSize: 10, color: T.TEXT2 } }, `${u.date?.slice(5, 7)}/${u.date?.slice(2, 4)}`)
                 ),
                 React.createElement("div", { style: { flex: 1 } },
-                  React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: T.TEXT } }, `vs. ${u.opponent}`),
+                  React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: T.TEXT } }, `vs. ${u.opponent}${u.opponent_team ? ` · ${u.opponent_team}` : ``}`),
                   React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, [u.event, u.local].filter(Boolean).join(" · ")),
                   React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
                     React.createElement(Badge, null, u.modality), React.createElement(Badge, { type: "gold" }, u.sub_modality),
@@ -1877,7 +1884,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
               React.createElement(Badge, { type: "gold" }, f.team),
               React.createElement(Badge, null, f.modality),
               React.createElement(Badge, { type: "blue" }, f.level),
-              React.createElement(Badge, null, `${f.weight}kg`)
+              React.createElement(Badge, null, f.weight)
             ),
             daysLeft !== null && daysLeft >= 0 && React.createElement("div", { style: { marginTop: 10, display: "flex", alignItems: "center", gap: 8, background: T.BG3, borderRadius: 8, padding: "8px 12px", border: `1px solid ${daysLeft <= 7 ? "#e05555" : daysLeft <= 30 ? T.GOLD_DIM : T.BORDER}` } },
               React.createElement("div", { style: { flex: 1 } },
