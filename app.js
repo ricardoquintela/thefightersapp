@@ -471,11 +471,21 @@ function AccountModal({ user, onClose }) {
   );
 }
 
-function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, viewAsClub }) {
+function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const [showAccount, setShowAccount] = React.useState(false);
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${T.BORDER}` } },
     showAccount && React.createElement(AccountModal, { user, onClose: () => setShowAccount(false) }),
+    viewAsClub && setViewAsClub && React.createElement("div", { style: { background: "#1a0f00", border: "1px solid #ff990066", borderRadius: 8, padding: "8px 14px", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between" } },
+      React.createElement("div", { style: { fontSize: 12, color: "#ff9900", display: "flex", alignItems: "center", gap: 6 } },
+        React.createElement("svg", { width: 13, height: 13, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" },
+          React.createElement("path", { d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" }),
+          React.createElement("circle", { cx: 12, cy: 12, r: 3 })
+        ),
+        "A ver como ", React.createElement("strong", null, viewAsClub.name)
+      ),
+      React.createElement("button", { onClick: () => { setViewAsClub(null); T = buildTheme(null); setPage("clubs"); }, style: { fontSize: 11, color: "#ff9900", background: "transparent", border: "1px solid #ff990066", borderRadius: 6, padding: "3px 10px", cursor: "pointer" } }, "← Voltar")
+    ),
     React.createElement(Logo, { club }),
     user && React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 10 } },
       React.createElement("div", { style: { textAlign: "center" } },
@@ -556,7 +566,7 @@ function EventForm({ val, set }) {
   );
 }
 
-function CalendarPage({ onLogout, user, setPage, pendingCount, club }) {
+function CalendarPage({ onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -635,7 +645,7 @@ function CalendarPage({ onLogout, user, setPage, pendingCount, club }) {
 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, currentPage: "calendar", setPage, pendingCount, club: null }),
+      React.createElement(Header, { onLogout, user, currentPage: "calendar", setPage, pendingCount, club: null, viewAsClub, setViewAsClub }),
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.TEXT, textTransform: "uppercase", letterSpacing: 1 } }, "Calendário de Provas"),
         canEdit && React.createElement("button", { onClick: () => { setShowForm(p => !p); setEditEvent(null); }, style: s.btnOutline }, "+ Nova Prova")
@@ -963,7 +973,7 @@ function RegisterPage({ clubs }) {
   );
 }
 
-function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, club, clubs }) {
+function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, club, clubs, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -995,7 +1005,7 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, currentPage: "pending", setPage, pendingCount, club }),
+      React.createElement(Header, { onLogout, user, currentPage: "pending", setPage, pendingCount, club, viewAsClub, setViewAsClub }),
       React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.TEXT, marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 } }, `Pedidos Pendentes · ${pending.length}`),
       loading && React.createElement("div", { style: { color: T.TEXT2, textAlign: "center", padding: 24 } }, "A carregar..."),
       pending.length === 0 && !loading && React.createElement(Card, null, React.createElement("div", { style: { color: T.TEXT3, textAlign: "center", padding: "24px 0" } }, "Nenhum pedido pendente.")),
@@ -1022,7 +1032,7 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
   );
 }
 
-function DashboardPage({ onLogout, user, setPage, pendingCount, clubs, allFighters, allFights }) {
+function DashboardPage({ onLogout, user, setPage, pendingCount, clubs, allFighters, allFights, viewAsClub, setViewAsClub }) {
   const clubStats = (clubs || []).map(club => {
     const cf = allFighters.filter(f => f.club_id === club.id);
     const cfights = allFights.filter(f => cf.some(fi => fi.id === f.fighter_id));
@@ -1030,7 +1040,7 @@ function DashboardPage({ onLogout, user, setPage, pendingCount, clubs, allFighte
   });
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, currentPage: "dashboard", setPage, pendingCount, club: null }),
+      React.createElement(Header, { onLogout, user, currentPage: "dashboard", setPage, pendingCount, club: null, viewAsClub, setViewAsClub }),
       React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: "#ff9900", marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 } }, "⭐ Dashboard Global"),
       React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 } },
         React.createElement(StatBox, { label: "Clubes Ativos", value: (clubs || []).filter(c => c.active).length, color: T.GOLD }),
@@ -1080,7 +1090,7 @@ function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes, vi
 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, currentPage: "clubs", setPage, pendingCount, club: null }),
+      React.createElement(Header, { onLogout, user, currentPage: "clubs", setPage, pendingCount, club: null, viewAsClub, setViewAsClub }),
       inviteClub && React.createElement(InviteModal, { onClose: () => setInviteClub(null), user, club: inviteClub, clubs, defaultClubId: inviteClub.id, defaultRole: "admin", defaultEmail: "" }),
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: "#ff9900", textTransform: "uppercase", letterSpacing: 1 } }, `Clubes · ${(clubs || []).length}`),
@@ -1138,7 +1148,7 @@ function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes, vi
 // PARTE 4: TEAMS PAGE
 // ═══════════════════════════════════════════════════════════
 
-function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs }) {
+function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const [teams, setTeams] = useState([]);
   const [allFighters, setAllFighters] = useState([]);
@@ -1177,7 +1187,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs }) {
     const fighterFights = allFights.filter(f => f.fighter_id === selFighter.id);
     return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
       React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-        React.createElement(Header, { onLogout, user, currentPage: "teams", setPage, pendingCount, club }),
+        React.createElement(Header, { onLogout, user, currentPage: "teams", setPage, pendingCount, club, viewAsClub, setViewAsClub }),
         React.createElement("button", { onClick: () => setSelFighter(null), style: { fontSize: 13, color: T.TEXT2, background: "none", border: "none", cursor: "pointer", marginBottom: 14, padding: 0 } }, "← Voltar"),
         React.createElement(Card, { gold: true, style: { marginBottom: 14 } },
           React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 14 } },
@@ -1231,7 +1241,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs }) {
     const teamFighters = allFighters.filter(f => (f.team || "Sem Equipa") === selected);
     return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
       React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-        React.createElement(Header, { onLogout, user, currentPage: "teams", setPage, pendingCount, club }),
+        React.createElement(Header, { onLogout, user, currentPage: "teams", setPage, pendingCount, club, viewAsClub, setViewAsClub }),
         React.createElement("button", { onClick: () => setSelected(null), style: { fontSize: 13, color: T.TEXT2, background: "none", border: "none", cursor: "pointer", marginBottom: 14, padding: 0 } }, "← Equipas"),
         React.createElement("div", { style: { fontSize: 20, fontWeight: 700, color: T.GOLD, marginBottom: 4, textTransform: "uppercase", letterSpacing: 2 } }, selected),
         React.createElement("div", { style: { fontSize: 13, color: T.TEXT2, marginBottom: 16 } }, `${teamFighters.length} atleta${teamFighters.length !== 1 ? "s" : ""}`),
@@ -1269,7 +1279,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs }) {
   // Vista lista de equipas
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, currentPage: "teams", setPage, pendingCount, club }),
+      React.createElement(Header, { onLogout, user, currentPage: "teams", setPage, pendingCount, club, viewAsClub, setViewAsClub }),
       React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.TEXT, marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 } }, `Equipas · ${teams.length}`),
       React.createElement("input", { style: { ...getStyles().inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Pesquisar equipa...", value: searchTeam, onChange: e => setSearchTeam(e.target.value) }),
       loading && React.createElement("div", { style: { color: T.TEXT2, textAlign: "center", padding: 24 } }, "A carregar..."),
@@ -1297,7 +1307,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs }) {
 // PARTE 5: FIGHTER PROFILE, INVITE MODAL, NEW FIGHTER FORM
 // ═══════════════════════════════════════════════════════════
 
-function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setPage, pendingCount, club, clubs }) {
+function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const { inp, lbl } = s;
   const [tab, setTab] = useState(0);
@@ -1862,7 +1872,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       React.createElement("img", { src: lightbox, style: { maxWidth: "95vw", maxHeight: "90vh", borderRadius: 8, objectFit: "contain" } })
     ),
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, setPage, pendingCount, club }),
+      React.createElement(Header, { onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub }),
       onBack && React.createElement("button", { onClick: onBack, style: { fontSize: 13, color: T.TEXT2, background: "none", border: "none", cursor: "pointer", marginBottom: 14, padding: 0 } }, "← Voltar"),
       React.createElement(Card, { gold: true, style: { marginBottom: 14 } },
         React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 14 } },
@@ -2215,10 +2225,10 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   }
 
   // Routing para sub-páginas
-  if (page === "pending") return React.createElement(PendingPage, { onLogout, user, setPage, setUsers, users, pendingCount, club, clubs });
-  if (page === "teams") return React.createElement(TeamsPage, { onLogout, user, setPage, pendingCount, club, clubs });
-  if (page === "calendar") return React.createElement(CalendarPage, { onLogout, user, setPage, pendingCount, club });
-  if (page === "dashboard") return React.createElement(DashboardPage, { onLogout, user, setPage, pendingCount, clubs, allFighters, allFights });
+  if (page === "pending") return React.createElement(PendingPage, { onLogout, user, setPage, setUsers, users, pendingCount, club, clubs, viewAsClub, setViewAsClub });
+  if (page === "teams") return React.createElement(TeamsPage, { onLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub });
+  if (page === "calendar") return React.createElement(CalendarPage, { onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub });
+  if (page === "dashboard") return React.createElement(DashboardPage, { onLogout, user, setPage, pendingCount, clubs, allFighters, allFights, viewAsClub, setViewAsClub });
   if (page === "clubs") return React.createElement(ClubsPage, { onLogout, user, setPage, pendingCount, clubs, setClubes, viewAsClub, setViewAsClub });
 
   // Modal password redefinida
@@ -2248,20 +2258,12 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   if (selected) return React.createElement(FighterProfile, {
     fighter: selected, onBack: () => setSelected(null),
     onSave: f => setFighters(p => p.map(x => x.id === f.id ? f : x)),
-    user, isOwner: true, onLogout, setPage, pendingCount, club, clubs
+    user, isOwner: true, onLogout, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub
   });
 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      viewAsClub && React.createElement("div", { style: { background: "#1a0f00", border: "1px solid #ff990066", borderRadius: 8, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" } },
-        React.createElement("div", { style: { fontSize: 13, color: "#ff9900" } },
-          React.createElement("span", { style: { display: "flex", alignItems: "center", gap: 6 } }, React.createElement("svg", { width: 14, height: 14, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "inline", verticalAlign: "middle", marginRight: 4 } },
-              React.createElement("path", { d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" }),
-              React.createElement("circle", { cx: 12, cy: 12, r: 3 })
-            ), "A ver como ", React.createElement("strong", null, viewAsClub.name))
-        ),
-        React.createElement("button", { onClick: () => { setViewAsClub(null); T = buildTheme(null); setPage("clubs"); }, style: { fontSize: 12, color: "#ff9900", background: "transparent", border: "1px solid #ff990066", borderRadius: 6, padding: "4px 12px", cursor: "pointer" } }, "← Voltar ao superadmin")
-      ),
+
       React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club, viewAsClub }),
       React.createElement("input", { style: { ...s.inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Nome ou modalidade...", value: search, onChange: e => setSearch(e.target.value) }),
       showInvite && React.createElement(InviteModal, { onClose: () => setShowInvite(false), user, club, clubs, defaultEmail: inviteData?.fighter?.email || "", fighters, users }),
@@ -2316,7 +2318,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   );
 }
 
-function AthleteView({ fighters, user, onLogout, setPage, pendingCount, club, clubs }) {
+function AthleteView({ fighters, user, onLogout, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub }) {
   const fighter = fighters.find(f => f.id === user.fighter_id);
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [matchConfirmDone, setMatchConfirmDone] = React.useState(false);
@@ -2328,7 +2330,7 @@ function AthleteView({ fighters, user, onLogout, setPage, pendingCount, club, cl
   );
   return React.createElement("div", null,
     !matchConfirmDone && fighter && React.createElement(MatchConfirmModal, { fighter, onDone: () => setMatchConfirmDone(true) }),
-    React.createElement(FighterProfile, { key: refreshKey, fighter, onBack: null, onSave: () => setRefreshKey(k => k+1), user, isOwner: true, onLogout, setPage, pendingCount, club, clubs })
+    React.createElement(FighterProfile, { key: refreshKey, fighter, onBack: null, onSave: () => setRefreshKey(k => k+1), user, isOwner: true, onLogout, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub })
   );
 }
 
@@ -2533,7 +2535,7 @@ function App() {
 
   if (!user) return React.createElement(Login, { onLogin: handleLogin, clubs });
 
-  if (page === "calendar") return React.createElement(CalendarPage, { onLogout: handleLogout, user, setPage, pendingCount, club });
+  if (page === "calendar") return React.createElement(CalendarPage, { onLogout: handleLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub });
 
   // Superadmin a ver como outro clube
   const effectiveClub = viewAsClub || club;
