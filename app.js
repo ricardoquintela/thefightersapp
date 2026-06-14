@@ -2306,13 +2306,138 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
 function AthleteView({ fighters, user, onLogout, setPage, pendingCount, club, clubs }) {
   const fighter = fighters.find(f => f.id === user.fighter_id);
   const [refreshKey, setRefreshKey] = React.useState(0);
+  const [matchConfirmDone, setMatchConfirmDone] = React.useState(false);
   if (!fighter) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "", setPage, pendingCount, club }),
       React.createElement(Card, null, React.createElement("div", { style: { color: T.TEXT2, textAlign: "center", padding: "24px 0" } }, "Perfil ainda não criado. Contacta o admin."))
     )
   );
-  return React.createElement(FighterProfile, { key: refreshKey, fighter, onBack: null, onSave: () => setRefreshKey(k => k+1), user, isOwner: true, onLogout, setPage, pendingCount, club, clubs });
+  return React.createElement("div", null,
+    !matchConfirmDone && fighter && React.createElement(MatchConfirmModal, { fighter, onDone: () => setMatchConfirmDone(true) }),
+    React.createElement(FighterProfile, { key: refreshKey, fighter, onBack: null, onSave: () => setRefreshKey(k => k+1), user, isOwner: true, onLogout, setPage, pendingCount, club, clubs })
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// CONFIRMAÇÃO DE COMBATES — primeiro login do atleta
+// ═══════════════════════════════════════════════════════════
+
+function MatchConfirmModal({ fighter, onDone }) {
+  const s = getStyles();
+  const [matches, setMatches] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [confirmed, setConfirmed] = React.useState({});
+  const [saving, setSaving] = React.useState(false);
+  const [done, setDone] = React.useState(false);
+
+  React.useEffect(() => {
+    async function findMatches() {
+      const allFights = await db.get("fights");
+      const name = fighter.name.toLowerCase().trim();
+      // Encontrar combates onde este atleta aparece como adversário mas não tem fighter_id próprio
+      const found = allFights.filter(f =>
+        f.fighter_id !== fighter.id &&
+        f.opponent && f.opponent.toLowerCase().trim() === name
+      );
+      setMatches(found);
+      setLoading(false);
+      // Se não há matches, terminar imediatamente
+      if (found.length === 0) onDone();
+    }
+    findMatches();
+  }, []);
+
+  async function handleConfirm() {
+    setSaving(true);
+    const toConfirm = matches.filter(f => confirmed[f.id]);
+    for (const fight of toConfirm) {
+      // Resultado invertido
+      const mirrorResult = fight.result === "V" ? "D" : fight.result === "D" ? "V" : "E";
+      // Buscar o atleta que registou o combate
+      const ownerFighters = await db.get("fighters", { id: fight.fighter_id });
+      const owner = ownerFighters && ownerFighters[0];
+      await db.insert("fights", {
+        id: `f${Date.now()}_${fight.id}`,
+        fighter_id: fighter.id,
+        opponent: owner ? owner.name : fight.opponent_team || "Desconhecido",
+        opponent_team: owner ? (owner.team || "") : "",
+        result: mirrorResult,
+        method: fight.method,
+        event: fight.event,
+        date: fight.date,
+        modality: fight.modality,
+        sub_modality: fight.sub_modality,
+        level: fight.level,
+        weight: fight.weight,
+        federation: fight.federation || "",
+        confirmed_from: fight.id
+      });
+    }
+    setSaving(false);
+    setDone(true);
+    setTimeout(() => onDone(), 1500);
+  }
+
+  if (loading) return null;
+  if (matches.length === 0) return null;
+
+  if (done) return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: 16 } },
+    React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 12, padding: 32, textAlign: "center", maxWidth: 400 } },
+      React.createElement("div", { style: { fontSize: 18, color: "#4caf7d", fontWeight: 700, marginBottom: 8 } }, "Histórico actualizado!"),
+      React.createElement("div", { style: { fontSize: 14, color: T.TEXT2 } }, "Os combates confirmados foram adicionados ao teu perfil.")
+    )
+  );
+
+  return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: 16, overflowY: "auto" } },
+    React.createElement("div", { style: { background: T.BG2, border: `1px solid ${T.BORDER_GOLD}`, borderRadius: 12, padding: 24, width: "100%", maxWidth: 500 } },
+      React.createElement("div", { style: { fontSize: 16, fontWeight: 700, color: T.GOLD, marginBottom: 6 } }, "Encontrámos combates com o teu nome!"),
+      React.createElement("div", { style: { fontSize: 13, color: T.TEXT2, marginBottom: 20 } },
+        `Outros atletas registaram ${matches.length} combate${matches.length !== 1 ? "s" : ""} onde apareces como adversário. Confirma os que são teus para os adicionar ao teu histórico.`
+      ),
+      matches.map(fight => {
+        const isConfirmed = confirmed[fight.id];
+        return React.createElement("div", {
+          key: fight.id,
+          style: { background: isConfirmed ? "#0a1a0e" : T.BG3, border: `1px solid ${isConfirmed ? "#4caf7d44" : T.BORDER}`, borderRadius: 8, padding: "12px 14px", marginBottom: 10, cursor: "pointer" },
+          onClick: () => setConfirmed(p => ({ ...p, [fight.id]: !p[fight.id] }))
+        },
+          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+            React.createElement("div", { style: { width: 22, height: 22, borderRadius: 4, border: `2px solid ${isConfirmed ? "#4caf7d" : T.BORDER}`, background: isConfirmed ? "#4caf7d" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } },
+              isConfirmed && React.createElement("span", { style: { color: "#fff", fontSize: 13, fontWeight: 700 } }, "✓")
+            ),
+            React.createElement("div", { style: { flex: 1 } },
+              React.createElement("div", { style: { fontWeight: 700, fontSize: 14, color: T.TEXT } },
+                `vs. `,
+                React.createElement("span", { style: { color: T.GOLD } }, "Adversário registado por outro atleta"),
+                React.createElement("span", { style: { color: fight.result === "V" ? "#e05555" : "#4caf7d", marginLeft: 8, fontSize: 12, fontWeight: 700 } },
+                  fight.result === "V" ? "← Derrota para ti" : fight.result === "D" ? "← Vitória para ti" : "Empate"
+                )
+              ),
+              React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 3 } },
+                `${fight.event || "—"} · ${fight.date || "—"}`
+              ),
+              React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
+                React.createElement(Badge, null, fight.modality),
+                fight.sub_modality && React.createElement(Badge, { type: "gold" }, fight.sub_modality),
+                React.createElement(Badge, { type: "blue" }, fight.level),
+                fight.weight && React.createElement(Badge, null, fight.weight)
+              )
+            )
+          )
+        );
+      }),
+      React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 20 } },
+        React.createElement("button", {
+          onClick: handleConfirm,
+          disabled: saving || Object.values(confirmed).every(v => !v),
+          style: { ...s.btnGold, flex: 1, marginTop: 0, opacity: (saving || Object.values(confirmed).every(v => !v)) ? 0.5 : 1 }
+        }, saving ? "A guardar..." : `Confirmar ${Object.values(confirmed).filter(Boolean).length} combate${Object.values(confirmed).filter(Boolean).length !== 1 ? "s" : ""}`),
+        React.createElement("button", { onClick: onDone, style: { ...s.btnGold, marginTop: 0, background: T.BG4, color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Ignorar")
+      )
+    )
+  );
 }
 
 // ─── APP ROOT ──────────────────────────────────────────────
