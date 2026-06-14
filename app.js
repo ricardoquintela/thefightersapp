@@ -1766,21 +1766,26 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, fighters, users
 
   const isSuperAdmin = user.role === "superadmin";
 
-  async function handleSend() {
-    setErr(""); setDone("");
+  function handleSend() {
+    setErr("");
     if (!email.includes("@")) return setErr("Email inválido.");
     if (!clubId) return setErr("Selecciona um clube.");
-    setSending(true);
-    const token = localStorage.getItem("tfa_token");
-    const r = await fetch("/api/invite?action=create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim().toLowerCase(), role, club_id: clubId, inviter_token: token })
-    });
-    const data = await r.json();
-    setSending(false);
-    if (data.ok) { setDone(data.message || `Convite enviado para ${email}`); setEmail(""); }
-    else setErr(data.error || "Erro ao enviar convite.");
+    const clubName = (clubs || []).find(c => c.id === clubId)?.name || clubId;
+    const roleLabel = role === "admin" ? "Administrador" : "Atleta";
+    const link = "https://thefightersapp.vercel.app";
+    const subject = encodeURIComponent(`Convite para a The Fighters App — ${clubName}`);
+    const body = encodeURIComponent(`Olá,
+
+Foste convidado para entrar na The Fighters App como ${roleLabel} do clube ${clubName}.
+
+Acede ao link abaixo para activar a tua conta e definir a tua password:
+
+${link}
+
+The Fighters App`);
+    window.open(`mailto:${email.trim()}?subject=${subject}&body=${body}`, "_blank");
+    setDone(`Email preparado para ${email}`);
+    setEmail("");
   }
 
   return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }, onClick: onClose },
@@ -1828,8 +1833,8 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, fighters, users
       ),
       err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 12 } }, err),
       done && React.createElement("div", { style: { fontSize: 13, color: "#4caf7d", marginBottom: 12, padding: "10px 14px", background: "#0a1a0e", borderRadius: 8 } }, "✓ " + done),
-      React.createElement("button", { onClick: handleSend, disabled: sending, style: { ...s.btnGold, width: "100%", marginTop: 0, opacity: sending ? 0.7 : 1 } }, sending ? "A enviar..." : "Enviar Convite por Email"),
-      React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 12, textAlign: "center" } }, "O convidado recebe um link para activar a conta. Válido 7 dias.")
+      React.createElement("button", { onClick: handleSend, style: { ...s.btnGold, width: "100%", marginTop: 0 } }, "✉ Enviar Convite por Email"),
+      React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 12, textAlign: "center" } }, "Abre o teu cliente de email com a mensagem pronta a enviar.")
     )
   );
 }
