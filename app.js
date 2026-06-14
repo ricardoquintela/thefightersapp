@@ -882,6 +882,7 @@ function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes }) 
   const s = getStyles();
   const { inp, lbl } = s;
   const [showForm, setShowForm] = useState(false);
+  const [inviteClub, setInviteClub] = useState(null);
   const [nc, setNc] = useState({ id: "", name: "", short_name: "", primary_color: "#C9A84C", secondary_color: "#8a6f2e", logo_url: "", active: true });
 
   async function saveClub() {
@@ -899,6 +900,7 @@ function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes }) 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "clubs", setPage, pendingCount, club: null }),
+      inviteClub && React.createElement(InviteModal, { onClose: () => setInviteClub(null), user, club: inviteClub, clubs }),
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: "#ff9900", textTransform: "uppercase", letterSpacing: 1 } }, `Clubes · ${(clubs || []).length}`),
         React.createElement("button", { onClick: () => setShowForm(p => !p), style: { ...s.btnOutline, borderColor: "#ff990066", color: "#ff9900" } }, "+ Novo Clube")
@@ -937,7 +939,10 @@ function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes }) 
             React.createElement("div", { style: { fontWeight: 700, color: club.primary_color, fontSize: 15 } }, club.name),
             React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `ID: ${club.id} · ${club.short_name || "—"}`)
           ),
-          React.createElement("button", { onClick: () => toggleActive(club), style: { padding: "5px 14px", borderRadius: 6, border: `1px solid ${club.active ? "#4caf7d44" : "#e0555544"}`, background: "transparent", color: club.active ? "#4caf7d" : "#e05555", cursor: "pointer", fontSize: 12, fontWeight: 700 } }, club.active ? "Ativo" : "Inativo")
+          React.createElement("div", { style: { display: "flex", gap: 8 } },
+            React.createElement("button", { onClick: () => toggleActive(club), style: { padding: "5px 14px", borderRadius: 6, border: `1px solid ${club.active ? "#4caf7d44" : "#e0555544"}`, background: "transparent", color: club.active ? "#4caf7d" : "#e05555", cursor: "pointer", fontSize: 12, fontWeight: 700 } }, club.active ? "Ativo" : "Inativo"),
+            React.createElement("button", { onClick: () => setInviteClub(club), style: { padding: "5px 14px", borderRadius: 6, border: "1px solid #4caf7d44", background: "transparent", color: "#4caf7d", cursor: "pointer", fontSize: 12, fontWeight: 700 } }, "✉ Admin")
+          )
         )
       )),
       React.createElement(Footer)
@@ -1626,24 +1631,190 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   );
 }
 
-function InviteModal({ fighter, user, onClose }) {
+function AcceptInvitePage({ token, clubs }) {
   const s = getStyles();
-  const subject = encodeURIComponent("Convite - The Fighters App");
-  const body = encodeURIComponent(`Olá ${fighter.name},\n\nFoste adicionado à The Fighters App.\n\nAcede à app aqui: https://norteforte.vercel.app\n\nUsername: ${user.username}\nPassword: ${user.password}\n\nThe Fighters App`);
-  return React.createElement("div", { style: { position: "fixed", inset: 0, background: "#000000bb", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 } },
-    React.createElement(Card, { gold: true, style: { maxWidth: 400, width: "100%" } },
-      React.createElement("div", { style: { fontSize: 16, fontWeight: 700, color: T.TEXT, marginBottom: 4 } }, `Convite para ${fighter.name}`),
-      React.createElement(GoldDivider),
-      React.createElement("div", { style: { marginBottom: 8 } }, React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, textTransform: "uppercase" } }, "Link"), React.createElement("div", { style: { fontSize: 14, color: T.GOLD, fontWeight: 700 } }, "https://norteforte.vercel.app")),
-      React.createElement("div", { style: { marginBottom: 8 } }, React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, textTransform: "uppercase" } }, "Username"), React.createElement("div", { style: { fontSize: 16, color: T.GOLD, fontWeight: 700 } }, user.username)),
-      React.createElement("div", { style: { marginBottom: 16 } }, React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, textTransform: "uppercase" } }, "Password"), React.createElement("div", { style: { fontSize: 16, color: T.GOLD, fontWeight: 700 } }, user.password)),
-      React.createElement("div", { style: { display: "flex", gap: 8 } },
-        React.createElement("a", { href: `mailto:${fighter.email}?subject=${subject}&body=${body}`, style: { ...s.btnGold, marginTop: 0, flex: 1, textAlign: "center", textDecoration: "none", display: "block" } }, "✉ Enviar Convite"),
-        React.createElement("button", { onClick: onClose, style: { ...s.btnGold, marginTop: 0, background: T.BG4, color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Fechar")
+  const { inp, lbl } = s;
+  const [invite, setInvite] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [err, setErr] = React.useState("");
+  const [name, setName] = React.useState("");
+  const [pw, setPw] = React.useState("");
+  const [pw2, setPw2] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const [done, setDone] = React.useState(false);
+
+  React.useEffect(() => {
+    fetch("/api/invite?action=validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token })
+    }).then(r => r.json()).then(data => {
+      setLoading(false);
+      if (data.ok) setInvite(data.invite);
+      else setErr(data.error || "Convite inválido.");
+    }).catch(() => { setLoading(false); setErr("Erro de ligação."); });
+  }, [token]);
+
+  async function handleAccept() {
+    setErr("");
+    if (!name.trim()) return setErr("O teu nome é obrigatório.");
+    if (pw.length < 6) return setErr("Password mínimo 6 caracteres.");
+    if (pw !== pw2) return setErr("As passwords não coincidem.");
+    setSaving(true);
+    const r = await fetch("/api/invite?action=accept", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password: pw, name: name.trim() })
+    });
+    const data = await r.json();
+    setSaving(false);
+    if (data.ok) {
+      localStorage.setItem("tfa_token", data.token);
+      setDone(true);
+      setTimeout(() => { window.location.href = "/"; }, 2000);
+    } else {
+      setErr(data.error || "Erro ao activar conta.");
+    }
+  }
+
+  const club = invite?.club;
+
+  if (loading) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center" } },
+    React.createElement("img", { src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/tfa_logo.jpeg", style: { height: 60, opacity: 0.7 } })
+  );
+
+  if (err && !invite) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
+    React.createElement("div", { style: { textAlign: "center", maxWidth: 400 } },
+      React.createElement("img", { src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/tfa_logo.jpeg", style: { height: 60, opacity: 0.7, marginBottom: 24 } }),
+      React.createElement("div", { style: { background: "#1a0a0a", border: "1px solid #e0555544", borderRadius: 12, padding: 24 } },
+        React.createElement("div", { style: { fontSize: 32, marginBottom: 12 } }, "⚠️"),
+        React.createElement("div", { style: { fontSize: 16, color: "#e05555", fontWeight: 700, marginBottom: 8 } }, "Convite inválido"),
+        React.createElement("div", { style: { fontSize: 14, color: T.TEXT2, marginBottom: 16 } }, err),
+        React.createElement("a", { href: "/", style: { fontSize: 13, color: T.GOLD_DIM, textDecoration: "none" } }, "← Ir para o login")
+      )
+    )
+  );
+
+  if (done) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
+    React.createElement("div", { style: { textAlign: "center", maxWidth: 400 } },
+      React.createElement("img", { src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/tfa_logo.jpeg", style: { height: 60, opacity: 0.9, marginBottom: 24 } }),
+      React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 12, padding: 24 } },
+        React.createElement("div", { style: { fontSize: 32, marginBottom: 12 } }, "✅"),
+        React.createElement("div", { style: { fontSize: 18, color: "#4caf7d", fontWeight: 700, marginBottom: 8 } }, "Conta activada!"),
+        React.createElement("div", { style: { fontSize: 14, color: T.TEXT2 } }, "A entrar na app...")
+      )
+    )
+  );
+
+  const roleLabel = invite.role === "admin" ? "Administrador" : "Atleta";
+
+  return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
+    React.createElement("div", { style: { width: "100%", maxWidth: 420 } },
+      React.createElement("img", { src: "https://iwjpunazbezxqwftcned.supabase.co/storage/v1/object/public/logos/tfa_logo.jpeg", style: { height: 70, display: "block", margin: "0 auto 28px", opacity: 0.92 } }),
+      React.createElement("div", { style: { background: T.BG2, border: `1px solid ${T.BORDER_GOLD}`, borderRadius: 10, padding: "14px 16px", marginBottom: 20 } },
+        React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 } }, "Convite para"),
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+          club?.logo_url
+            ? React.createElement("img", { src: club.logo_url, style: { width: 36, height: 36, objectFit: "contain", borderRadius: 6 } })
+            : React.createElement("div", { style: { width: 36, height: 36, borderRadius: 6, background: (club?.primary_color || T.GOLD) + "33", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, color: club?.primary_color || T.GOLD } }, club?.short_name || "?"),
+          React.createElement("div", null,
+            React.createElement("div", { style: { fontWeight: 700, color: club?.primary_color || T.GOLD, fontSize: 15 } }, club?.name || invite.club_id),
+            React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, roleLabel + " · " + invite.email)
+          )
+        )
+      ),
+      React.createElement("div", { style: { background: T.BG2, border: `1px solid ${T.BORDER}`, borderRadius: 10, padding: "20px 16px" } },
+        React.createElement("div", { style: { fontSize: 13, color: T.GOLD, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 } }, "Activar Conta"),
+        React.createElement("div", { style: { marginBottom: 12 } },
+          React.createElement("label", { style: lbl }, "O teu nome completo"),
+          React.createElement("input", { style: inp, value: name, onChange: e => setName(e.target.value), placeholder: "Nome Apelido", autoFocus: true })
+        ),
+        React.createElement("div", { style: { marginBottom: 12 } },
+          React.createElement("label", { style: lbl }, "Escolhe uma password"),
+          React.createElement("input", { type: "password", style: inp, value: pw, onChange: e => setPw(e.target.value), placeholder: "Mínimo 6 caracteres" })
+        ),
+        React.createElement("div", { style: { marginBottom: 16 } },
+          React.createElement("label", { style: lbl }, "Confirmar password"),
+          React.createElement("input", { type: "password", style: inp, value: pw2, onChange: e => setPw2(e.target.value), placeholder: "Repetir password", onKeyDown: e => e.key === "Enter" && handleAccept() })
+        ),
+        err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 12 } }, err),
+        React.createElement("button", { onClick: handleAccept, disabled: saving, style: { ...s.btnGold, width: "100%", marginTop: 0, opacity: saving ? 0.7 : 1 } }, saving ? "A activar..." : "Activar Conta")
+      ),
+      React.createElement("div", { style: { textAlign: "center", marginTop: 16 } },
+        React.createElement("a", { href: "/", style: { fontSize: 12, color: T.TEXT3, textDecoration: "none" } }, "Já tenho conta → Login")
       )
     )
   );
 }
+
+function InviteModal({ onClose, user, club, clubs }) {
+  const s = getStyles();
+  const { inp, lbl } = s;
+  const [email, setEmail] = React.useState("");
+  const [role, setRole] = React.useState("athlete");
+  const [clubId, setClubId] = React.useState(user.club_id || "");
+  const [sending, setSending] = React.useState(false);
+  const [done, setDone] = React.useState("");
+  const [err, setErr] = React.useState("");
+
+  const isSuperAdmin = user.role === "superadmin";
+
+  async function handleSend() {
+    setErr(""); setDone("");
+    if (!email.includes("@")) return setErr("Email inválido.");
+    if (!clubId) return setErr("Selecciona um clube.");
+    setSending(true);
+    const token = localStorage.getItem("tfa_token");
+    const r = await fetch("/api/invite?action=create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim().toLowerCase(), role, club_id: clubId, inviter_token: token })
+    });
+    const data = await r.json();
+    setSending(false);
+    if (data.ok) { setDone(data.message || `Convite enviado para ${email}`); setEmail(""); }
+    else setErr(data.error || "Erro ao enviar convite.");
+  }
+
+  return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }, onClick: onClose },
+    React.createElement("div", { style: { background: T.BG2, border: `1px solid ${T.BORDER_GOLD}`, borderRadius: 12, padding: 24, width: "100%", maxWidth: 400 }, onClick: e => e.stopPropagation() },
+      React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 } },
+        React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.GOLD, textTransform: "uppercase", letterSpacing: 1 } }, "Convidar"),
+        React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", color: T.TEXT2, fontSize: 20, cursor: "pointer" } }, "×")
+      ),
+      isSuperAdmin && React.createElement("div", { style: { marginBottom: 12 } },
+        React.createElement("label", { style: { ...lbl, color: "#ff9900" } }, "Clube"),
+        React.createElement("select", { style: inp, value: clubId, onChange: e => setClubId(e.target.value) },
+          React.createElement("option", { value: "" }, "Seleccionar clube..."),
+          (clubs || []).filter(c => c.active).map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))
+        )
+      ),
+      isSuperAdmin && React.createElement("div", { style: { marginBottom: 12 } },
+        React.createElement("label", { style: lbl }, "Função"),
+        React.createElement("select", { style: inp, value: role, onChange: e => setRole(e.target.value) },
+          React.createElement("option", { value: "athlete" }, "Atleta"),
+          React.createElement("option", { value: "admin" }, "Administrador")
+        )
+      ),
+      !isSuperAdmin && React.createElement("div", { style: { marginBottom: 12, padding: "10px 14px", background: T.BG3, borderRadius: 8 } },
+        React.createElement("div", { style: { fontSize: 12, color: T.TEXT2 } },
+          "A convidar como ", React.createElement("strong", { style: { color: T.GOLD } }, "Atleta"),
+          " para ", React.createElement("strong", { style: { color: T.TEXT } }, club?.name || "o teu clube")
+        )
+      ),
+      React.createElement("div", { style: { marginBottom: 16 } },
+        React.createElement("label", { style: lbl }, "Email do convidado"),
+        React.createElement("input", { style: inp, type: "email", value: email, onChange: e => setEmail(e.target.value), placeholder: "atleta@email.com", onKeyDown: e => e.key === "Enter" && handleSend(), autoFocus: true })
+      ),
+      err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 12 } }, err),
+      done && React.createElement("div", { style: { fontSize: 13, color: "#4caf7d", marginBottom: 12, padding: "10px 14px", background: "#0a1a0e", borderRadius: 8 } }, "✓ " + done),
+      React.createElement("button", { onClick: handleSend, disabled: sending, style: { ...s.btnGold, width: "100%", marginTop: 0, opacity: sending ? 0.7 : 1 } }, sending ? "A enviar..." : "Enviar Convite por Email"),
+      React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 12, textAlign: "center" } }, "O convidado recebe um link para activar a conta. Válido 7 dias.")
+    )
+  );
+}
+
+function InviteModal({ fighter, user, onClose }) {
 
 function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames, club, clubs }) {
   const s = getStyles();
@@ -1713,6 +1884,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   const [selected, setSelected] = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
   const [delId, setDelId] = useState(null);
+  const [showInvite, setShowInvite] = useState(false);
   const [inviteData, setInviteData] = useState(null);
   const [resetData, setResetData] = useState(null);
 
@@ -1764,10 +1936,21 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club }),
-      inviteData && React.createElement(InviteModal, { fighter: inviteData.fighter, user: inviteData.user, onClose: () => setInviteData(null) }),
+      showInvite && React.createElement(InviteModal, { onClose: () => setShowInvite(false), user, club, clubs }),
+      inviteData && React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 10, padding: "12px 16px", marginBottom: 16 } },
+        React.createElement("div", { style: { fontSize: 13, color: "#4caf7d", marginBottom: 8, fontWeight: 700 } }, `✓ Perfil criado — ${inviteData.fighter.name}`),
+        React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginBottom: 8 } }, `Username: ${inviteData.user.username} · Password: ${inviteData.user.password}`),
+        React.createElement("div", { style: { display: "flex", gap: 8 } },
+          React.createElement("button", { onClick: () => setShowInvite(true), style: { ...s.btnGreen, padding: "4px 12px", fontSize: 12, marginTop: 0 } }, "✉ Enviar convite por email"),
+          React.createElement("button", { onClick: () => setInviteData(null), style: { ...s.btnOutline, padding: "4px 12px", fontSize: 12 } }, "Fechar")
+        )
+      ),
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
         React.createElement("span", { style: { fontSize: 13, color: T.TEXT2, textTransform: "uppercase", letterSpacing: 1 } }, `${fighters.length} lutadores`),
-        React.createElement("button", { onClick: () => setShowNewForm(true), style: s.btnOutline }, "+ Novo Lutador")
+        React.createElement("div", { style: { display: "flex", gap: 8 } },
+          React.createElement("button", { onClick: () => setShowInvite(true), style: { ...s.btnOutline, borderColor: "#4caf7d44", color: "#4caf7d" } }, "✉ Convidar"),
+          React.createElement("button", { onClick: () => setShowNewForm(true), style: s.btnOutline }, "+ Novo Lutador")
+        )
       ),
       delId && React.createElement("div", { style: { background: "#1a0a0a", border: `1px solid #e0555544`, borderRadius: 10, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" } },
         React.createElement("span", { style: { fontSize: 13, color: "#e05555" } }, `Eliminar ${fighters.find(f => f.id === delId)?.name}?`),
@@ -1831,13 +2014,14 @@ function App() {
   const [pendingCount, setPendingCount] = useState(0);
 
   const isRegister = window.location.search.includes("register=true");
+  const inviteToken = new URLSearchParams(window.location.search).get("invite");
 
   // Carregar clubes sempre
   useEffect(() => { db.get("clubs").then(c => setClubs(c.filter(x => x.active))); }, []);
 
   // Restaurar sessão se houver token guardado
   useEffect(() => {
-    if (isRegister) { setLoading(false); return; }
+    if (isRegister || inviteToken) { setLoading(false); return; }
     const token = localStorage.getItem("tfa_token");
     if (!token) { setLoading(false); return; }
     fetch("/api/auth?action=verify", {
@@ -1858,6 +2042,7 @@ function App() {
   }, []);
 
   if (isRegister) return React.createElement(RegisterPage, { clubs });
+  if (inviteToken && !user) return React.createElement(AcceptInvitePage, { token: inviteToken, clubs });
 
   useEffect(() => {
     if (!user) return;
