@@ -2264,7 +2264,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
 
-      React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club, viewAsClub }),
+      React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club, viewAsClub, setViewAsClub }),
       React.createElement("input", { style: { ...s.inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Nome ou modalidade...", value: search, onChange: e => setSearch(e.target.value) }),
       showInvite && React.createElement(InviteModal, { onClose: () => setShowInvite(false), user, club, clubs, defaultEmail: inviteData?.fighter?.email || "", fighters, users }),
       inviteData && React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 10, padding: "12px 16px", marginBottom: 16 } },
