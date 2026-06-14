@@ -138,8 +138,171 @@ function getWeightCategories(subModality, escalao, gender, level) {
   return esc[g] || [];
 }
 const METHODS = ["KO/TKO", "Decisão Unânime", "Decisão Dividida", "Submissão", "Desqualificação", "Desistência"];
-const EMPTY_FIGHT = { opponent: "", opponent_team: "", result: "V", method: "KO/TKO", event: "", date: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", weight: "" };
-const EMPTY_EVENT = { name: "", local: "", city: "", country: "Portugal", organization: "", date: "" };
+
+const FEDERATIONS = [
+  // Internacional — Kickboxing
+  "WAKO (World Association of Kickboxing Organizations)",
+  "WAKO PRO",
+  "WKF (World Kickboxing Federation)",
+  "WKA (World Kickboxing Association)",
+  "WKN (World Kickboxing Network)",
+  "WKO (World Kickboxing Organization)",
+  "ISKA (International Sport Karate Association)",
+  "IKF (International Kickboxing Federation)",
+  "ICO (International Combat Organization)",
+  "WMO (World Martial Arts Organization)",
+  // Internacional — Muay Thai
+  "IFMA (International Federation of Muaythai Associations)",
+  "WBC Muay Thai",
+  "WPMF (World Professional Muaythai Federation)",
+  "FEA (Fighting Entertainment Association)",
+  "MTGP (Muay Thai Grand Prix)",
+  "Lion Fight",
+  "Max Muay Thai",
+  "Muay Thai Extreme",
+  "Thai Fight",
+  "Rajadamnern",
+  "Lumpinee",
+  // Internacional — Promoções / Eventos
+  "SUPERKOMBAT",
+  "ONE Championship",
+  "Glory Kickboxing",
+  "K-1 Japan",
+  "Rise Kickboxing",
+  "Krush",
+  "Senshi",
+  "Enfusion",
+  // Portugal
+  "FNKDA (Portugal - Kickboxing)",
+  "FPKMT (Portugal - Kickboxing & Muay Thai)",
+  // Albânia
+  "Kick Boxing Federation of Albania",
+  "Albanian Muaythai Federation",
+  // Alemanha
+  "WAKO Deutschland",
+  "MTBD (Muaythai Bund Deutschland)",
+  // Andorra
+  "Federació Andorrana de Kickboxing i Muay Thai",
+  // Áustria
+  "ÖBFK (Österreichischer Bundesfachverband für Kickboxen)",
+  "ÖMTF (Österreichischer Muaythai Verband)",
+  // Bélgica
+  "WAKO Belgium",
+  "BKBMO (Belgian Kickboxing, Muaythai & MMA Organisation)",
+  // Bielorrússia
+  "Belarusian Federation of Kickboxing and Muay Thai",
+  // Bósnia e Herzegovina
+  "KBSBiH (Kik Boks Savez Bosne i Hercegovine)",
+  "Muaythai Savez Bosne i Hercegovine",
+  // Bulgária
+  "Bulgarian Confederation of Kickboxing and Muay Thai",
+  // Chéquia
+  "ČSFU (Český Svaz Full-contactu)",
+  "CMTA (Česká Muaythai Asociace)",
+  // Chipre
+  "Cyprus Kickboxing Federation",
+  "Cyprus Muaythai Federation",
+  // Croácia
+  "HKBS (Hrvatski Kikboksing Savez)",
+  "HMS (Hrvatski Muaythai Savez)",
+  // Dinamarca
+  "Kickboxing Danmark",
+  "Dansk Muaythai Forbund",
+  // Eslováquia
+  "SZKB (Slovenský Zväz Kickboxu)",
+  "SMTA (Slovenská Muaythai Asociácia)",
+  // Eslovénia
+  "KBZS (Kickboxing Zveza Slovenije)",
+  "Slovenska Muaythai Zveza",
+  // Espanha
+  "FEKM (Real Federación Española de Kickboxing y Muaythai)",
+  // Estónia
+  "Estonian Kickboxing Federation",
+  "Estonian Muaythai Federation",
+  // Finlândia
+  "Suomen Potkunyrkkeilyliitto (Finnish Kickboxing Federation)",
+  "Suomen Thainyrkkeilyliitto (Finnish Muaythai Federation)",
+  // França
+  "FFKMDA (Fédération Française de Kickboxing, Muaythai et Disciplines Associées)",
+  // Grécia
+  "POPO (Panhellenic Kickboxing Federation)",
+  "PMF (Panhellenic Muaythai Federation)",
+  // Hungria
+  "Magyar KICK-BOX Szakszövetség",
+  "Magyar Muaythai Szakszövetség",
+  // Irlanda
+  "Kickboxing Ireland (KBI)",
+  "Muaythai Ireland (MTI)",
+  // Islândia
+  "Vaki (Kickboxing Federation of Iceland)",
+  "Iceland Muay Thai Federation",
+  // Itália
+  "Federkombat",
+  // Kosovo
+  "Kickboxing Federation of Kosovo",
+  "Muaythai Federation of Kosovo",
+  // Letónia
+  "Latvia Kickboxing Federation",
+  "Latvian Muay Thai Federation",
+  // Liechtenstein
+  "LKBV (Liechtensteiner Kickboxing Verband)",
+  // Lituânia
+  "Lietuvos Kikboksingo Federacija",
+  "Lietuvos Muaythai Sąjunga",
+  // Luxemburgo
+  "FLAM (Fédération Luxembourgeoise des Arts Martiaux)",
+  // Macedónia do Norte
+  "Kickboxing Muaythai Federation of Macedonia",
+  // Malta
+  "Malta Kickboxing Association",
+  "Muaythai Malta",
+  // Moldávia
+  "National Kickboxing Federation of Republic of Moldova",
+  "Muaythai and Kickboxing Federation of Moldova",
+  // Mónaco
+  "Fédération Monégasque de Kick-Boxing",
+  "Fédération Monégasque de Muaythai",
+  // Montenegro
+  "Kik Boks Savez Crne Gore",
+  "Muaythai Savez Crne Gore",
+  // Noruega
+  "Norges Kickboxingforbund (NKBF)",
+  "Norges Muaythai Forbund",
+  // Países Baixos
+  "Vechtsportautoriteit / WAKO Nederland",
+  "MON (Muaythai Organisatie Nederland)",
+  // Polónia
+  "Polski Związek Kickboxingu (PZKB)",
+  "Polski Związek Muaythai (PZM)",
+  // Reino Unido
+  "WAKO GB (British Kickboxing Federation)",
+  "UKMF (United Kingdom Muaythai Federation)",
+  // Roménia
+  "FRKM (Federația Română de Kickboxing)",
+  "Federația Română de Muay Thai",
+  // Rússia
+  "FKR (Federation of Kickboxing of Russia)",
+  "RMF (Russian Muaythai Federation)",
+  // San Marino
+  "FESAM (Federazione Sammarinese Arti Marziali)",
+  // Sérvia
+  "Kik Boks Savez Srbije",
+  "Muaythai Savez Srbije",
+  // Suécia
+  "Svenska Kickboxningsförbundet",
+  "Svenska Muaythaiförbundet (SMTF)",
+  // Suíça
+  "WAKO Switzerland",
+  "SMV (Swiss Muaythai Verband)",
+  // Ucrânia
+  "WAKO Ukraine (National Kickboxing Federation of Ukraine)",
+  "Ukrainian Muaythai Federation",
+  // Outra
+  "Outra"
+];
+
+const EMPTY_FIGHT = { opponent: "", opponent_team: "", result: "V", method: "KO/TKO", event: "", date: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", weight: "", federation: "" };
+const EMPTY_EVENT = { name: "", local: "", city: "", country: "Portugal", organization: "", date: "", federation: "" };
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 // ─── UTILITÁRIOS ──────────────────────────────────────────
@@ -359,7 +522,14 @@ function FightForm({ val, set }) {
     React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"),
       React.createElement("select", { style: inp, value: val.level || "Amador", onChange: e => set({ ...val, level: e.target.value }) }, LEVELS.map(l => React.createElement("option", { key: l }, l)))
     ),
-    React.createElement("div", null, React.createElement("label", { style: lbl }, "Evento"), React.createElement("input", { style: inp, value: val.event || "", onChange: e => set({ ...val, event: e.target.value }) }))
+    React.createElement("div", null, React.createElement("label", { style: lbl }, "Evento"), React.createElement("input", { style: inp, value: val.event || "", onChange: e => set({ ...val, event: e.target.value }) })),
+    React.createElement("div", { style: { gridColumn: "1 / -1" } },
+      React.createElement("label", { style: lbl }, "Federação"),
+      React.createElement("select", { style: inp, value: val.federation || "", onChange: e => set({ ...val, federation: e.target.value }) },
+        React.createElement("option", { value: "" }, "Selecionar federação..."),
+        FEDERATIONS.map(fed => React.createElement("option", { key: fed, value: fed }, fed))
+      )
+    )
   );
 }
 
@@ -374,7 +544,14 @@ function EventForm({ val, set }) {
     React.createElement("div", null, React.createElement("label", { style: lbl }, "Organização"), React.createElement("input", { style: inp, value: val.organization || "", onChange: e => set({ ...val, organization: e.target.value }) })),
     React.createElement("div", null, React.createElement("label", { style: lbl }, "Local"), React.createElement("input", { style: inp, value: val.local || "", onChange: e => set({ ...val, local: e.target.value }) })),
     React.createElement("div", null, React.createElement("label", { style: lbl }, "Cidade"), React.createElement("input", { style: inp, value: val.city || "", onChange: e => set({ ...val, city: e.target.value }) })),
-    React.createElement("div", null, React.createElement("label", { style: lbl }, "País"), React.createElement("input", { style: inp, value: val.country || "", onChange: e => set({ ...val, country: e.target.value }) }))
+    React.createElement("div", null, React.createElement("label", { style: lbl }, "País"), React.createElement("input", { style: inp, value: val.country || "", onChange: e => set({ ...val, country: e.target.value }) })),
+    React.createElement("div", { style: { gridColumn: "1 / -1" } },
+      React.createElement("label", { style: lbl }, "Federação"),
+      React.createElement("select", { style: inp, value: val.federation || "", onChange: e => set({ ...val, federation: e.target.value }) },
+        React.createElement("option", { value: "" }, "Selecionar federação..."),
+        FEDERATIONS.map(fed => React.createElement("option", { key: fed, value: fed }, fed))
+      )
+    )
   );
 }
 
@@ -433,6 +610,7 @@ function CalendarPage({ onLogout, user, setPage, pendingCount, club }) {
               React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: isPast ? T.TEXT2 : T.TEXT } }, ev.name),
               ev.organization && React.createElement("div", { style: { fontSize: 12, color: T.GOLD, fontWeight: 600, marginTop: 2 } }, ev.organization),
               React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, [ev.local, ev.city, ev.country].filter(Boolean).join(" · ")),
+              ev.federation && React.createElement("div", { style: { fontSize: 11, color: "#d4844c", fontWeight: 600, marginTop: 3 } }, ev.federation),
               delEventId === ev.id && React.createElement("div", { style: { marginTop: 10, display: "flex", gap: 8, alignItems: "center" } },
                 React.createElement("span", { style: { fontSize: 13, color: "#e05555" } }, "Tens a certeza?"),
                 React.createElement("button", { onClick: () => deleteEvent(ev.id), style: { ...s.btnGold, marginTop: 0, padding: "5px 14px", fontSize: 12, background: "#e05555" } }, "Eliminar"),
@@ -1405,7 +1583,8 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
             React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
               React.createElement(Badge, null, fight.modality), fight.sub_modality && React.createElement(Badge, { type: "gold" }, fight.sub_modality),
               React.createElement(Badge, { type: "blue" }, fight.level), React.createElement(Badge, null, fight.method),
-              fight.weight && React.createElement(Badge, null, `${fight.weight}kg`)
+              fight.weight && React.createElement(Badge, null, `${fight.weight}kg`),
+              fight.federation && React.createElement(Badge, { type: "orange" }, fight.federation)
             ),
             delFightId === fight.id && React.createElement("div", { style: { marginTop: 10, display: "flex", gap: 8, alignItems: "center" } },
               React.createElement("span", { style: { fontSize: 13, color: "#e05555" } }, "Tens a certeza?"),
@@ -1464,7 +1643,14 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Peso (kg)"), React.createElement("input", { type: "number", style: inp, value: nu.weight, onChange: e => setNu({ ...nu, weight: e.target.value }) })),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Modalidade"), React.createElement("select", { style: inp, value: nu.modality, onChange: e => setNu({ ...nu, modality: e.target.value, sub_modality: MODALITIES[e.target.value][0] }) }, Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m)))),
           React.createElement("div", null, React.createElement("label", { style: lbl }, "Disciplina"), React.createElement("select", { style: inp, value: nu.sub_modality, onChange: e => setNu({ ...nu, sub_modality: e.target.value }) }, (MODALITIES[nu.modality] || []).map(s => React.createElement("option", { key: s }, s)))),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: nu.level, onChange: e => setNu({ ...nu, level: e.target.value }) }, LEVELS.map(l => React.createElement("option", { key: l }, l))))
+          React.createElement("div", null, React.createElement("label", { style: lbl }, "Nível"), React.createElement("select", { style: inp, value: nu.level, onChange: e => setNu({ ...nu, level: e.target.value }) }, LEVELS.map(l => React.createElement("option", { key: l }, l)))),
+          React.createElement("div", { style: { gridColumn: "1 / -1" } },
+            React.createElement("label", { style: lbl }, "Federação"),
+            React.createElement("select", { style: inp, value: nu.federation || "", onChange: e => setNu({ ...nu, federation: e.target.value }) },
+              React.createElement("option", { value: "" }, "Selecionar federação..."),
+              FEDERATIONS.map(fed => React.createElement("option", { key: fed, value: fed }, fed))
+            )
+          )
         ),
         nu.event && nu.event.trim() && !nu._eventId && React.createElement("div", { style: { fontSize: 11, color: T.GOLD_DIM, marginTop: 10, padding: "6px 10px", background: T.BG3, borderRadius: 6 } },
           `📅 Se "${nu.event}" não existir no calendário, será criado automaticamente.`
@@ -1507,7 +1693,8 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
                   React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, [u.event, u.local].filter(Boolean).join(" · ")),
                   React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
                     React.createElement(Badge, null, u.modality), React.createElement(Badge, { type: "gold" }, u.sub_modality),
-                    React.createElement(Badge, { type: "blue" }, u.level), u.weight && React.createElement(Badge, null, `${u.weight}kg`)
+                    React.createElement(Badge, { type: "blue" }, u.level), u.weight && React.createElement(Badge, null, `${u.weight}kg`),
+                    u.federation && React.createElement(Badge, { type: "orange" }, u.federation)
                   ),
                   isOwner && React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 8 } },
                     React.createElement("button", { onClick: () => setEditUpcoming({ ...u }), style: { ...s.btnOutline, fontSize: 11, padding: "3px 10px" } }, "Editar"),
