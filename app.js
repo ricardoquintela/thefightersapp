@@ -2137,7 +2137,7 @@ The Fighters App`);
   );
 }
 
-function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames, club, clubs }) {
+function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames, club, clubs, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const { inp, lbl } = s;
   const [f, setF] = useState({ name: "", weight: "", category: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", email: "", team: club?.name || "", club_id: user.club_id || club?.id || "", gender: "" });
@@ -2247,7 +2247,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   if (showNewForm) return React.createElement(NewFighterForm, {
     onBack: () => setShowNewForm(false),
     onSave: async (fighter, newUser) => {
-      await db.insert("fighters", { ...fighter, available: false, status: "approved" });
+      await db.insert("fighters", { ...fighter, available: false, status: "approved" , viewAsClub, setViewAsClub });
       await db.insert("users", newUser);
       setFighters(p => [...p, fighter]); setUsers(p => [...p, newUser]);
       setShowNewForm(false); setInviteData({ fighter, user: newUser });
