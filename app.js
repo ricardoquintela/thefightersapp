@@ -471,7 +471,7 @@ function AccountModal({ user, onClose }) {
   );
 }
 
-function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club }) {
+function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, viewAsClub }) {
   const s = getStyles();
   const [showAccount, setShowAccount] = React.useState(false);
   return React.createElement("div", { style: { textAlign: "center", marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${T.BORDER}` } },
@@ -494,8 +494,8 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club }
         pendingCount > 0 && React.createElement("span", { style: { position: "absolute", top: -7, right: -7, background: "#e05555", color: "#fff", borderRadius: "50%", width: 17, height: 17, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" } }, pendingCount > 9 ? "9+" : pendingCount)
       ),
       (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("teams"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "teams" ? T.GOLD_DIM : "transparent", color: currentPage === "teams" ? "#fff" : T.GOLD } }, "Equipas"),
-      user.role === "superadmin" && React.createElement("button", { onClick: () => setPage("dashboard"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "dashboard" ? "#ff990066" : "transparent", color: currentPage === "dashboard" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Dashboard"),
-      user.role === "superadmin" && React.createElement("button", { onClick: () => setPage("clubs"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "clubs" ? "#ff990066" : "transparent", color: currentPage === "clubs" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Clubes"),
+      user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("dashboard"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "dashboard" ? "#ff990066" : "transparent", color: currentPage === "dashboard" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Dashboard"),
+      user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("clubs"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "clubs" ? "#ff990066" : "transparent", color: currentPage === "clubs" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Clubes"),
       React.createElement("button", { onClick: () => setPage("calendar"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? T.GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : T.GOLD } }, "Calendário")
     )
   );
@@ -1121,7 +1121,7 @@ function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes, vi
             React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `ID: ${club.id} · ${club.short_name || "—"}`)
           ),
           React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
-            React.createElement("button", { onClick: () => { setViewAsClub(club); setPage("fighters"); }, style: { padding: "5px 14px", borderRadius: 6, border: "1px solid #5b8fd444", background: "transparent", color: "#5b8fd4", cursor: "pointer", fontSize: 12, fontWeight: 700 } }, React.createElement("span", { style: { display: "flex", alignItems: "center", gap: 4 } }, React.createElement("svg", { width: 14, height: 14, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "inline", verticalAlign: "middle", marginRight: 4 } },
+            React.createElement("button", { onClick: () => { setViewAsClub(club); T = buildTheme(club); setPage("fighters"); }, style: { padding: "5px 14px", borderRadius: 6, border: "1px solid #5b8fd444", background: "transparent", color: "#5b8fd4", cursor: "pointer", fontSize: 12, fontWeight: 700 } }, React.createElement("span", { style: { display: "flex", alignItems: "center", gap: 4 } }, React.createElement("svg", { width: 14, height: 14, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "inline", verticalAlign: "middle", marginRight: 4 } },
               React.createElement("path", { d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" }),
               React.createElement("circle", { cx: 12, cy: 12, r: 3 })
             ), "Ver como")),
@@ -2260,9 +2260,9 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
               React.createElement("circle", { cx: 12, cy: 12, r: 3 })
             ), "A ver como ", React.createElement("strong", null, viewAsClub.name))
         ),
-        React.createElement("button", { onClick: () => { setViewAsClub(null); setPage("clubs"); }, style: { fontSize: 12, color: "#ff9900", background: "transparent", border: "1px solid #ff990066", borderRadius: 6, padding: "4px 12px", cursor: "pointer" } }, "← Voltar ao superadmin")
+        React.createElement("button", { onClick: () => { setViewAsClub(null); T = buildTheme(null); setPage("clubs"); }, style: { fontSize: 12, color: "#ff9900", background: "transparent", border: "1px solid #ff990066", borderRadius: 6, padding: "4px 12px", cursor: "pointer" } }, "← Voltar ao superadmin")
       ),
-      React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club }),
+      React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club, viewAsClub }),
       React.createElement("input", { style: { ...s.inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Nome ou modalidade...", value: search, onChange: e => setSearch(e.target.value) }),
       showInvite && React.createElement(InviteModal, { onClose: () => setShowInvite(false), user, club, clubs, defaultEmail: inviteData?.fighter?.email || "", fighters, users }),
       inviteData && React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 10, padding: "12px 16px", marginBottom: 16 } },
