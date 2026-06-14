@@ -1814,8 +1814,6 @@ function InviteModal({ onClose, user, club, clubs }) {
   );
 }
 
-function InviteModal({ fighter, user, onClose }) {
-
 function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames, club, clubs }) {
   const s = getStyles();
   const { inp, lbl } = s;
