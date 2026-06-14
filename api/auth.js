@@ -4,18 +4,15 @@ const SUPABASE_URL = "https://iwjpunazbezxqwftcned.supabase.co";
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const SESSION_SECRET = process.env.SESSION_SECRET || "fighters_secret_2026";
 
-// Gerar token de sessão simples
 function generateToken(userId) {
   const payload = `${userId}:${Date.now()}:${SESSION_SECRET}`;
   return Buffer.from(payload).toString("base64");
 }
 
-// Verificar token
 function verifyToken(token) {
   try {
     const decoded = Buffer.from(token, "base64").toString("utf8");
     const [userId, timestamp] = decoded.split(":");
-    // Token válido por 7 dias
     if (Date.now() - parseInt(timestamp) > 7 * 24 * 60 * 60 * 1000) return null;
     return userId;
   } catch { return null; }
@@ -27,6 +24,11 @@ async function getUser(id) {
   });
   const users = await r.json();
   return users[0] || null;
+}
+
+function generatePassword() {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 }
 
 export default async function handler(req, res) {
@@ -61,14 +63,13 @@ export default async function handler(req, res) {
     return res.status(200).json({ user });
   }
 
-  // ── CHANGE PASSWORD ──
+  // ── CHANGE PASSWORD (pelo próprio utilizador) ──
   if (action === "change-password" && req.method === "POST") {
     const { token, currentPassword, newPassword } = req.body;
     if (!token) return res.status(401).json({ error: "Não autenticado." });
     const userId = verifyToken(token);
     if (!userId) return res.status(401).json({ error: "Token inválido." });
 
-    // Verificar password actual
     const r = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userId}&select=*`, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
     });
@@ -86,7 +87,44 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
-  // ── RESET PASSWORD (admin) ──
+  // ── RESET PASSWORD (admin reset de atleta via app) ──
+  if (action === "reset-by-admin" && req.method === "POST") {
+    const { token, fighter_id } = req.body;
+    if (!token) return res.status(401).json({ error: "Não autenticado." });
+
+    const adminId = verifyToken(token);
+    if (!adminId) return res.status(401).json({ error: "Token inválido." });
+
+    // Verificar que quem pede é admin ou superadmin
+    const admin = await getUser(adminId);
+    if (!admin || (admin.role !== "admin" && admin.role !== "superadmin"))
+      return res.status(403).json({ error: "Sem permissão." });
+
+    // Buscar o user do atleta
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/users?fighter_id=eq.${fighter_id}&select=*`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const users = await r.json();
+    if (!users?.length) return res.status(404).json({ error: "Atleta não tem conta." });
+
+    const targetUser = users[0];
+
+    // Admin só pode resetar atletas do seu clube
+    if (admin.role === "admin" && targetUser.club_id !== admin.club_id)
+      return res.status(403).json({ error: "Sem permissão para este atleta." });
+
+    const newPw = generatePassword();
+
+    await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${targetUser.id}`, {
+      method: "PATCH",
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ password: newPw })
+    });
+
+    return res.status(200).json({ success: true, newPassword: newPw, username: targetUser.username });
+  }
+
+  // ── RESET PASSWORD (esqueci a password — envia email) ──
   if (action === "reset" && req.method === "POST") {
     const { username } = req.body;
     if (!username) return res.status(400).json({ error: "Username obrigatório." });
@@ -100,9 +138,7 @@ export default async function handler(req, res) {
     const user = users[0];
     if (!user.email) return res.status(400).json({ error: "Sem e-mail associado." });
 
-    // Gerar nova password
-    const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-    const newPw = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    const newPw = generatePassword();
 
     await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
       method: "PATCH",
