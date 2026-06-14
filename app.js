@@ -303,6 +303,7 @@ const FEDERATIONS = [
 
 const EMPTY_FIGHT = { opponent: "", opponent_team: "", result: "V", method: "KO/TKO", event: "", date: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", weight: "", federation: "" };
 const EMPTY_EVENT = { name: "", local: "", city: "", country: "Portugal", organization: "", date: "", federation: "" };
+const TITLE_TYPES = ["Campeão", "Vencedor", "Medalha de Ouro", "Medalha de Prata", "Medalha de Bronze"];
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 // ─── UTILITÁRIOS ──────────────────────────────────────────
@@ -1465,8 +1466,8 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
     setNu({ opponent: "", event: "", date: "", local: "", weight: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", _eventId: "", _opponentId: "" });
   }
 
-  async function saveTitle() { const res = await db.insert("titles", { name: san(nt.name, 100), org: san(nt.org, 100), year: Number(nt.year), fighter_id: f.id }); setF(p => ({ ...p, titles: [...p.titles, res[0] || nt] })); setShowTF(false); setNt({ name: "", org: "", year: 2026 }); }
-  async function saveEditTitle() { await db.update("titles", editTitle.id, { name: san(editTitle.name, 100), org: san(editTitle.org, 100), year: Number(editTitle.year) }); setF(p => ({ ...p, titles: p.titles.map(x => x.id === editTitle.id ? { ...editTitle } : x) })); setEditTitle(null); }
+  async function saveTitle() { const res = await db.insert("titles", { name: san(nt.name, 100), org: san(nt.org, 100), modality: nt.modality || "Kickboxing", sub_modality: nt.sub_modality || "", escalao: san(nt.escalao || "", 100), weight: san(nt.weight || "", 50), event_name: san(nt.event_name || "", 100), date: nt.date || "", fighter_id: f.id }); setF(p => ({ ...p, titles: [...p.titles, res[0] || nt] })); setShowTF(false); setNt({ name: "", org: "", modality: "Kickboxing", sub_modality: "K1", escalao: "", weight: "", event_name: "", date: "" }); }
+  async function saveEditTitle() { await db.update("titles", editTitle.id, { name: san(editTitle.name, 100), org: san(editTitle.org, 100), modality: editTitle.modality || "Kickboxing", sub_modality: editTitle.sub_modality || "", escalao: san(editTitle.escalao || "", 100), weight: san(editTitle.weight || "", 50), event_name: san(editTitle.event_name || "", 100), date: editTitle.date || "" }); setF(p => ({ ...p, titles: p.titles.map(x => x.id === editTitle.id ? { ...editTitle } : x) })); setEditTitle(null); }
   async function deleteTitle(id) { await db.delete("titles", id); setF(p => ({ ...p, titles: p.titles.filter(x => x.id !== id) })); setDelTitleId(null); }
 
   const TABS = ["Perfil", "Histórico", "Próximas Lutas", "Títulos"];
@@ -1717,10 +1718,49 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       ),
       showTF && React.createElement(Card, { style: { marginBottom: 12 } },
         React.createElement("div", { style: { fontSize: 12, color: T.GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, "Novo Título"),
-        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 } },
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Título"), React.createElement("input", { style: inp, value: nt.name, onChange: e => setNt({ ...nt, name: e.target.value }) })),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Organização"), React.createElement("input", { style: inp, value: nt.org, onChange: e => setNt({ ...nt, org: e.target.value }) })),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Ano"), React.createElement("input", { type: "number", style: inp, value: nt.year, onChange: e => setNt({ ...nt, year: e.target.value }) }))
+        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Classificação"),
+            React.createElement("select", { style: inp, value: nt.name, onChange: e => setNt({ ...nt, name: e.target.value }) },
+              React.createElement("option", { value: "" }, "Selecionar..."),
+              TITLE_TYPES.map(t => React.createElement("option", { key: t, value: t }, t))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Organização / Federação"),
+            React.createElement("select", { style: inp, value: nt.org, onChange: e => setNt({ ...nt, org: e.target.value }) },
+              React.createElement("option", { value: "" }, "Selecionar federação..."),
+              FEDERATIONS.map(fed => React.createElement("option", { key: fed, value: fed }, fed))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Modalidade"),
+            React.createElement("select", { style: inp, value: nt.modality || "Kickboxing", onChange: e => setNt({ ...nt, modality: e.target.value, sub_modality: MODALITIES[e.target.value][0] }) },
+              Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Disciplina"),
+            React.createElement("select", { style: inp, value: nt.sub_modality || "K1", onChange: e => setNt({ ...nt, sub_modality: e.target.value }) },
+              (MODALITIES[nt.modality || "Kickboxing"] || []).map(s => React.createElement("option", { key: s }, s))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Escalão"),
+            React.createElement("input", { style: inp, value: nt.escalao || "", onChange: e => setNt({ ...nt, escalao: e.target.value }), placeholder: "ex: Seniores" })
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Peso"),
+            React.createElement("input", { style: inp, value: nt.weight || "", onChange: e => setNt({ ...nt, weight: e.target.value }), placeholder: "ex: -70kg" })
+          ),
+          React.createElement("div", { style: { gridColumn: "1 / -1" } },
+            React.createElement("label", { style: lbl }, "Nome do Título / Evento"),
+            React.createElement("input", { style: inp, value: nt.event_name || "", onChange: e => setNt({ ...nt, event_name: e.target.value }), placeholder: "ex: Campeonato Nacional 2025" })
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Data"),
+            React.createElement("input", { type: "date", style: inp, value: nt.date || "", onChange: e => setNt({ ...nt, date: e.target.value }) })
+          )
         ),
         React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
           React.createElement("button", { onClick: saveTitle, style: { ...s.btnGold, marginTop: 0 } }, "Guardar"),
@@ -1729,10 +1769,49 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       ),
       editTitle && React.createElement(Card, { style: { marginBottom: 12, border: `1px solid ${T.GOLD_DIM}` } },
         React.createElement("div", { style: { fontSize: 12, color: T.GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, "Editar Título"),
-        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 } },
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Título"), React.createElement("input", { style: inp, value: editTitle.name, onChange: e => setEditTitle({ ...editTitle, name: e.target.value }) })),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Organização"), React.createElement("input", { style: inp, value: editTitle.org, onChange: e => setEditTitle({ ...editTitle, org: e.target.value }) })),
-          React.createElement("div", null, React.createElement("label", { style: lbl }, "Ano"), React.createElement("input", { type: "number", style: inp, value: editTitle.year, onChange: e => setEditTitle({ ...editTitle, year: e.target.value }) }))
+        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Classificação"),
+            React.createElement("select", { style: inp, value: editTitle.name, onChange: e => setEditTitle({ ...editTitle, name: e.target.value }) },
+              React.createElement("option", { value: "" }, "Selecionar..."),
+              TITLE_TYPES.map(t => React.createElement("option", { key: t, value: t }, t))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Organização / Federação"),
+            React.createElement("select", { style: inp, value: editTitle.org, onChange: e => setEditTitle({ ...editTitle, org: e.target.value }) },
+              React.createElement("option", { value: "" }, "Selecionar federação..."),
+              FEDERATIONS.map(fed => React.createElement("option", { key: fed, value: fed }, fed))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Modalidade"),
+            React.createElement("select", { style: inp, value: editTitle.modality || "Kickboxing", onChange: e => setEditTitle({ ...editTitle, modality: e.target.value, sub_modality: MODALITIES[e.target.value][0] }) },
+              Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Disciplina"),
+            React.createElement("select", { style: inp, value: editTitle.sub_modality || "K1", onChange: e => setEditTitle({ ...editTitle, sub_modality: e.target.value }) },
+              (MODALITIES[editTitle.modality || "Kickboxing"] || []).map(s => React.createElement("option", { key: s }, s))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Escalão"),
+            React.createElement("input", { style: inp, value: editTitle.escalao || "", onChange: e => setEditTitle({ ...editTitle, escalao: e.target.value }), placeholder: "ex: Seniores" })
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Peso"),
+            React.createElement("input", { style: inp, value: editTitle.weight || "", onChange: e => setEditTitle({ ...editTitle, weight: e.target.value }), placeholder: "ex: -70kg" })
+          ),
+          React.createElement("div", { style: { gridColumn: "1 / -1" } },
+            React.createElement("label", { style: lbl }, "Nome do Título / Evento"),
+            React.createElement("input", { style: inp, value: editTitle.event_name || "", onChange: e => setEditTitle({ ...editTitle, event_name: e.target.value }), placeholder: "ex: Campeonato Nacional 2025" })
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: lbl }, "Data"),
+            React.createElement("input", { type: "date", style: inp, value: editTitle.date || "", onChange: e => setEditTitle({ ...editTitle, date: e.target.value }) })
+          )
         ),
         React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
           React.createElement("button", { onClick: saveEditTitle, style: { ...s.btnGold, marginTop: 0 } }, "Guardar"),
@@ -1743,9 +1822,16 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 } },
         f.titles.map((t, i) => React.createElement("div", { key: i, style: { background: T.BG2, border: `1px solid ${T.GOLD_DIM}`, borderRadius: 10, padding: "16px", position: "relative", overflow: "hidden" } },
           React.createElement("div", { style: { position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${T.GOLD}, transparent)` } }),
-          React.createElement("div", { style: { fontSize: 24, marginBottom: 8 } }, "🏆"),
+
           React.createElement("div", { style: { fontWeight: 700, fontSize: 14, color: T.GOLD } }, t.name),
-          React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 4 } }, `${t.org} · ${t.year}`),
+          t.event_name && React.createElement("div", { style: { fontSize: 13, color: T.TEXT, fontWeight: 600, marginTop: 4 } }, t.event_name),
+          React.createElement("div", { style: { fontSize: 11, color: T.TEXT2, marginTop: 4 } }, t.org),
+          React.createElement("div", { style: { display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 } },
+            t.modality && React.createElement(Badge, null, t.sub_modality || t.modality),
+            t.escalao && React.createElement(Badge, { type: "blue" }, t.escalao),
+            t.weight && React.createElement(Badge, null, t.weight),
+            t.date && React.createElement(Badge, { type: "default" }, t.date.slice(0,4))
+          ),
           isOwner && React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } },
             React.createElement("button", { onClick: () => { setEditTitle({ ...t }); setShowTF(false); }, style: { ...s.btnOutline, padding: "3px 10px", fontSize: 11 } }, "Editar"),
             delTitleId === t.id
