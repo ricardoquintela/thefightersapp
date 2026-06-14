@@ -1891,9 +1891,15 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   async function resetPassword(fighter) {
     const fu = users.find(u => u.fighter_id === fighter.id);
     if (!fu) return alert("Este atleta não tem conta associada.");
-    const newPw = generatePassword();
-    await db.update("users", fu.id, { password: newPw });
-    setResetData({ fighter, newPw });
+    const token = localStorage.getItem("tfa_token");
+    const r = await fetch("/api/auth?action=reset-by-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, fighter_id: fighter.id })
+    });
+    const data = await r.json();
+    if (!r.ok) return alert(data.error || "Erro ao redefinir password.");
+    setResetData({ fighter, newPw: data.newPassword });
   }
 
   // Routing para sub-páginas
