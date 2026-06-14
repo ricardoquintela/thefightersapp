@@ -386,6 +386,7 @@ function CalendarPage({ onLogout, user, setPage, pendingCount, club }) {
   const [editEvent, setEditEvent] = useState(null);
   const [delEventId, setDelEventId] = useState(null);
   const [ne, setNe] = useState({ ...EMPTY_EVENT });
+  const [searchCal, setSearchCal] = useState("");
   const canEdit = user && (user.role === "admin" || user.role === "superadmin");
 
   useEffect(() => { db.get("events").then(all => { setEvents(all.sort((a, b) => new Date(a.date) - new Date(b.date))); setLoading(false); }); }, []);
@@ -460,6 +461,7 @@ function CalendarPage({ onLogout, user, setPage, pendingCount, club }) {
         React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.TEXT, textTransform: "uppercase", letterSpacing: 1 } }, "Calendário de Provas"),
         canEdit && React.createElement("button", { onClick: () => { setShowForm(p => !p); setEditEvent(null); }, style: s.btnOutline }, "+ Nova Prova")
       ),
+      React.createElement("input", { style: { ...getStyles().inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Prova, cidade ou organização...", value: searchCal, onChange: e => setSearchCal(e.target.value) }),
       showForm && React.createElement(Card, { gold: true, style: { marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 12, color: T.GOLD, fontWeight: 700, marginBottom: 12, textTransform: "uppercase" } }, "Nova Prova"),
         React.createElement(EventForm, { val: ne, set: setNe }),
@@ -471,15 +473,15 @@ function CalendarPage({ onLogout, user, setPage, pendingCount, club }) {
       loading && React.createElement("div", { style: { color: T.TEXT2, textAlign: "center", padding: 24 } }, "A carregar..."),
       upcoming.length > 0 && React.createElement("div", null,
         React.createElement("div", { style: { fontSize: 11, color: T.GOLD, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 } }, `Próximas · ${upcoming.length}`),
-        upcoming.map(ev => React.createElement(EventCard, { key: ev.id, ev }))
+        upcoming.filter(e => !searchCal || e.name?.toLowerCase().includes(searchCal.toLowerCase()) || e.city?.toLowerCase().includes(searchCal.toLowerCase()) || e.organization?.toLowerCase().includes(searchCal.toLowerCase())).map(ev => React.createElement(EventCard, { key: ev.id, ev }))
       ),
-      upcoming.length === 0 && !loading && React.createElement(Card, { style: { marginBottom: 16 } },
-        React.createElement("div", { style: { color: T.TEXT3, textAlign: "center", padding: "16px 0" } }, "Nenhuma prova agendada.")
+      upcoming.filter(e => !searchCal || e.name?.toLowerCase().includes(searchCal.toLowerCase()) || e.city?.toLowerCase().includes(searchCal.toLowerCase()) || e.organization?.toLowerCase().includes(searchCal.toLowerCase())).length === 0 && !loading && React.createElement(Card, { style: { marginBottom: 16 } },
+        React.createElement("div", { style: { color: T.TEXT3, textAlign: "center", padding: "16px 0" } }, searchCal ? "Nenhuma prova encontrada." : "Nenhuma prova agendada.")
       ),
-      past.length > 0 && React.createElement("div", { style: { marginTop: 20 } },
+      past.filter(e => !searchCal || e.name?.toLowerCase().includes(searchCal.toLowerCase()) || e.city?.toLowerCase().includes(searchCal.toLowerCase()) || e.organization?.toLowerCase().includes(searchCal.toLowerCase())).length > 0 && React.createElement("div", { style: { marginTop: 20 } },
         React.createElement(GoldDivider),
-        React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 } }, `Realizadas · ${past.length}`),
-        past.map(ev => React.createElement(EventCard, { key: ev.id, ev }))
+        React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 } }, `Realizadas · ${past.filter(e => !searchCal || e.name?.toLowerCase().includes(searchCal.toLowerCase()) || e.city?.toLowerCase().includes(searchCal.toLowerCase()) || e.organization?.toLowerCase().includes(searchCal.toLowerCase())).length}`),
+        past.filter(e => !searchCal || e.name?.toLowerCase().includes(searchCal.toLowerCase()) || e.city?.toLowerCase().includes(searchCal.toLowerCase()) || e.organization?.toLowerCase().includes(searchCal.toLowerCase())).map(ev => React.createElement(EventCard, { key: ev.id, ev }))
       ),
       React.createElement(Footer)
     )
@@ -961,6 +963,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs }) {
   const [selected, setSelected] = useState(null);
   const [selFighter, setSelFighter] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [searchTeam, setSearchTeam] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -1085,8 +1088,9 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs }) {
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "teams", setPage, pendingCount, club }),
       React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.TEXT, marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 } }, `Equipas · ${teams.length}`),
+      React.createElement("input", { style: { ...getStyles().inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Pesquisar equipa...", value: searchTeam, onChange: e => setSearchTeam(e.target.value) }),
       loading && React.createElement("div", { style: { color: T.TEXT2, textAlign: "center", padding: 24 } }, "A carregar..."),
-      teams.map(t => {
+      teams.filter(t => !searchTeam || t.name.toLowerCase().includes(searchTeam.toLowerCase())).map(t => {
         const totalFights = t.fighters.reduce((acc, f) => acc + allFights.filter(x => x.fighter_id === f.id).length, 0);
         const totalWins = t.fighters.reduce((acc, f) => acc + allFights.filter(x => x.fighter_id === f.id && x.result === "V").length, 0);
         return React.createElement("div", { key: t.name, style: { background: T.BG2, border: `1px solid ${T.BORDER}`, borderRadius: 10, padding: "16px", marginBottom: 8, cursor: "pointer" }, onMouseEnter: e => e.currentTarget.style.borderColor = T.GOLD_DIM, onMouseLeave: e => e.currentTarget.style.borderColor = T.BORDER, onClick: () => setSelected(t.name) },
@@ -1910,6 +1914,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   const [showInvite, setShowInvite] = useState(false);
   const [inviteData, setInviteData] = useState(null);
   const [resetData, setResetData] = useState(null);
+  const [search, setSearch] = useState("");
 
   async function resetPassword(fighter) {
     const fu = users.find(u => u.fighter_id === fighter.id);
@@ -1965,6 +1970,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club }),
+      React.createElement("input", { style: { ...s.inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Nome, equipa ou modalidade...", value: search, onChange: e => setSearch(e.target.value) }),
       showInvite && React.createElement(InviteModal, { onClose: () => setShowInvite(false), user, club, clubs, defaultEmail: inviteData?.fighter?.email || "", fighters, users }),
       inviteData && React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 10, padding: "12px 16px", marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 13, color: "#4caf7d", marginBottom: 8, fontWeight: 700 } }, `✓ Perfil criado — ${inviteData.fighter.name}`),
@@ -1975,7 +1981,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
         )
       ),
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
-        React.createElement("span", { style: { fontSize: 13, color: T.TEXT2, textTransform: "uppercase", letterSpacing: 1 } }, `${fighters.length} lutadores`),
+        React.createElement("span", { style: { fontSize: 13, color: T.TEXT2, textTransform: "uppercase", letterSpacing: 1 } }, `${fighters.filter(f => { const q = search.toLowerCase(); return !search || f.name?.toLowerCase().includes(q) || f.team?.toLowerCase().includes(q) || f.modality?.toLowerCase().includes(q); }).length} lutadores`),
         React.createElement("div", { style: { display: "flex", gap: 8 } },
           React.createElement("button", { onClick: () => setShowInvite(true), style: { ...s.btnOutline, borderColor: "#4caf7d44", color: "#4caf7d" } }, "✉ Convidar"),
           React.createElement("button", { onClick: () => setShowNewForm(true), style: s.btnOutline }, "+ Novo Lutador")
@@ -1989,7 +1995,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
         )
       ),
       React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
-        fighters.map(f => {
+        fighters.filter(f => { const q = search.toLowerCase(); return !search || f.name?.toLowerCase().includes(q) || f.team?.toLowerCase().includes(q) || f.modality?.toLowerCase().includes(q); }).map(f => {
           const fu = users.find(u => u.fighter_id === f.id);
           return React.createElement("div", { key: f.id, style: { background: T.BG2, border: `1px solid ${T.BORDER}`, borderRadius: 10, padding: "14px 16px" }, onMouseEnter: e => e.currentTarget.style.borderColor = T.GOLD_DIM, onMouseLeave: e => e.currentTarget.style.borderColor = T.BORDER },
             React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }, onClick: () => setSelected(f) },
@@ -2005,7 +2011,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
               )
             ),
             React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 10, justifyContent: "flex-end" } },
-              React.createElement("button", { onClick: () => { setInviteData({ fighter: f, user: fu || {} }); setShowInvite(true); }, style: { ...s.btnOutline, padding: "4px 12px", fontSize: 12 } }, "✉ Convite"),
+              !fu && React.createElement("button", { onClick: () => { setInviteData({ fighter: f, user: {} }); setShowInvite(true); }, style: { ...s.btnOutline, padding: "4px 12px", fontSize: 12, borderColor: "#4caf7d44", color: "#4caf7d" } }, "✉ Convite"),
               React.createElement("button", { onClick: () => resetPassword(f), style: { ...s.btnOutline, padding: "4px 12px", fontSize: 12, borderColor: "#5b8fd444", color: "#5b8fd4" } }, "🔑 Password"),
               React.createElement("button", { onClick: () => setDelId(f.id), style: { ...s.btnRed, padding: "4px 12px", fontSize: 12 } }, "✕ Eliminar")
             )
