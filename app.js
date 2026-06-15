@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // PARTE 1: DB, THEME ENGINE, UTILITÁRIOS, COMPONENTES BASE
 // ═══════════════════════════════════════════════════════════
+
 const SUPABASE_URL = "https://iwjpunazbezxqwftcned.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3anB1bmF6YmV6eHF3ZnRjbmVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NjMzNjAsImV4cCI6MjA5NjMzOTM2MH0.Ip0ccSaud0dcMFyD8WA2VsfY9vvle2EG6bZvQwfscls";
 
@@ -9,7 +10,7 @@ const db = {
     let url = `${SUPABASE_URL}/rest/v1/${table}?select=*`;
     Object.entries(filters).forEach(([k, v]) => url += `&${k}=eq.${v}`);
     const r = await fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
-    return r.json()
+    return r.json();
   },
   async insert(table, data) {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
@@ -38,8 +39,8 @@ const { useState, useEffect } = React;
 
 // ─── THEME ENGINE ─────────────────────────────────────────
 function buildTheme(club) {
-  const _pc = club && club.primary_color; const primary = (_pc && _pc.toLowerCase() !== "black" && _pc !== "#000000" && _pc !== "#000" && _pc.toLowerCase() !== "white" && _pc !== "#ffffff" && _pc !== "#fff") ? _pc : "#C9A84C";
-  const _sc = club && club.secondary_color; const secondary = (_sc && _sc.toLowerCase() !== "white" && _sc !== "#ffffff" && _sc !== "#fff" && _sc.toLowerCase() !== "black" && _sc !== "#000000" && _sc !== "#000") ? _sc : "#8a6f2e";
+  const primary = club?.primary_color || "#C9A84C";
+  const secondary = club?.secondary_color || "#8a6f2e";
   return {
     GOLD: primary, GOLD_DIM: secondary,
     BG: "#0a0a0a", BG2: "#141414", BG3: "#1c1c1c", BG4: "#242424",
@@ -271,7 +272,7 @@ const FEDERATIONS = [
   "Vechtsportautoriteit / WAKO Nederland",
   "MON (Muaythai Organisatie Nederland)",
   // Polónia
-   "Polski Związek Kickboxingu (PZKB)",
+  "Polski Związek Kickboxingu (PZKB)",
   "Polski Związek Muaythai (PZM)",
   // Reino Unido
   "WAKO GB (British Kickboxing Federation)",
@@ -296,7 +297,7 @@ const FEDERATIONS = [
   // Ucrânia
   "WAKO Ukraine (National Kickboxing Federation of Ukraine)",
   "Ukrainian Muaythai Federation",
-   // Outra
+  // Outra
   "Outra"
 ];
 
@@ -321,7 +322,7 @@ function san(val, max = 200) { if (typeof val !== "string") return val; return v
 
 // ─── ESTILOS DINÂMICOS ────────────────────────────────────
 const getStyles = () => ({
-  inp: { padding: "8px 12px", borderRadius: 6, border: `1px solid ${T.BORDER}`, color: T.TEXT, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none" },
+  inp: { padding: "8px 12px", borderRadius: 6, border: `1px solid ${T.BORDER}`, background: T.BG3, color: T.TEXT, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none", appearance: "none", WebkitAppearance: "none", colorScheme: "dark" },
   lbl: { fontSize: 11, color: T.TEXT3, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.5px" },
   btnGold: { padding: "9px 22px", borderRadius: 6, border: "none", background: T.GOLD, color: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 700, marginTop: 12 },
   btnOutline: { padding: "6px 14px", borderRadius: 6, border: `1px solid ${T.GOLD_DIM}`, background: "transparent", cursor: "pointer", fontSize: 13, color: T.GOLD, fontWeight: 600 },
@@ -644,7 +645,7 @@ function CalendarPage({ onLogout, user, setPage, pendingCount, club, viewAsClub,
 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, currentPage: "calendar", setPage, pendingCount, club: null, viewAsClub, setViewAsClub }),
+      React.createElement(Header, { onLogout, user, currentPage: "calendar", setPage, pendingCount, club, viewAsClub, setViewAsClub }),
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.TEXT, textTransform: "uppercase", letterSpacing: 1 } }, "Calendário de Provas"),
         canEdit && React.createElement("button", { onClick: () => { setShowForm(p => !p); setEditEvent(null); }, style: s.btnOutline }, "+ Nova Prova")
@@ -979,9 +980,10 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
 
   useEffect(() => {
     db.get("fighters").then(all => {
-      const filtered = user.role === "superadmin"
-        ? all.filter(f => f.status === "pending")
-        : all.filter(f => f.status === "pending" && f.club_id === user.club_id);
+      const activeClubId = viewAsClub ? viewAsClub.id : (user.role !== "superadmin" ? user.club_id : null);
+      const filtered = activeClubId
+        ? all.filter(f => f.status === "pending" && f.club_id === activeClubId)
+        : all.filter(f => f.status === "pending");
       setPending(filtered); setLoading(false);
     });
   }, []);
@@ -1056,7 +1058,7 @@ function DashboardPage({ onLogout, user, setPage, pendingCount, clubs, allFighte
               ? React.createElement("img", { src: club.logo_url, style: { width: 36, height: 36, objectFit: "contain", borderRadius: 6 } })
               : React.createElement("div", { style: { width: 36, height: 36, borderRadius: 6, background: club.primary_color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: club.primary_color } }, club.short_name || "?"),
             React.createElement("div", { style: { flex: 1 } },
-              React.createElement("div", { style: { fontWeight: 700, color: (club.primary_color && club.primary_color !== "black" ? club.primary_color : "#ffffff"), fontSize: 14 } }, club.name),
+              React.createElement("div", { style: { fontWeight: 700, color: club.primary_color, fontSize: 14 } }, club.name),
               React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `${fighters} atletas · ${fights} combates · ${wins}V / ${fights - wins}D`)
             ),
             React.createElement("div", { style: { background: club.active ? "#0a1a0e" : "#1a0a0a", color: club.active ? "#4caf7d" : "#e05555", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 4 } }, club.active ? "Ativo" : "Inativo")
@@ -1123,10 +1125,10 @@ function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes, vi
       (clubs || []).map(club => React.createElement(Card, { key: club.id, style: { marginBottom: 8 } },
         React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
           club.logo_url
-            ? React.createElement("img", { src: club.logo_url, style: { width: 44, height: 44, objectFit: (club.id === "tnt" || club.id === "mgteam") ? "cover" : "contain", borderRadius: 8, background: "#000" } })
+            ? React.createElement("img", { src: club.logo_url, style: { width: 44, height: 44, objectFit: "contain", borderRadius: 8, background: T.BG3 } })
             : React.createElement("div", { style: { width: 44, height: 44, borderRadius: 8, background: club.primary_color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 14, color: club.primary_color } }, club.short_name || "?"),
           React.createElement("div", { style: { flex: 1 } },
-            React.createElement("div", { style: { fontWeight: 700, color: (club.primary_color && club.primary_color !== "black" ? club.primary_color : "#ffffff"), fontSize: 15 } }, club.name),
+            React.createElement("div", { style: { fontWeight: 700, color: club.primary_color, fontSize: 15 } }, club.name),
             React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `ID: ${club.id} · ${club.short_name || "—"}`)
           ),
           React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
@@ -2508,7 +2510,7 @@ function App() {
       setAllFighters(approved);
       setAllFights(fi);
       setFighters(user.role === "superadmin" ? approved : approved.filter(x => x.club_id === user.club_id));
-      setPendingCount(user.role === "superadmin" ? pending.length : pending.filter(x => x.club_id === user.club_id).length);
+      setPendingCount(viewAsClub ? pending.filter(x => x.club_id === viewAsClub.id).length : user.role === "superadmin" ? pending.length : pending.filter(x => x.club_id === user.club_id).length);
       setUsers(u);
     }
     load();
