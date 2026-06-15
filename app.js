@@ -272,7 +272,7 @@ const FEDERATIONS = [
   "Vechtsportautoriteit / WAKO Nederland",
   "MON (Muaythai Organisatie Nederland)",
   // Polónia
-  "Polski Związek Kickboxingu (PZKB)",
+   "Polski Związek Kickboxingu (PZKB)",
   "Polski Związek Muaythai (PZM)",
   // Reino Unido
   "WAKO GB (British Kickboxing Federation)",
@@ -297,7 +297,7 @@ const FEDERATIONS = [
   // Ucrânia
   "WAKO Ukraine (National Kickboxing Federation of Ukraine)",
   "Ukrainian Muaythai Federation",
- , color: // Outra
+   // Outra
   "Outra"
 ];
 
