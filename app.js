@@ -1,7 +1,6 @@
 // ═══════════════════════════════════════════════════════════
 // PARTE 1: DB, THEME ENGINE, UTILITÁRIOS, COMPONENTES BASE
 // ═══════════════════════════════════════════════════════════
-
 const SUPABASE_URL = "https://iwjpunazbezxqwftcned.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3anB1bmF6YmV6eHF3ZnRjbmVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NjMzNjAsImV4cCI6MjA5NjMzOTM2MH0.Ip0ccSaud0dcMFyD8WA2VsfY9vvle2EG6bZvQwfscls";
 
@@ -1054,7 +1053,7 @@ function DashboardPage({ onLogout, user, setPage, pendingCount, clubs, allFighte
         React.createElement(Card, { key: club.id, style: { marginBottom: 8 } },
           React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
             club.logo_url
-              ? React.createElement("img", { src: club.logo_url, style: { width: 36, height: 36, objectFit: "contain", borderRadius: 6 } })
+              ? React.createElement("img", { src: club.logo_url, style: { width: 36, height: 36, objectFit: "cover", borderRadius: 6 } })
               : React.createElement("div", { style: { width: 36, height: 36, borderRadius: 6, background: club.primary_color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: club.primary_color } }, club.short_name || "?"),
             React.createElement("div", { style: { flex: 1 } },
               React.createElement("div", { style: { fontWeight: 700, color: (club.primary_color && club.primary_color !== "black" ? club.primary_color : "#ffffff"), fontSize: 14 } }, club.name),
@@ -1124,7 +1123,7 @@ function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes, vi
       (clubs || []).map(club => React.createElement(Card, { key: club.id, style: { marginBottom: 8 } },
         React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
           club.logo_url
-            ? React.createElement("img", { src: club.logo_url, style: { width: 44, height: 44, objectFit: "contain", borderRadius: 8, background: "#000" } })
+            ? React.createElement("img", { src: club.logo_url, style: { width: 44, height: 44, objectFit: "cover", borderRadius: 8, background: "#000" } })
             : React.createElement("div", { style: { width: 44, height: 44, borderRadius: 8, background: club.primary_color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 14, color: club.primary_color } }, club.short_name || "?"),
           React.createElement("div", { style: { flex: 1 } },
             React.createElement("div", { style: { fontWeight: 700, color: (club.primary_color && club.primary_color !== "black" ? club.primary_color : "#ffffff"), fontSize: 15 } }, club.name),
@@ -2013,7 +2012,7 @@ function AcceptInvitePage({ token, clubs }) {
         React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 } }, "Convite para"),
         React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
           club?.logo_url
-            ? React.createElement("img", { src: club.logo_url, style: { width: 36, height: 36, objectFit: "contain", borderRadius: 6 } })
+            ? React.createElement("img", { src: club.logo_url, style: { width: 36, height: 36, objectFit: "cover", borderRadius: 6 } })
             : React.createElement("div", { style: { width: 36, height: 36, borderRadius: 6, background: (club?.primary_color || T.GOLD) + "33", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, color: club?.primary_color || T.GOLD } }, club?.short_name || "?"),
           React.createElement("div", null,
             React.createElement("div", { style: { fontWeight: 700, color: club?.primary_color || T.GOLD, fontSize: 15 } }, club?.name || invite.club_id),
