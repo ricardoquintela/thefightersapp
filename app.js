@@ -38,8 +38,8 @@ const { useState, useEffect } = React;
 
 // ─── THEME ENGINE ─────────────────────────────────────────
 function buildTheme(club) {
-  const primary = club?.primary_color || "#C9A84C";
-  const secondary = club?.secondary_color || "#8a6f2e";
+  const _pc = club && club.primary_color; const primary = (_pc && _pc.toLowerCase() !== "black" && _pc !== "#000000" && _pc !== "#000" && _pc.toLowerCase() !== "white" && _pc !== "#ffffff" && _pc !== "#fff") ? _pc : "#C9A84C";
+  const _sc = club && club.secondary_color; const secondary = (_sc && _sc.toLowerCase() !== "white" && _sc !== "#ffffff" && _sc !== "#fff" && _sc.toLowerCase() !== "black" && _sc !== "#000000" && _sc !== "#000") ? _sc : "#8a6f2e";
   return {
     GOLD: primary, GOLD_DIM: secondary,
     BG: "#0a0a0a", BG2: "#141414", BG3: "#1c1c1c", BG4: "#242424",
