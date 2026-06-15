@@ -2067,25 +2067,52 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
 
   const isSuperAdmin = user.role === "superadmin";
 
-  function handleSend() {
+  async function handleSend() {
     setErr("");
     if (!email.includes("@")) return setErr("Email inválido.");
     if (!clubId) return setErr("Selecciona um clube.");
     const clubName = (clubs || []).find(c => c.id === clubId)?.name || clubId;
     const roleLabel = role === "admin" ? "Administrador" : "Atleta";
-    const link = "https://thefightersapp.vercel.app";
-    const subject = encodeURIComponent(`Convite para a The Fighters App — ${clubName}`);
+
+    // Gerar credenciais
+    const username = emailToUsername(email.trim());
+    const password = generatePassword();
+
+    // Verificar se já existe utilizador com este email ou username
+    const allUsers = await db.get("users");
+    if (allUsers.some(u => u.email === email.trim())) return setErr("Este email já tem conta.");
+    if (allUsers.some(u => u.username === username)) return setErr("Username já existe — tenta outro email.");
+
+    // Criar o utilizador
+    const fighter = (fighters || []).find(f => f.email && f.email.toLowerCase() === email.trim().toLowerCase());
+    const newUser = {
+      id: `user_${Date.now()}`,
+      name: fighter ? fighter.name : email.split("@")[0],
+      username,
+      password,
+      email: email.trim(),
+      role,
+      club_id: clubId,
+      fighter_id: fighter ? fighter.id : null
+    };
+    await db.insert("users", newUser);
+
+    // Abrir mailto com credenciais
+    const subject = encodeURIComponent(`Acesso à The Fighters App — ${clubName}`);
     const body = encodeURIComponent(`Olá,
 
-Foste convidado para entrar na The Fighters App como ${roleLabel} do clube ${clubName}.
+Foram criadas as tuas credenciais de acesso à The Fighters App como ${roleLabel} do ${clubName}.
 
-Acede ao link abaixo para activar a tua conta e definir a tua password:
+Acede em: https://thefightersapp.vercel.app
 
-${link}
+Username: ${username}
+Password: ${password}
+
+Por segurança, altera a password após o primeiro login (menu Conta).
 
 The Fighters App`);
     window.open(`mailto:${email.trim()}?subject=${subject}&body=${body}`, "_blank");
-    setDone(`Email preparado para ${email}`);
+    setDone(`Credenciais criadas e email preparado para ${email}`);
     setEmail("");
   }
 
@@ -2321,7 +2348,8 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   );
 }
 
-function AthleteView({ fighters, user, onLogout, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub }) {
+function AthleteView({ fighters, user, onLogout, setPage, pendingCount: allPending, club, clubs, viewAsClub, setViewAsClub }) {
+  const pendingCount = Array.isArray(allPending) ? allPending.filter(x => x.club_id === user.club_id).length : (allPending || 0);
   const fighter = fighters.find(f => f.id === user.fighter_id);
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [matchConfirmDone, setMatchConfirmDone] = React.useState(false);
