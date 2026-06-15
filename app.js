@@ -297,7 +297,7 @@ const FEDERATIONS = [
   // Ucrânia
   "WAKO Ukraine (National Kickboxing Federation of Ukraine)",
   "Ukrainian Muaythai Federation",
-  // Outra
+ , color: // Outra
   "Outra"
 ];
 
@@ -322,7 +322,7 @@ function san(val, max = 200) { if (typeof val !== "string") return val; return v
 
 // ─── ESTILOS DINÂMICOS ────────────────────────────────────
 const getStyles = () => ({
-  inp: { padding: "8px 12px", borderRadius: 6, border: `1px solid ${T.BORDER}`, , color: T.TEXT, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none" },
+  inp: { padding: "8px 12px", borderRadius: 6, border: `1px solid ${T.BORDER}`, color: T.TEXT, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none" },
   lbl: { fontSize: 11, color: T.TEXT3, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.5px" },
   btnGold: { padding: "9px 22px", borderRadius: 6, border: "none", background: T.GOLD, color: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 700, marginTop: 12 },
   btnOutline: { padding: "6px 14px", borderRadius: 6, border: `1px solid ${T.GOLD_DIM}`, background: "transparent", cursor: "pointer", fontSize: 13, color: T.GOLD, fontWeight: 600 },
