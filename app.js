@@ -2106,12 +2106,12 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
           });
           const invData = await invRes.json();
           if (invRes.ok) {
-            setDone("Email enviado com sucesso para " + email.trim() + "!");
+            setDone("✅ Email enviado com sucesso para " + email.trim() + "! Username: " + username + " | Password: " + password);
           } else {
-            setDone("Credenciais criadas. Erro no email: " + (invData.error || "desconhecido"));
+            setDone("⚠️ Credenciais criadas mas email falhou. Partilha manualmente — Username: " + username + " | Password: " + password);
           }
         } catch (e) {
-          setDone("Credenciais criadas. Não foi possível enviar email: " + e.message);
+          setDone("⚠️ Credenciais criadas mas email falhou. Partilha manualmente — Username: " + username + " | Password: " + password);
         }
         setEmail("");
   }
