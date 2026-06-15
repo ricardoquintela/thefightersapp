@@ -322,7 +322,7 @@ function san(val, max = 200) { if (typeof val !== "string") return val; return v
 
 // ─── ESTILOS DINÂMICOS ────────────────────────────────────
 const getStyles = () => ({
-  inp: { padding: "8px 12px", borderRadius: 6, border: `1px solid ${T.BORDER}`, background: T.BG3, color: T.TEXT, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none" },
+  inp: { padding: "8px 12px", borderRadius: 6, border: `1px solid ${T.BORDER}`, , color: T.TEXT, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none" },
   lbl: { fontSize: 11, color: T.TEXT3, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.5px" },
   btnGold: { padding: "9px 22px", borderRadius: 6, border: "none", background: T.GOLD, color: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 700, marginTop: 12 },
   btnOutline: { padding: "6px 14px", borderRadius: 6, border: `1px solid ${T.GOLD_DIM}`, background: "transparent", cursor: "pointer", fontSize: 13, color: T.GOLD, fontWeight: 600 },
@@ -1057,7 +1057,7 @@ function DashboardPage({ onLogout, user, setPage, pendingCount, clubs, allFighte
               ? React.createElement("img", { src: club.logo_url, style: { width: 36, height: 36, objectFit: "contain", borderRadius: 6 } })
               : React.createElement("div", { style: { width: 36, height: 36, borderRadius: 6, background: club.primary_color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: club.primary_color } }, club.short_name || "?"),
             React.createElement("div", { style: { flex: 1 } },
-              React.createElement("div", { style: { fontWeight: 700, color: club.primary_color, fontSize: 14 } }, club.name),
+              React.createElement("div", { style: { fontWeight: 700, color: (club.primary_color && club.primary_color !== "black" ? club.primary_color : "#ffffff"), fontSize: 14 } }, club.name),
               React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `${fighters} atletas · ${fights} combates · ${wins}V / ${fights - wins}D`)
             ),
             React.createElement("div", { style: { background: club.active ? "#0a1a0e" : "#1a0a0a", color: club.active ? "#4caf7d" : "#e05555", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 4 } }, club.active ? "Ativo" : "Inativo")
@@ -1124,10 +1124,10 @@ function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes, vi
       (clubs || []).map(club => React.createElement(Card, { key: club.id, style: { marginBottom: 8 } },
         React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
           club.logo_url
-            ? React.createElement("img", { src: club.logo_url, style: { width: 44, height: 44, objectFit: "contain", borderRadius: 8, background: T.BG3 } })
+            ? React.createElement("img", { src: club.logo_url, style: { width: 44, height: 44, objectFit: "contain", borderRadius: 8, background: "#000" } })
             : React.createElement("div", { style: { width: 44, height: 44, borderRadius: 8, background: club.primary_color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 14, color: club.primary_color } }, club.short_name || "?"),
           React.createElement("div", { style: { flex: 1 } },
-            React.createElement("div", { style: { fontWeight: 700, color: club.primary_color, fontSize: 15 } }, club.name),
+            React.createElement("div", { style: { fontWeight: 700, color: (club.primary_color && club.primary_color !== "black" ? club.primary_color : "#ffffff"), fontSize: 15 } }, club.name),
             React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `ID: ${club.id} · ${club.short_name || "—"}`)
           ),
           React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
