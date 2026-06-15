@@ -2097,23 +2097,38 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
     };
     await db.insert("users", newUser);
 
-        // Enviar email via API
-        try {
-          const invRes = await fetch("/api/invite", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: email.trim(), username, password, clubName, roleLabel })
-          });
-          const invData = await invRes.json();
-          if (invRes.ok) {
-            setDone("✅ Email enviado com sucesso para " + email.trim() + "! Username: " + username + " | Password: " + password);
-          } else {
-            setDone("⚠️ Credenciais criadas mas email falhou. Partilha manualmente — Username: " + username + " | Password: " + password);
-          }
-        } catch (e) {
-          setDone("⚠️ Credenciais criadas mas email falhou. Partilha manualmente — Username: " + username + " | Password: " + password);
-        }
-        setEmail("");
+    // Tentar enviar via Resend
+    const token = localStorage.getItem("tfa_token");
+    try {
+      const r = await fetch("/api/auth?action=send-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, email: email.trim(), username, password, clubName, role })
+      });
+      const data = await r.json();
+      if (data.success && !data.fallback) {
+        setDone(`Email enviado automaticamente para ${email}`);
+        setEmail(""); return;
+      }
+    } catch {}
+
+    // Fallback: abrir mailto
+    const subject = encodeURIComponent(`Acesso à The Fighters App — ${clubName}`);
+    const body = encodeURIComponent(`Olá,
+
+Aqui estão as tuas credenciais de acesso à The Fighters App como ${roleLabel} do ${clubName}.
+
+Acede em: https://thefightersapp.vercel.app
+
+Username: ${username}
+Password: ${password}
+
+Por segurança, altera a password após o primeiro login.
+
+The Fighters App`);
+    window.open(`mailto:${email.trim()}?subject=${subject}&body=${body}`, "_blank");
+    setDone(`Email preparado para ${email}`);
+    setEmail("");
   }
 
   return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }, onClick: onClose },
@@ -2161,8 +2176,8 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
       ),
       err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 12 } }, err),
       done && React.createElement("div", { style: { fontSize: 13, color: "#4caf7d", marginBottom: 12, padding: "10px 14px", background: "#0a1a0e", borderRadius: 8 } }, "✓ " + done),
-      React.createElement("button", { onClick: handleSend, style: { ...s.btnGold, width: "100%", marginTop: 0 } }, "✉ Enviar Convite"),
-      React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 12, textAlign: "center" } }, "O email é enviado automaticamente para o convidado.")
+      React.createElement("button", { onClick: handleSend, style: { ...s.btnGold, width: "100%", marginTop: 0 } }, "✉ Enviar Convite por Email"),
+      React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 12, textAlign: "center" } }, "Abre o teu cliente de email com a mensagem pronta a enviar.")
     )
   );
 }
