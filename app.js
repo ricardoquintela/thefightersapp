@@ -981,7 +981,11 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
   useEffect(() => {
     db.get("fighters").then(all => {
       const activeClubId = viewAsClub ? viewAsClub.id : user.club_id;
-      const filtered = all.filter(f => f.status === "pending" && f.club_id === activeClubId);
+      const filtered = viewAsClub
+        ? all.filter(f => f.status === "pending" && f.club_id === activeClubId)
+        : user.role === "superadmin"
+          ? all.filter(f => f.status === "pending")
+          : all.filter(f => f.status === "pending" && f.club_id === activeClubId);
       setPending(filtered); setLoading(false);
     });
   }, []);
@@ -2508,7 +2512,11 @@ function App() {
       setAllFighters(approved);
       setAllFights(fi);
       setFighters(user.role === "superadmin" ? approved : approved.filter(x => x.club_id === user.club_id));
-      setPendingCount(pending.filter(x => x.club_id === (viewAsClub ? viewAsClub.id : user.club_id)).length);
+      setPendingCount(viewAsClub
+        ? pending.filter(x => x.club_id === viewAsClub.id).length
+        : user.role === "superadmin"
+          ? pending.length
+          : pending.filter(x => x.club_id === user.club_id).length);
       setUsers(u);
     }
     load();
