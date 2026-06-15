@@ -2097,23 +2097,23 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
     };
     await db.insert("users", newUser);
 
-    // Abrir mailto com credenciais
-    const subject = encodeURIComponent(`Acesso à The Fighters App — ${clubName}`);
-    const body = encodeURIComponent(`Olá,
-
-Foram criadas as tuas credenciais de acesso à The Fighters App como ${roleLabel} do ${clubName}.
-
-Acede em: https://thefightersapp.vercel.app
-
-Username: ${username}
-Password: ${password}
-
-Por segurança, altera a password após o primeiro login (menu Conta).
-
-The Fighters App`);
-    window.open(`mailto:${email.trim()}?subject=${subject}&body=${body}`, "_blank");
-    setDone(`Credenciais criadas e email preparado para ${email}`);
-    setEmail("");
+        // Enviar email via API
+        try {
+          const invRes = await fetch("/api/invite", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email.trim(), username, password, clubName, roleLabel })
+          });
+          const invData = await invRes.json();
+          if (invRes.ok) {
+            setDone("Email enviado com sucesso para " + email.trim() + "!");
+          } else {
+            setDone("Credenciais criadas. Erro no email: " + (invData.error || "desconhecido"));
+          }
+        } catch (e) {
+          setDone("Credenciais criadas. Não foi possível enviar email: " + e.message);
+        }
+        setEmail("");
   }
 
   return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }, onClick: onClose },
