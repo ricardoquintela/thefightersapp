@@ -2387,119 +2387,194 @@ function AthleteView({ fighters, user, onLogout, setPage, pendingCount: allPendi
 // ═══════════════════════════════════════════════════════════
 
 function MatchConfirmModal({ fighter, onDone }) {
-  const s = getStyles();
   const [matches, setMatches] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
-  const [confirmed, setConfirmed] = React.useState({});
+  const [idx, setIdx] = React.useState(0);
+  const [step, setStep] = React.useState(1);
+  const [edits, setEdits] = React.useState({});
+  const [owners, setOwners] = React.useState({});
   const [saving, setSaving] = React.useState(false);
   const [done, setDone] = React.useState(false);
+  const [resolvedCount, setResolvedCount] = React.useState(0);
 
   React.useEffect(() => {
     async function findMatches() {
       const allFights = await db.get("fights");
-      const norm = (str) => (str||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\(teste\)/g,"").trim(); const name = norm(fighter.name); const nameTokens = name.split(/\s+/).filter((t) => t.length > 2); const myTeam = norm(fighter.team);
-      // Encontrar combates onde este atleta aparece como adversário mas não tem fighter_id próprio
-      const found = allFights.filter(f =>
-        f.fighter_id !== fighter.id &&
-        f.opponent && (() => { const op = norm(f.opponent); const ot = norm(f.opponent_team); const nh = op === name || (nameTokens.length > 0 && nameTokens.filter((t) => op.includes(t)).length >= Math.min(2, nameTokens.length)); const th = !myTeam || !ot || ot.includes(myTeam) || myTeam.includes(ot); return nh && th; })()
-      );
+      const allFighters = await db.get("fighters");
+      const norm = (str) => (str||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\(teste\)/g, "").trim();
+      const name = norm(fighter.name);
+      const nameTokens = name.split(/\s+/).filter(t => t.length > 2);
+      const myTeam = norm(fighter.team);
+      const myIdStr = String(fighter.id);
+      const found = allFights.filter(f => {
+        if (String(f.fighter_id) === myIdStr) return false;
+        if (f.confirmed_from) return false;
+        const op = norm(f.opponent);
+        const ot = norm(f.opponent_team);
+        const overlap = nameTokens.filter(t => op.includes(t)).length;
+        const nh = nameTokens.length > 0 && overlap >= Math.min(2, nameTokens.length);
+        const th = myTeam && ot && (ot.includes(myTeam) || myTeam.includes(ot));
+        return nh && th;
+      });
+      const ownerMap = {};
+      found.forEach(f => { const o = allFighters.find(x => String(x.id) === String(f.fighter_id)); if (o) ownerMap[f.id] = o; });
+      setOwners(ownerMap);
       setMatches(found);
       setLoading(false);
-      // Se não há matches, terminar imediatamente
-      if (found.length === 0) onDone();
+      if (found.length === 0) { setDone(true); onDone && onDone(); }
     }
     findMatches();
   }, []);
 
+  const current = matches[idx];
+  const ed = (current && edits[current.id]) || {};
+  const getField = (k) => (ed[k] !== undefined ? ed[k] : (current ? current[k] : ""));
+  const setField = (k, v) => setEdits(p => ({ ...p, [current.id]: { ...(p[current.id]||{}), [k]: v } }));
+
+  function advance() {
+    if (idx + 1 >= matches.length) { setDone(true); onDone && onDone(); }
+    else { setIdx(idx + 1); setStep(1); }
+  }
+
+  // "Não sou eu" — ignorar este combate
+  function handleNotMe() { advance(); }
+
+  // Confirma identidade -> passo 2
+  function handleIsMe() { setStep(2); }
+
+  // Confirma dados corretos -> replica no histórico
   async function handleConfirm() {
     setSaving(true);
-    const toConfirm = matches.filter(f => confirmed[f.id]);
-    for (const fight of toConfirm) {
-      // Resultado invertido
-      const mirrorResult = fight.result === "V" ? "D" : fight.result === "D" ? "V" : "E";
-      // Buscar o atleta que registou o combate
-      const ownerFighters = await db.get("fighters", { id: fight.fighter_id });
-      const owner = ownerFighters && ownerFighters[0];
-      await db.insert("fights", {
-        id: `f${Date.now()}_${fight.id}`,
-        fighter_id: fighter.id,
-        opponent: owner ? owner.name : fight.opponent_team || "Desconhecido",
-        opponent_team: owner ? (owner.team || "") : "",
-        result: mirrorResult,
-        method: fight.method,
-        event: fight.event,
-        date: fight.date,
-        modality: fight.modality,
-        sub_modality: fight.sub_modality,
-        level: fight.level,
-        weight: fight.weight,
-        federation: fight.federation || "",
-        confirmed_from: fight.id
+    const fight = current;
+    const owner = owners[fight.id];
+    const mirrorResult = fight.result === "V" ? "D" : fight.result === "D" ? "V" : "E";
+    const editedFields = edits[fight.id] || {};
+    const newId = `f${Date.now()}_${fight.id}`;
+    await db.insert("fights", {
+      id: newId,
+      fighter_id: fighter.id,
+      opponent: owner ? owner.name : (fight.opponent_team || "Desconhecido"),
+      opponent_team: owner ? (owner.team || "") : "",
+      result: mirrorResult,
+      method: getField("method"),
+      event: getField("event"),
+      date: getField("date"),
+      modality: getField("modality"),
+      sub_modality: getField("sub_modality"),
+      level: getField("level"),
+      weight: getField("weight"),
+      federation: getField("federation") || "",
+      country: getField("country") || "",
+      confirmed_from: fight.id
+    });
+    const hasEdits = Object.keys(editedFields).length > 0;
+    try {
+      await db.insert("fight_confirmations", {
+        id: `c${Date.now()}_${fight.id}`,
+        fight_id: fight.id,
+        owner_fighter_id: Number(fight.fighter_id),
+        new_fighter_id: Number(fighter.id),
+        status: "confirmed",
+        edited_fields: hasEdits ? editedFields : null,
+        replicated_fight_id: newId,
+        owner_notified: false,
+        resolved_at: new Date().toISOString()
       });
-    }
+    } catch (e) { console.warn("fight_confirmations insert falhou", e); }
     setSaving(false);
-    setDone(true);
-    setTimeout(() => onDone(), 1500);
+    setResolvedCount(c => c + 1);
+    advance();
+  }
+
+  // Nega o resultado -> disputa para o superadmin verificar
+  async function handleDispute() {
+    setSaving(true);
+    const fight = current;
+    try {
+      await db.update("fights", fight.id, { flagged: true, flag_note: `Resultado contestado por ${fighter.name} (${fighter.team||""}) — verificar com a federação` });
+    } catch (e) { console.warn("flag falhou", e); }
+    try {
+      await db.insert("fight_confirmations", {
+        id: `c${Date.now()}_${fight.id}`,
+        fight_id: fight.id,
+        owner_fighter_id: Number(fight.fighter_id),
+        new_fighter_id: Number(fighter.id),
+        status: "disputed",
+        edited_fields: edits[fight.id] || null,
+        owner_notified: false,
+        resolved_at: new Date().toISOString()
+      });
+    } catch (e) { console.warn("fight_confirmations insert falhou", e); }
+    setSaving(false);
+    setResolvedCount(c => c + 1);
+    advance();
   }
 
   if (loading) return null;
   if (matches.length === 0) return null;
 
-  if (done) return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: 16 } },
-    React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 12, padding: 32, textAlign: "center", maxWidth: 400 } },
-      React.createElement("div", { style: { fontSize: 18, color: "#4caf7d", fontWeight: 700, marginBottom: 8 } }, "Histórico actualizado!"),
-      React.createElement("div", { style: { fontSize: 14, color: T.TEXT2 } }, "Os combates confirmados foram adicionados ao teu perfil.")
+  if (done) return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 } },
+    React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 14, padding: 30, maxWidth: 420, textAlign: "center" } },
+      React.createElement("div", { style: { fontSize: 18, color: "#4caf7d", fontWeight: 700, marginBottom: 8 } }, "\u2713 Conclu\u00eddo"),
+      React.createElement("div", { style: { fontSize: 14, color: T.TEXT2, marginBottom: 18 } }, resolvedCount > 0 ? `Processaste ${resolvedCount} combate${resolvedCount !== 1 ? "s" : ""}. Os confirmados j\u00e1 est\u00e3o no teu hist\u00f3rico.` : "Sem combates por confirmar."),
+      React.createElement("button", { onClick: onDone, style: { ...s.btnGold, marginTop: 0 } }, "Continuar")
     )
   );
 
-  return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: 16, overflowY: "auto" } },
-    React.createElement("div", { style: { background: T.BG2, border: `1px solid ${T.BORDER_GOLD}`, borderRadius: 12, padding: 24, width: "100%", maxWidth: 500 } },
-      React.createElement("div", { style: { fontSize: 16, fontWeight: 700, color: T.GOLD, marginBottom: 6 } }, "Encontrámos combates com o teu nome!"),
-      React.createElement("div", { style: { fontSize: 13, color: T.TEXT2, marginBottom: 20 } },
-        `Outros atletas registaram ${matches.length} combate${matches.length !== 1 ? "s" : ""} onde apareces como adversário. Confirma os que são teus para os adicionar ao teu histórico.`
-      ),
-      matches.map(fight => {
-        const isConfirmed = confirmed[fight.id];
-        return React.createElement("div", {
-          key: fight.id,
-          style: { background: isConfirmed ? "#0a1a0e" : T.BG3, border: `1px solid ${isConfirmed ? "#4caf7d44" : T.BORDER}`, borderRadius: 8, padding: "12px 14px", marginBottom: 10, cursor: "pointer" },
-          onClick: () => setConfirmed(p => ({ ...p, [fight.id]: !p[fight.id] }))
-        },
-          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
-            React.createElement("div", { style: { width: 22, height: 22, borderRadius: 4, border: `2px solid ${isConfirmed ? "#4caf7d" : T.BORDER}`, background: isConfirmed ? "#4caf7d" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } },
-              isConfirmed && React.createElement("span", { style: { color: "#fff", fontSize: 13, fontWeight: 700 } }, "✓")
-            ),
-            React.createElement("div", { style: { flex: 1 } },
-              React.createElement("div", { style: { fontWeight: 700, fontSize: 14, color: T.TEXT } },
-                `vs. `,
-                React.createElement("span", { style: { color: T.GOLD } }, "Adversário registado por outro atleta"),
-                React.createElement("span", { style: { color: fight.result === "V" ? "#e05555" : "#4caf7d", marginLeft: 8, fontSize: 12, fontWeight: 700 } },
-                  fight.result === "V" ? "← Derrota para ti" : fight.result === "D" ? "← Vitória para ti" : "Empate"
-                )
-              ),
-              React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 3 } },
-                `${fight.event || "—"} · ${fight.date || "—"}`
-              ),
-              React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
-                React.createElement(Badge, null, fight.modality),
-                fight.sub_modality && React.createElement(Badge, { type: "gold" }, fight.sub_modality),
-                React.createElement(Badge, { type: "blue" }, fight.level),
-                fight.weight && React.createElement(Badge, null, fight.weight)
-              )
-            )
-          )
-        );
-      }),
-      React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 20 } },
-        React.createElement("button", {
-          onClick: handleConfirm,
-          disabled: saving || Object.values(confirmed).every(v => !v),
-          style: { ...s.btnGold, flex: 1, marginTop: 0, opacity: (saving || Object.values(confirmed).every(v => !v)) ? 0.5 : 1 }
-        }, saving ? "A guardar..." : `Confirmar ${Object.values(confirmed).filter(Boolean).length} combate${Object.values(confirmed).filter(Boolean).length !== 1 ? "s" : ""}`),
-        React.createElement("button", { onClick: onDone, style: { ...s.btnGold, marginTop: 0, background: T.BG4, color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Ignorar")
-      )
-    )
+  const owner = owners[current.id];
+  const ownerName = owner ? owner.name : (current.opponent_team || "Outro atleta");
+  const ownerTeam = owner ? (owner.team || "") : (current.opponent_team || "");
+  const mirrorTxt = current.result === "V" ? "Derrota para ti" : current.result === "D" ? "Vit\u00f3ria para ti" : "Empate";
+
+  const wrap = (children) => React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" } },
+    React.createElement("div", { style: { background: T.BG2, border: `1px solid ${T.BORDER_GOLD}`, borderRadius: 14, padding: 26, maxWidth: 520, width: "100%", maxHeight: "90vh", overflowY: "auto" } }, children)
   );
+
+  const progress = React.createElement("div", { style: { fontSize: 11, color: T.TEXT2, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 } }, `Combate ${idx + 1} de ${matches.length}`);
+
+  if (step === 1) {
+    return wrap([
+      progress,
+      React.createElement("div", { key: "t", style: { fontSize: 17, fontWeight: 700, color: T.GOLD, marginBottom: 10 } }, "Este combate \u00e9s tu?"),
+      React.createElement("div", { key: "d", style: { fontSize: 14, color: T.TEXT, marginBottom: 6 } }, `${ownerName}${ownerTeam ? " ("+ownerTeam+")" : ""} registou um combate contra `, React.createElement("b", { style: { color: T.GOLD } }, `${current.opponent}`), current.opponent_team ? ` do ${current.opponent_team}.` : "."),
+      React.createElement("div", { key: "m", style: { fontSize: 13, color: T.TEXT2, marginBottom: 18 } }, `${current.event || "\u2014"} \u00b7 ${current.date || "\u2014"} \u00b7 ${current.modality||""} ${current.sub_modality||""}`),
+      React.createElement("div", { key: "b", style: { display: "flex", gap: 10 } },
+        React.createElement("button", { key: "y", onClick: handleIsMe, style: { ...s.btnGold, flex: 1, marginTop: 0 } }, "Sim, sou eu"),
+        React.createElement("button", { key: "n", onClick: handleNotMe, style: { ...s.btnGold, flex: 1, marginTop: 0, background: "transparent", color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "N\u00e3o sou eu")
+      )
+    ]);
+  }
+
+  // step 2 — confirmar dados (editar tudo menos resultado)
+  const fieldRow = (label, key, opts) => React.createElement("div", { key: key, style: { marginBottom: 10 } },
+    React.createElement("div", { style: { fontSize: 11, color: T.TEXT2, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 } }, label),
+    opts ? React.createElement("select", { value: getField(key) || "", onChange: e => setField(key, e.target.value), style: { ...s.inp, marginTop: 0 } }, opts.map(o => React.createElement("option", { key: o, value: o }, o)))
+      : React.createElement("input", { value: getField(key) || "", onChange: e => setField(key, e.target.value), style: { ...s.inp, marginTop: 0 } })
+  );
+
+  return wrap([
+    progress,
+    React.createElement("div", { key: "t", style: { fontSize: 17, fontWeight: 700, color: T.GOLD, marginBottom: 6 } }, "Os dados est\u00e3o corretos?"),
+    React.createElement("div", { key: "s", style: { fontSize: 13, color: T.TEXT2, marginBottom: 14 } }, "Podes editar tudo exceto o resultado. Se editares, " + ownerName + " ser\u00e1 notificado."),
+    React.createElement("div", { key: "res", style: { background: T.BG3, border: `1px solid ${T.BORDER}`, borderRadius: 8, padding: "10px 12px", marginBottom: 14, fontSize: 14 } },
+      React.createElement("span", { style: { color: T.TEXT2 } }, "Resultado: "),
+      React.createElement("b", { style: { color: current.result === "V" ? "#e05555" : current.result === "D" ? "#4caf7d" : T.GOLD } }, mirrorTxt),
+      React.createElement("span", { style: { color: T.TEXT2, fontSize: 12 } }, "  (n\u00e3o edit\u00e1vel)")
+    ),
+    fieldRow("Evento", "event"),
+    fieldRow("Data", "date"),
+    fieldRow("Modalidade", "modality"),
+    fieldRow("Sub-modalidade", "sub_modality"),
+    fieldRow("N\u00edvel", "level", ["Amador", "Neo-Profissional", "Profissional"]),
+    fieldRow("Peso", "weight"),
+    fieldRow("Federa\u00e7\u00e3o", "federation"),
+    fieldRow("Pa\u00eds", "country"),
+    React.createElement("div", { key: "b", style: { display: "flex", flexDirection: "column", gap: 8, marginTop: 18 } },
+      React.createElement("button", { key: "ok", onClick: handleConfirm, disabled: saving, style: { ...s.btnGold, marginTop: 0, opacity: saving ? 0.6 : 1 } }, saving ? "A guardar..." : "Confirmar e adicionar ao meu hist\u00f3rico"),
+      React.createElement("button", { key: "disp", onClick: handleDispute, disabled: saving, style: { ...s.btnGold, marginTop: 0, background: "transparent", color: "#e0a555", border: "1px solid #e0a55566" } }, "Contestar o resultado"),
+      React.createElement("button", { key: "back", onClick: () => setStep(1), disabled: saving, style: { ...s.btnGold, marginTop: 0, background: "transparent", color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Voltar")
+    )
+  ]);
 }
 
 // ─── APP ROOT ──────────────────────────────────────────────
