@@ -2067,7 +2067,7 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
 
   const isSuperAdmin = user.role?.toLowerCase() === "superadmin";
 
-  async function handleSend() {
+  async function handleSend() { let autoSent = false;
     setErr("");
     if (!email.includes("@")) return setErr("Email inválido.");
     if (!clubId) return setErr("Selecciona um clube.");
@@ -2108,7 +2108,7 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
       const data = await r.json();
       if (data.success && !data.fallback) {
         setDone(`Email enviado automaticamente para ${email}`);
-        setEmail(""); return;
+        setEmail(""); autoSent = true;
       }
     } catch {}
 
@@ -2126,8 +2126,8 @@ Password: ${password}
 Por segurança, altera a password após o primeiro login.
 
 The Fighters App`);
-    window.open(`mailto:${email.trim()}?subject=${subject}&body=${body}`, "_blank"); setShare({ enc: body, txt: decodeURIComponent(body) });
-    setDone(`Email preparado para ${email}`);
+    if (!autoSent) window.open(`mailto:${email.trim()}?subject=${subject}&body=${body}`, "_blank"); setShare({ enc: body, txt: decodeURIComponent(body) });
+    if (!autoSent) setDone(`Email preparado para ${email}`);
     setEmail("");
   }
 
