@@ -2317,15 +2317,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
         React.createElement("div", { style: { fontSize: 13, color: "#4caf7d", marginBottom: 8, fontWeight: 700 } }, `✓ Perfil criado — ${inviteData.fighter.name}`),
         React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginBottom: 8 } }, `Username: ${inviteData.user.username} · Password: ${inviteData.user.password}`),
         React.createElement("div", { style: { display: "flex", gap: 8 } },
-          React.createElement("button", { onClick: () => setShowInvite(true), style: { ...s.btnGreen, padding: "4px 12px", fontSize: 12, marginTop: 0 } }, "✉ Enviar convite por email"), React.createElement("button", { onClick: () => { var m = "Olá! Foi-te criado um acesso à The Fighters App.
-
-Entra em: https://thefightersapp.vercel.app
-Utilizador: " + inviteData.user.username + "
-Palavra-passe: " + inviteData.user.password; window.open("https://wa.me/?text=" + encodeURIComponent(m), "_blank"); }, style: { ...s.btnGreen, padding: "4px 12px", fontSize: 12, marginTop: 0, marginLeft: 8 } }, "💬 WhatsApp"), React.createElement("button", { onClick: () => { var m = "Olá! Foi-te criado um acesso à The Fighters App.
-
-Entra em: https://thefightersapp.vercel.app
-Utilizador: " + inviteData.user.username + "
-Palavra-passe: " + inviteData.user.password; navigator.clipboard.writeText(m); }, style: { ...s.btnGreen, padding: "4px 12px", fontSize: 12, marginTop: 0, marginLeft: 8 } }, "📋 Copiar"),
+          React.createElement("button", { onClick: () => setShowInvite(true), style: { ...s.btnGreen, padding: "4px 12px", fontSize: 12, marginTop: 0 } }, "✉ Enviar convite por email"), React.createElement("button", { onClick: () => { var nl = String.fromCharCode(10); var m = "Olá! Foi-te criado um acesso à The Fighters App." + nl + nl + "Entra em: https://thefightersapp.vercel.app" + nl + "Utilizador: " + inviteData.user.username + nl + "Palavra-passe: " + inviteData.user.password; window.open("https://wa.me/?text=" + encodeURIComponent(m), "_blank"); }, style: { ...s.btnGreen, padding: "4px 12px", fontSize: 12, marginTop: 0, marginLeft: 8 } }, "💬 WhatsApp"), React.createElement("button", { onClick: () => { var nl = String.fromCharCode(10); var m = "Olá! Foi-te criado um acesso à The Fighters App." + nl + nl + "Entra em: https://thefightersapp.vercel.app" + nl + "Utilizador: " + inviteData.user.username + nl + "Palavra-passe: " + inviteData.user.password; navigator.clipboard.writeText(m); }, style: { ...s.btnGreen, padding: "4px 12px", fontSize: 12, marginTop: 0, marginLeft: 8 } }, "📋 Copiar"),
           React.createElement("button", { onClick: () => setInviteData(null), style: { ...s.btnOutline, padding: "4px 12px", fontSize: 12 } }, "Fechar")
         )
       ),
