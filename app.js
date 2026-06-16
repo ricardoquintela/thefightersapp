@@ -2397,11 +2397,11 @@ function MatchConfirmModal({ fighter, onDone }) {
   React.useEffect(() => {
     async function findMatches() {
       const allFights = await db.get("fights");
-      const name = fighter.name.toLowerCase().trim();
+      const norm = (str) => (str||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\(teste\)/g,"").trim(); const name = norm(fighter.name); const nameTokens = name.split(/\s+/).filter((t) => t.length > 2); const myTeam = norm(fighter.team);
       // Encontrar combates onde este atleta aparece como adversário mas não tem fighter_id próprio
       const found = allFights.filter(f =>
         f.fighter_id !== fighter.id &&
-        f.opponent && f.opponent.toLowerCase().trim() === name
+        f.opponent && (() => { const op = norm(f.opponent); const ot = norm(f.opponent_team); const nh = op === name || (nameTokens.length > 0 && nameTokens.filter((t) => op.includes(t)).length >= Math.min(2, nameTokens.length)); const th = !myTeam || !ot || ot.includes(myTeam) || myTeam.includes(ot); return nh && th; })()
       );
       setMatches(found);
       setLoading(false);
