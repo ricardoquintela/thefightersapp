@@ -2310,7 +2310,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
 
       React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club, viewAsClub, setViewAsClub }),
-                              user.role === "superadmin" && club ? React.createElement("select", { value: viewAsClub ? viewAsClub.id : club.id, onChange: e => { const v = e.target.value; if (v === "__all__") setViewAsClub({ id: "__all__" }); else if (Number(v) === club.id) setViewAsClub(null); else setViewAsClub(clubs.find(c => c.id === Number(v))); }, style: { ...s.inp, marginBottom: 14, background: T.BG2 } }, [React.createElement("option", { key: "own", value: club.id }, club.name + " (a minha equipa)"), React.createElement("option", { key: "all", value: "__all__" }, "Todos os clubes"), ...clubs.filter(c => c.id !== club.id).map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))]) : null,
+                              user.role === "superadmin" && club ? React.createElement("select", { value: (viewAsClub && viewAsClub.id === "__all__") ? "__all__" : (viewAsClub ? viewAsClub.id : (clubs.find(c => c.id === user.club_id) || {}).id), onChange: e => { const v = e.target.value; const myc = clubs.find(c => c.id === user.club_id); if (v === "__all__") setViewAsClub({ id: "__all__" }); else if (myc && Number(v) === myc.id) setViewAsClub(null); else setViewAsClub(clubs.find(c => c.id === Number(v)) || null); }, style: { ...s.inp, marginBottom: 14, background: T.BG2 } }, [((function(){var oc=clubs.find(c => c.id === user.club_id);return oc ? React.createElement("option", { key: "own", value: oc.id }, oc.name + " (a minha equipa)") : null;})()), React.createElement("option", { key: "all", value: "__all__" }, "Todos os clubes"), ...clubs.filter(c => c.id !== user.club_id).map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))]) : null,
       React.createElement("input", { style: { ...s.inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Nome ou modalidade...", value: search, onChange: e => setSearch(e.target.value) }),
       showInvite && React.createElement(InviteModal, { onClose: () => setShowInvite(false), user, club, clubs, defaultEmail: inviteData?.fighter?.email || "", fighters, users }),
       inviteData && React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 10, padding: "12px 16px", marginBottom: 16 } },
@@ -2589,7 +2589,7 @@ function App() {
   if (page === "calendar") return React.createElement(CalendarPage, { onLogout: handleLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub });
 
   // Superadmin a ver como outro clube
-  const effectiveClub = viewAsClub || club;
+  const effectiveClub = (viewAsClub && viewAsClub.id !== "__all__") ? viewAsClub : club;
   const effectiveFighters = viewAsClub
     ? (viewAsClub.id === "__all__" ? allFighters : allFighters.filter(f => f.club_id === viewAsClub.id))
     : (user.role === "superadmin" && user.club_id) ? allFighters.filter(f => f.club_id === user.club_id) : fighters;
