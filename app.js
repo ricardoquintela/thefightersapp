@@ -2437,7 +2437,25 @@ function MatchConfirmModal({ fighter, onDone }) {
   }
 
   // "Não sou eu" — ignorar este combate
-  function handleNotMe() { advance(); }
+  async function handleNotMe() {
+    setSaving(true);
+    const fight = current;
+    try {
+      await db.insert("fight_confirmations", {
+        id: `c${Date.now()}_${fight.id}`,
+        fight_id: fight.id,
+        owner_fighter_id: Number(fight.fighter_id),
+        new_fighter_id: Number(fighter.id),
+        status: "not_me",
+        edited_fields: { rejected_by: fighter.name, rejected_team: fighter.team || "", opponent: fight.opponent, opponent_team: fight.opponent_team || "" },
+        owner_notified: false,
+        resolved_at: new Date().toISOString()
+      });
+    } catch (e) { console.warn("fight_confirmations (not_me) insert falhou", e); }
+    setSaving(false);
+    setResolvedCount(c => c + 1);
+    advance();
+  }
 
   // Confirma identidade -> passo 2
   function handleIsMe() { setStep(2); }
