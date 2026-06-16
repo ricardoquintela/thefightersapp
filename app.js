@@ -419,7 +419,7 @@ function AccountModal({ user, onClose }) {
   const [newPw, setNewPw] = React.useState("");
   const [confirmPw, setConfirmPw] = React.useState("");
   const [msg, setMsg] = React.useState(null);
-  const [err, setErr] = React.useState("");
+  const [err, setErr] = React.useState(""); const [share, setShare] = React.useState(null);
   const [saving, setSaving] = React.useState(false);
 
   async function changePassword() {
@@ -1937,7 +1937,7 @@ function AcceptInvitePage({ token, clubs }) {
   const { inp, lbl } = s;
   const [invite, setInvite] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
-  const [err, setErr] = React.useState("");
+  const [err, setErr] = React.useState(""); const [share, setShare] = React.useState(null);
   const [name, setName] = React.useState("");
   const [pw, setPw] = React.useState("");
   const [pw2, setPw2] = React.useState("");
@@ -2063,7 +2063,7 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
   });
   const [sending, setSending] = React.useState(false);
   const [done, setDone] = React.useState("");
-  const [err, setErr] = React.useState("");
+  const [err, setErr] = React.useState(""); const [share, setShare] = React.useState(null);
 
   const isSuperAdmin = user.role?.toLowerCase() === "superadmin";
 
@@ -2126,7 +2126,7 @@ Password: ${password}
 Por segurança, altera a password após o primeiro login.
 
 The Fighters App`);
-    window.open(`mailto:${email.trim()}?subject=${subject}&body=${body}`, "_blank");
+    window.open(`mailto:${email.trim()}?subject=${subject}&body=${body}`, "_blank"); setShare({ enc: body, txt: decodeURIComponent(body) });
     setDone(`Email preparado para ${email}`);
     setEmail("");
   }
@@ -2176,7 +2176,7 @@ The Fighters App`);
       ),
       err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 12 } }, err),
       done && React.createElement("div", { style: { fontSize: 13, color: "#4caf7d", marginBottom: 12, padding: "10px 14px", background: "#0a1a0e", borderRadius: 8 } }, "✓ " + done),
-      React.createElement("button", { onClick: handleSend, style: { ...s.btnGold, width: "100%", marginTop: 0 } }, "✉ Enviar Convite por Email"),
+      React.createElement("button", { onClick: handleSend, style: { ...s.btnGold, width: "100%", marginTop: 0 } }, "✉ Enviar Convite por Email"), share && React.createElement("button", { onClick: () => window.open("https://wa.me/?text=" + share.enc, "_blank"), style: { ...s.btnGold, width: "100%", marginTop: 8 } }, "💬 Enviar por WhatsApp"), share && React.createElement("button", { onClick: () => { navigator.clipboard.writeText(share.txt); setDone("Mensagem copiada para a área de transferência!"); }, style: { ...s.btnGold, width: "100%", marginTop: 8 } }, "📋 Copiar mensagem"),
       React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 12, textAlign: "center" } }, "Abre o teu cliente de email com a mensagem pronta a enviar.")
     )
   );
