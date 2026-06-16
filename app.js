@@ -490,22 +490,22 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
     user && React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 10 } },
       React.createElement("div", { style: { textAlign: "center" } },
         React.createElement("div", { style: { fontSize: 12, color: T.TEXT, fontWeight: 600 } }, user.name),
-        React.createElement("div", { style: { fontSize: 11, color: user.role === "superadmin" ? "#ff9900" : user.role === "admin" ? T.GOLD : T.TEXT2 } },
-          user.role === "superadmin" ? "⭐ Super Admin" : user.role === "admin" ? "Admin" : "Atleta"
+        React.createElement("div", { style: { fontSize: 11, color: user.role?.toLowerCase() === "superadmin" ? "#ff9900" : user.role?.toLowerCase() === "admin" ? T.GOLD : T.TEXT2 } },
+          user.role?.toLowerCase() === "superadmin" ? "⭐ Super Admin" : user.role?.toLowerCase() === "admin" ? "Admin" : "Atleta"
         )
       ),
       React.createElement("button", { onClick: () => setShowAccount(true), style: { padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.GOLD_DIM}`, background: "transparent", color: T.GOLD, cursor: "pointer", fontSize: 12 } }, "Conta"),
       React.createElement("button", { onClick: onLogout, style: { padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.BORDER}`, background: "transparent", color: T.TEXT2, cursor: "pointer", fontSize: 12 } }, "Sair")
     ),
     user && setPage && React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", marginTop: 12, flexWrap: "wrap" } },
-      (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("fighters"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "fighters" ? T.GOLD_DIM : "transparent", color: currentPage === "fighters" ? "#fff" : T.GOLD } }, "Lutadores"),
-      (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("pending"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "pending" ? T.GOLD_DIM : "transparent", color: currentPage === "pending" ? "#fff" : T.GOLD, position: "relative" } },
+      (user.role?.toLowerCase() === "admin" || user.role?.toLowerCase() === "superadmin") && React.createElement("button", { onClick: () => setPage("fighters"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "fighters" ? T.GOLD_DIM : "transparent", color: currentPage === "fighters" ? "#fff" : T.GOLD } }, "Lutadores"),
+      (user.role?.toLowerCase() === "admin" || user.role?.toLowerCase() === "superadmin") && React.createElement("button", { onClick: () => setPage("pending"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "pending" ? T.GOLD_DIM : "transparent", color: currentPage === "pending" ? "#fff" : T.GOLD, position: "relative" } },
         "Pedidos",
         pendingCount > 0 && React.createElement("span", { style: { position: "absolute", top: -7, right: -7, background: "#e05555", color: "#fff", borderRadius: "50%", width: 17, height: 17, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" } }, pendingCount > 9 ? "9+" : pendingCount)
       ),
-      (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("teams"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "teams" ? T.GOLD_DIM : "transparent", color: currentPage === "teams" ? "#fff" : T.GOLD } }, "Equipas"),
-      user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("dashboard"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "dashboard" ? "#ff990066" : "transparent", color: currentPage === "dashboard" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Dashboard"),
-      user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("clubs"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "clubs" ? "#ff990066" : "transparent", color: currentPage === "clubs" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Clubes"),
+      (user.role?.toLowerCase() === "admin" || user.role?.toLowerCase() === "superadmin") && React.createElement("button", { onClick: () => setPage("teams"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "teams" ? T.GOLD_DIM : "transparent", color: currentPage === "teams" ? "#fff" : T.GOLD } }, "Equipas"),
+      user.role?.toLowerCase() === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("dashboard"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "dashboard" ? "#ff990066" : "transparent", color: currentPage === "dashboard" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Dashboard"),
+      user.role?.toLowerCase() === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("clubs"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "clubs" ? "#ff990066" : "transparent", color: currentPage === "clubs" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Clubes"),
       React.createElement("button", { onClick: () => setPage("calendar"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? T.GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : T.GOLD } }, "Calendário")
     )
   );
@@ -575,7 +575,7 @@ function CalendarPage({ onLogout, user, setPage, pendingCount, club, viewAsClub,
   const [delEventId, setDelEventId] = useState(null);
   const [ne, setNe] = useState({ ...EMPTY_EVENT });
   const [searchCal, setSearchCal] = useState("");
-  const canEdit = user && (user.role === "admin" || user.role === "superadmin");
+  const canEdit = user && (user.role?.toLowerCase() === "admin" || user.role?.toLowerCase() === "superadmin");
 
   useEffect(() => { db.get("events").then(all => { setEvents(all.sort((a, b) => new Date(a.date) - new Date(b.date))); setLoading(false); }); }, []);
 
@@ -983,7 +983,7 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
       const activeClubId = viewAsClub ? viewAsClub.id : user.club_id;
       const filtered = viewAsClub
         ? all.filter(f => f.status === "pending" && f.club_id === activeClubId)
-        : user.role === "superadmin"
+        : user.role?.toLowerCase() === "superadmin"
           ? all.filter(f => f.status === "pending")
           : all.filter(f => f.status === "pending" && f.club_id === activeClubId);
       setPending(filtered); setLoading(false);
@@ -1166,7 +1166,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs, viewAsC
       const [fighters, fights] = await Promise.all([db.get("fighters"), db.get("fights")]);
       const approved = fighters.filter(f => {
         if (f.status === "pending" || f.status === "rejected") return false;
-        if (user.role === "admin") return f.club_id === user.club_id;
+        if (user.role?.toLowerCase() === "admin") return f.club_id === user.club_id;
         return true;
       });
       setAllFighters(approved); setAllFights(fights);
@@ -2007,7 +2007,7 @@ function AcceptInvitePage({ token, clubs }) {
     )
   );
 
-  const roleLabel = invite.role === "admin" ? "Administrador" : "Atleta";
+  const roleLabel = invite.role?.toLowerCase() === "admin" ? "Administrador" : "Atleta";
 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
     React.createElement("div", { style: { width: "100%", maxWidth: 420 } },
@@ -2058,14 +2058,14 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
   // Atletas sem conta ou sem convite enviado
   const pendingFighters = (fighters || []).filter(f => {
     const hasUser = (users || []).some(u => u.fighter_id === f.id);
-    const matchClub = user.role === "superadmin" ? (clubId ? f.club_id === clubId : true) : f.club_id === user.club_id;
+    const matchClub = user.role?.toLowerCase() === "superadmin" ? (clubId ? f.club_id === clubId : true) : f.club_id === user.club_id;
     return !hasUser && matchClub && f.email;
   });
   const [sending, setSending] = React.useState(false);
   const [done, setDone] = React.useState("");
   const [err, setErr] = React.useState("");
 
-  const isSuperAdmin = user.role === "superadmin";
+  const isSuperAdmin = user.role?.toLowerCase() === "superadmin";
 
   async function handleSend() {
     setErr("");
@@ -2212,7 +2212,7 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames, clu
       React.createElement("div", { style: { width: 30, height: 2, background: T.GOLD, marginBottom: 16, borderRadius: 2 } }),
       React.createElement(Card, null,
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-          user.role === "superadmin" && React.createElement("div", { style: { gridColumn: "1 / -1" } },
+          user.role?.toLowerCase() === "superadmin" && React.createElement("div", { style: { gridColumn: "1 / -1" } },
             React.createElement("label", { style: { ...lbl, color: "#ff9900" } }, "Clube"),
             React.createElement("select", { style: inp, value: f.club_id, onChange: e => upd("club_id", e.target.value) },
               React.createElement("option", { value: "" }, "Seleccionar clube..."),
@@ -2310,7 +2310,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
 
       React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club, viewAsClub, setViewAsClub }),
-                              user.role === "superadmin" && club ? React.createElement("select", { value: (viewAsClub && viewAsClub.id === "__all__") ? "__all__" : (viewAsClub ? viewAsClub.id : (clubs.find(c => c.id === user.club_id) || {}).id), onChange: e => { const v = e.target.value; const myc = clubs.find(c => c.id === user.club_id); if (v === "__all__") setViewAsClub({ id: "__all__" }); else if (myc && v === myc.id) setViewAsClub(null); else setViewAsClub(clubs.find(c => c.id === v) || null); }, style: { ...s.inp, marginBottom: 14, background: T.BG2 } }, [((function(){var oc=clubs.find(c => c.id === user.club_id);return oc ? React.createElement("option", { key: "own", value: oc.id }, oc.name + " (a minha equipa)") : null;})()), React.createElement("option", { key: "all", value: "__all__" }, "Todos os clubes"), ...clubs.filter(c => c.id !== user.club_id).map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))]) : null,
+                              user.role?.toLowerCase() === "superadmin" && club ? React.createElement("select", { value: (viewAsClub && viewAsClub.id === "__all__") ? "__all__" : (viewAsClub ? viewAsClub.id : (clubs.find(c => c.id === user.club_id) || {}).id), onChange: e => { const v = e.target.value; const myc = clubs.find(c => c.id === user.club_id); if (v === "__all__") setViewAsClub({ id: "__all__" }); else if (myc && v === myc.id) setViewAsClub(null); else setViewAsClub(clubs.find(c => c.id === v) || null); }, style: { ...s.inp, marginBottom: 14, background: T.BG2 } }, [((function(){var oc=clubs.find(c => c.id === user.club_id);return oc ? React.createElement("option", { key: "own", value: oc.id }, oc.name + " (a minha equipa)") : null;})()), React.createElement("option", { key: "all", value: "__all__" }, "Todos os clubes"), ...clubs.filter(c => c.id !== user.club_id).map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))]) : null,
       React.createElement("input", { style: { ...s.inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Nome ou modalidade...", value: search, onChange: e => setSearch(e.target.value) }),
       showInvite && React.createElement(InviteModal, { onClose: () => setShowInvite(false), user, club, clubs, defaultEmail: inviteData?.fighter?.email || "", fighters, users }),
       inviteData && React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 10, padding: "12px 16px", marginBottom: 16 } },
@@ -2555,10 +2555,10 @@ function App() {
       const pending = f.filter(x => x.status === "pending");
       setAllFighters(approved);
       setAllFights(fi);
-      setFighters(user.role === "superadmin" ? approved : approved.filter(x => x.club_id === user.club_id));
+      setFighters(user.role?.toLowerCase() === "superadmin" ? approved : approved.filter(x => x.club_id === user.club_id));
       setPendingCount(viewAsClub
         ? pending.filter(x => x.club_id === viewAsClub.id).length
-        : user.role === "superadmin"
+        : user.role?.toLowerCase() === "superadmin"
           ? pending.length
           : pending.filter(x => x.club_id === user.club_id).length);
       setUsers(u);
@@ -2592,9 +2592,9 @@ function App() {
   const effectiveClub = (viewAsClub && viewAsClub.id !== "__all__") ? viewAsClub : club;
   const effectiveFighters = viewAsClub
     ? (viewAsClub.id === "__all__" ? allFighters : allFighters.filter(f => f.club_id === viewAsClub.id))
-    : (user.role === "superadmin" && user.club_id) ? allFighters.filter(f => f.club_id === user.club_id) : fighters;
+    : (user.role?.toLowerCase() === "superadmin" && user.club_id) ? allFighters.filter(f => f.club_id === user.club_id) : fighters;
 
-  if (user.role === "admin" || user.role === "superadmin") return React.createElement(AdminDashboard, {
+  if (user.role?.toLowerCase() === "admin" || user.role?.toLowerCase() === "superadmin") return React.createElement(AdminDashboard, {
     fighters: effectiveFighters, setFighters, users, setUsers,
     onLogout: handleLogout,
     user, page, setPage, pendingCount,
