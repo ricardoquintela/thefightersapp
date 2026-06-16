@@ -1166,7 +1166,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs, viewAsC
       const [fighters, fights] = await Promise.all([db.get("fighters"), db.get("fights")]);
       const approved = fighters.filter(f => {
         if (f.status === "pending" || f.status === "rejected") return false;
-        if (user.role?.toLowerCase() === "admin") return f.club_id === user.club_id;
+        // admins veem todas as equipas (apenas leitura)
         return true;
       });
       setAllFighters(approved); setAllFights(fights);
