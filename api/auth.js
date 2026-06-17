@@ -36,9 +36,9 @@ function generatePassword() {
 async function checkPassword(plain, stored) {
   if (!plain || !stored) return false;
   // Bcrypt
-  if (stored.startsWith("$2a$") || stored.startsWith("$2b$")) {
+  if (stored.startsWith("$2a$") || stored.startsWith("$2b$") || stored.startsWith("$2y$")) {
     try {
-      const bcrypt = await import("bcryptjs");
+      const bcrypt = (await import("bcryptjs")).default || (await import("bcryptjs"));
       return await bcrypt.compare(plain, stored);
     } catch {
       // fallback: tentar bcrypt nativo do node se bcryptjs não disponível
