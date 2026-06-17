@@ -1037,6 +1037,7 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
 }
 
 function ConfirmationsPage({ onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub }) {
+  const s = getStyles();
   const [items, setItems] = useState([]);
   const [fighters, setFighters] = useState([]);
   const [fights, setFights] = useState([]);
