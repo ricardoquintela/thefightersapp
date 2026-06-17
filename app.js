@@ -506,7 +506,8 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
       (user.role?.toLowerCase() === "admin" || user.role?.toLowerCase() === "superadmin") && React.createElement("button", { onClick: () => setPage("teams"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "teams" ? T.GOLD_DIM : "transparent", color: currentPage === "teams" ? "#fff" : T.GOLD } }, "Equipas"),
       user.role?.toLowerCase() === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("dashboard"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "dashboard" ? "#ff990066" : "transparent", color: currentPage === "dashboard" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Dashboard"),
       user.role?.toLowerCase() === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("clubs"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "clubs" ? "#ff990066" : "transparent", color: currentPage === "clubs" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Clubes"),
-      React.createElement("button", { onClick: () => setPage("calendar"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? T.GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : T.GOLD } }, "Calendário")
+      React.createElement("button", { onClick: () => setPage("calendar"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? T.GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : T.GOLD } }, "Calendário"),
+      user.role?.toLowerCase() === "superadmin" && React.createElement("button", { onClick: () => setPage("confirmations"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "confirmations" ? T.GOLD_DIM : "transparent", color: currentPage === "confirmations" ? "#fff" : T.GOLD } }, "Confirmações")
     )
   );
 }
@@ -1027,6 +1028,113 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
               React.createElement("button", { onClick: () => approve(f), style: { ...s.btnGreen, padding: "5px 14px", fontSize: 12 } }, "✓ Aprovar"),
               React.createElement("button", { onClick: () => reject(f.id), style: { ...s.btnRed, padding: "5px 14px", fontSize: 12 } }, "✕ Rejeitar")
             )
+          )
+        );
+      }),
+      React.createElement(Footer)
+    )
+  );
+}
+
+function ConfirmationsPage({ onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub }) {
+  const [items, setItems] = useState([]);
+  const [fighters, setFighters] = useState([]);
+  const [fights, setFights] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [assignFor, setAssignFor] = useState(null);
+  const [assignSearch, setAssignSearch] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function load() {
+    const [confs, fgs, fts] = await Promise.all([db.get("fight_confirmations"), db.get("fighters"), db.get("fights")]);
+    const open = (confs||[]).filter(c => c.status === "not_me" || c.status === "disputed");
+    open.sort((a,b) => (b.created_at||"").localeCompare(a.created_at||""));
+    setItems(open); setFighters(fgs||[]); setFights(fts||[]); setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  const fightOf = (c) => fights.find(f => String(f.id) === String(c.fight_id));
+  const fighterOf = (id) => fighters.find(f => String(f.id) === String(id));
+
+  async function closeCase(c, newStatus) {
+    setBusy(true);
+    try { await db.update("fight_confirmations", c.id, { status: newStatus, resolved_at: new Date().toISOString() }); } catch (e) { console.warn("close falhou", e); }
+    setBusy(false);
+    setItems(p => p.filter(x => x.id !== c.id));
+    setAssignFor(null); setAssignSearch("");
+  }
+
+  async function assignTo(c, target) {
+    setBusy(true);
+    const fight = fightOf(c);
+    if (fight) {
+      const owner = fighterOf(fight.fighter_id);
+      const mirror = fight.result === "V" ? "D" : fight.result === "D" ? "V" : "E";
+      const newId = `f${Date.now()}_${fight.id}`;
+      try {
+        await db.insert("fights", {
+          id: newId, fighter_id: target.id,
+          opponent: owner ? owner.name : (fight.opponent_team || "Desconhecido"),
+          opponent_team: owner ? (owner.team || "") : "",
+          result: mirror, method: fight.method, event: fight.event, date: fight.date,
+          modality: fight.modality, sub_modality: fight.sub_modality, level: fight.level,
+          weight: fight.weight, federation: fight.federation || "", country: fight.country || "",
+          confirmed_from: fight.id
+        });
+      } catch (e) { console.warn("replicar falhou", e); }
+    }
+    try { await db.update("fight_confirmations", c.id, { status: "reassigned", new_fighter_id: Number(target.id), replicated_fight_id: fight ? `f${Date.now()}_${fight.id}` : null, resolved_at: new Date().toISOString() }); } catch (e) {}
+    setBusy(false);
+    setItems(p => p.filter(x => x.id !== c.id));
+    setAssignFor(null); setAssignSearch("");
+  }
+
+  const matchList = assignFor ? fighters.filter(f => {
+    const q = assignSearch.toLowerCase().trim();
+    if (!q) return true;
+    return (f.name||"").toLowerCase().includes(q) || (f.team||"").toLowerCase().includes(q);
+  }).slice(0, 20) : [];
+
+  return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
+    React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
+      React.createElement(Header, { onLogout, user, currentPage: "confirmations", setPage, pendingCount, club, viewAsClub, setViewAsClub }),
+      React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.TEXT, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 } }, `Confirma\u00e7\u00f5es de combates \u00b7 ${items.length}`),
+      React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginBottom: 16 } }, "Casos em que um atleta disse que n\u00e3o \u00e9 ele, ou contestou o resultado."),
+      loading && React.createElement("div", { style: { color: T.TEXT2, textAlign: "center", padding: 24 } }, "A carregar..."),
+      !loading && items.length === 0 && React.createElement("div", { style: { color: T.TEXT2, textAlign: "center", padding: 24 } }, "Sem casos pendentes."),
+      items.map(c => {
+        const fight = fightOf(c);
+        const owner = fighterOf(c.owner_fighter_id) || (fight && fighterOf(fight.fighter_id));
+        const ef = c.edited_fields || {};
+        const isDispute = c.status === "disputed";
+        const rejectedBy = ef.rejected_by || (fighterOf(c.new_fighter_id) && fighterOf(c.new_fighter_id).name) || "\u2014";
+        const rejectedTeam = ef.rejected_team || "";
+        const opponentName = (fight && fight.opponent) || ef.opponent || "\u2014";
+        const opponentTeam = (fight && fight.opponent_team) || ef.opponent_team || "";
+        return React.createElement(Card, { key: c.id, style: { marginBottom: 10 } },
+          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } },
+            React.createElement(Badge, { type: isDispute ? "gold" : "default" }, isDispute ? "Resultado contestado" : "N\u00e3o \u00e9 ele"),
+            React.createElement("span", { style: { fontSize: 11, color: T.TEXT3 } }, c.created_at ? new Date(c.created_at).toLocaleDateString("pt-PT") : "")
+          ),
+          React.createElement("div", { style: { fontSize: 14, color: T.TEXT, fontWeight: 700 } }, `${owner ? owner.name : "Algu\u00e9m"}${owner && owner.team ? " ("+owner.team+")" : ""}  vs.  ${opponentName}${opponentTeam ? " ("+opponentTeam+")" : ""}`),
+          React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 3 } }, `${(fight && fight.event) || ef.event || "\u2014"} \u00b7 ${(fight && fight.date) || "\u2014"} \u00b7 ${(fight && fight.modality) || ""} ${(fight && fight.sub_modality) || ""}`),
+          React.createElement("div", { style: { fontSize: 12, color: "#e0a555", marginTop: 6 } }, isDispute ? `${rejectedBy} contesta o resultado \u2014 verificar com a federa\u00e7\u00e3o.` : `${rejectedBy}${rejectedTeam ? " ("+rejectedTeam+")" : ""} diz que n\u00e3o \u00e9 ele.`),
+          assignFor === c.id ? React.createElement("div", { style: { marginTop: 10 } },
+            React.createElement("input", { value: assignSearch, onChange: e => setAssignSearch(e.target.value), placeholder: "Procurar atleta por nome ou equipa...", style: { ...s.inp, marginTop: 0 } }),
+            React.createElement("div", { style: { maxHeight: 220, overflowY: "auto", marginTop: 8, border: `1px solid ${T.BORDER}`, borderRadius: 8 } },
+              matchList.length === 0 ? React.createElement("div", { style: { padding: 10, fontSize: 12, color: T.TEXT2 } }, "Sem resultados.") :
+              matchList.map(f => React.createElement("div", { key: f.id, onClick: () => !busy && assignTo(c, f), style: { padding: "8px 10px", cursor: "pointer", borderBottom: `1px solid ${T.BORDER}`, display: "flex", alignItems: "center", gap: 8 } },
+                React.createElement(Avatar, { name: f.name, size: 26, photo: f.photo }),
+                React.createElement("div", null,
+                  React.createElement("div", { style: { fontSize: 13, color: T.TEXT, fontWeight: 600 } }, f.name),
+                  React.createElement("div", { style: { fontSize: 11, color: T.TEXT2 } }, f.team || "")
+                )
+              ))
+            ),
+            React.createElement("button", { onClick: () => { setAssignFor(null); setAssignSearch(""); }, style: { ...s.btnGold, marginTop: 8, background: "transparent", color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Cancelar")
+          ) : React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" } },
+            !isDispute && React.createElement("button", { onClick: () => setAssignFor(c.id), disabled: busy, style: { ...s.btnGold, marginTop: 0, padding: "6px 14px", fontSize: 12 } }, "Atribuir a outro atleta"),
+            React.createElement("button", { onClick: () => closeCase(c, isDispute ? "disputed_closed" : "not_me_closed"), disabled: busy, style: { ...s.btnRed, padding: "6px 14px", fontSize: 12 } }, isDispute ? "Marcar verificado / encerrar" : "Confirmar que n\u00e3o \u00e9 ele")
           )
         );
       }),
@@ -2274,6 +2382,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   if (page === "teams") return React.createElement(TeamsPage, { onLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub });
   if (page === "calendar") return React.createElement(CalendarPage, { onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub });
   if (page === "dashboard") return React.createElement(DashboardPage, { onLogout, user, setPage, pendingCount, clubs, allFighters, allFights, viewAsClub, setViewAsClub });
+  if (page === "confirmations") return React.createElement(ConfirmationsPage, { onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub });
   if (page === "clubs") return React.createElement(ClubsPage, { onLogout, user, setPage, pendingCount, clubs, setClubes, viewAsClub, setViewAsClub });
 
   // Modal password redefinida
