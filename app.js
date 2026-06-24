@@ -1021,7 +1021,7 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
             React.createElement("div", { style: { flex: 1 } },
               React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: T.TEXT } }, f.name),
               fClub && React.createElement("div", { style: { fontSize: 11, color: fClub.primary_color, fontWeight: 700, marginTop: 1 } }, fClub.name),
-              React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `${f.email} · ${f.modality} · ${f.level} · ${f.weight}`),
+              React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `${f.email} · ${f.modality} · ${f.level} · ${f.weight}${f.birthdate ? " · " + calcEscalaoGlobal(f.birthdate, f.modality, f.sub_modality) : ""}`),
               React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 2 } }, `Pedido: ${f.registration_date ? new Date(f.registration_date).toLocaleDateString("pt-PT") : "—"}`)
             ),
             React.createElement("div", { style: { display: "flex", gap: 8 } },
@@ -1128,7 +1128,7 @@ function ConfirmationsPage({ onLogout, user, setPage, pendingCount, club, viewAs
                 React.createElement(Avatar, { name: f.name, size: 26, photo: f.photo }),
                 React.createElement("div", null,
                   React.createElement("div", { style: { fontSize: 13, color: T.TEXT, fontWeight: 600 } }, f.name),
-                  React.createElement("div", { style: { fontSize: 11, color: T.TEXT2 } }, f.team || "")
+                  React.createElement("div", { style: { fontSize: 11, color: T.TEXT2 } }, f.team || ""), f.birthdate && React.createElement("div", { style: { fontSize: 11, color: T.TEXT3 } }, calcEscalaoGlobal(f.birthdate, f.modality, f.sub_modality))
                 )
               ))
             ),
@@ -1369,7 +1369,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs, viewAsC
                   React.createElement(ClubTag, { clubId: f.club_id, clubs }),
                   React.createElement(Badge, null, f.modality),
                   f.sub_modality && React.createElement(Badge, { type: "gold" }, f.sub_modality),
-                  React.createElement(Badge, { type: "blue" }, f.level),
+                  React.createElement(Badge, { type: "blue" }, f.level), f.birthdate && React.createElement(Badge, { type: "gold" }, calcEscalaoGlobal(f.birthdate, f.modality, f.sub_modality)),
                   React.createElement(Badge, null, f.weight)
                 ),
                 React.createElement("div", { style: { display: "flex", gap: 12, fontSize: 13 } },
@@ -2457,7 +2457,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
                   React.createElement(ClubTag, { clubId: f.club_id, clubs }),
                   React.createElement(Badge, { type: "gold" }, f.team)
                 ),
-                React.createElement("div", { style: { fontSize: 13, color: T.TEXT2 } }, `${f.modality} · ${f.sub_modality} · ${f.level} · ${f.weight}`),
+                React.createElement("div", { style: { fontSize: 13, color: T.TEXT2 } }, `${f.modality} · ${f.sub_modality} · ${f.level} · ${f.weight}${f.birthdate ? " · " + calcEscalaoGlobal(f.birthdate, f.modality, f.sub_modality) : ""}`),
                 fu && React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 2 } }, `@${fu.username} · ${f.email}`)
               )
             ),
