@@ -132,7 +132,8 @@ function getWeightCategories(subModality, escalao, gender, level) {
   }
   // Amador e Neo-Pro → WAKO 2025
   const disc = WEIGHT_CATEGORIES[subModality];
-  if (!disc || !escalao) return [];
+  if (!disc) return [];
+    if (!escalao || !disc[escalao]) escalao = "Seniores (19-40 anos)";;
   const esc = disc[escalao];
   if (!esc) return [];
   return esc[g] || [];
