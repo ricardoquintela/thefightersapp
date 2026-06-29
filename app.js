@@ -2193,7 +2193,12 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
     if (allUsers.some(u => u.username === username)) return setErr("Username já existe — tenta outro email.");
 
     // Criar o utilizador
-    const fighter = (fighters || []).find(f => f.email && f.email.toLowerCase() === email.trim().toLowerCase());
+    let fighter = fighters.find(f => f.email && f.email.toLowerCase() === email.trim().toLowerCase());
+        if (!fighter) {
+          fighter = { id: Date.now(), name: email.split("@")[0], weight: "", category: "", modality: "", sub_modality: "", level: "", available: false, contact: "", email: email.trim(), team: "", photo: "", status: "approved", combat_photos: [], club_id: clubId, birthdate: "", gender: "" };
+          await db.insert("fighters", fighter);
+          fighters.push(fighter);
+        };
     const newUser = {
       id: `user_${Date.now()}`,
       name: fighter ? fighter.name : email.split("@")[0],
