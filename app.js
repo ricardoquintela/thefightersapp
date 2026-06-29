@@ -1523,7 +1523,8 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   async function saveProfile() {
     setSaving(true);
     const autoCategory = calcEscalao(f.birthdate, f.modality, f.sub_modality);
-    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: autoCategory || san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, combat_photos: f.combat_photos, birthdate: f.birthdate || "" });
+    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: autoCategory || san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, combat_photos: f.combat_photos, birthdate: f.birthdate || "" , team: f.team || ""});
+    if (typeof onSave === "function") onSave(f);
     setSavedSnapshot(profileFields.reduce((o,k) => ({...o,[k]: f[k]}), {}));
     setSaving(false);
   }
