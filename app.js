@@ -2409,7 +2409,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   if (showNewForm) return React.createElement(NewFighterForm, {
     onBack: () => setShowNewForm(false),
     onSave: async (fighter, newUser) => {
-      await db.insert("fighters", { ...fighter, available: false, status: "approved" , viewAsClub, setViewAsClub });
+      await db.insert("fighters", { ...fighter, available: false, status: "approved"  });
       await db.insert("users", newUser);
       setFighters(p => [...p, fighter]); setUsers(p => [...p, newUser]);
       setShowNewForm(false); setInviteData({ fighter, user: newUser });
