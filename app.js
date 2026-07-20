@@ -563,7 +563,8 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
       (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("teams"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "teams" ? T.GOLD_DIM : "transparent", color: currentPage === "teams" ? "#fff" : T.GOLD } }, "Equipas"),
       user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("dashboard"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "dashboard" ? "#ff990066" : "transparent", color: currentPage === "dashboard" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Dashboard"),
       user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("clubs"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "clubs" ? "#ff990066" : "transparent", color: currentPage === "clubs" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Clubes"),
-      React.createElement("button", { onClick: () => setPage("calendar"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? T.GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : T.GOLD } }, "Calendário")
+      React.createElement("button", { onClick: () => setPage("calendar"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? T.GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : T.GOLD } }, "Calendário"),
+      React.createElement("button", { onClick: () => setPage("matchmaking"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "matchmaking" ? T.GOLD_DIM : "transparent", color: currentPage === "matchmaking" ? "#fff" : T.GOLD } }, "Matchmaking")
     )
   );
 }
@@ -2566,6 +2567,187 @@ function MatchConfirmModal({ fighter, onDone }) {
         }, saving ? "A guardar..." : `Confirmar ${Object.values(confirmed).filter(Boolean).length} combate${Object.values(confirmed).filter(Boolean).length !== 1 ? "s" : ""}`),
         React.createElement("button", { onClick: onDone, style: { ...s.btnGold, marginTop: 0, background: T.BG4, color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Ignorar")
       )
+    )
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// MATCHMAKING PAGE
+// ═══════════════════════════════════════════════════════════
+function MatchmakingPage({ onLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub }) {
+  const s = getStyles();
+  const [allFighters, setAllFighters] = React.useState([]);
+  const [allFights, setAllFights] = React.useState([]);
+  const [allClubs, setAllClubs] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [filters, setFilters] = React.useState({ modality: "Kickboxing", sub_modality: "K1", level: "Amador", weight: "", country: "Portugal", fight_date: "" });
+  const [pairs, setPairs] = React.useState([]);
+  const [searched, setSearched] = React.useState(false);
+
+  React.useEffect(() => {
+    async function load() {
+      const [f, fi, c] = await Promise.all([db.get("fighters"), db.get("fights"), db.get("clubs")]);
+      setAllFighters(f.filter(x => x.status === "approved"));
+      setAllFights(fi);
+      setAllClubs(c);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  function getRecord(fighterId) {
+    const ff = allFights.filter(f => String(f.fighter_id) === String(fighterId));
+    const wins = ff.filter(x => x.result === "V").length;
+    const losses = ff.filter(x => x.result === "D").length;
+    const draws = ff.filter(x => x.result === "E").length;
+    const kos = ff.filter(x => x.result === "V" && x.method && x.method.includes("KO")).length;
+    const kod = ff.filter(x => x.result === "D" && x.method && x.method.includes("KO")).length;
+    const total = ff.length;
+    const wr = total > 0 ? Math.round(wins / total * 100) : null;
+    return { wins, losses, draws, kos, kod, total, wr };
+  }
+
+  function hasUpcomingNear(fighterId, fightDate) {
+    if (!fightDate) return false;
+    const target = new Date(fightDate);
+    const from = new Date(target); from.setDate(from.getDate() - 30);
+    return allFights.filter(f => String(f.fighter_id) === String(fighterId) && f.date).some(f => {
+      const d = new Date(f.date); return d >= from && d <= target;
+    });
+  }
+
+  function getClubCountry(clubId) {
+    const c = allClubs.find(x => x.id === clubId);
+    return c?.country || "";
+  }
+
+  function evaluatePair(a, b, ra, rb, fightDate) {
+    const wrDiff = Math.abs((ra.wr ?? 50) - (rb.wr ?? 50));
+    const expDiff = Math.abs(ra.total - rb.total);
+    const aKoPct = ra.total > 0 ? ra.kos / ra.total : 0;
+    const bKoPct = rb.total > 0 ? rb.kos / rb.total : 0;
+    const aKodPct = ra.total > 0 ? ra.kod / ra.total : 0;
+    const bKodPct = rb.total > 0 ? rb.kod / rb.total : 0;
+    const dangerous = (aKoPct > 0.5 && (bKodPct > 0.4 || (rb.total < 3 && ra.total > 5))) || (bKoPct > 0.5 && (aKodPct > 0.4 || (ra.total < 3 && rb.total > 5)));
+    const unbalanced = !dangerous && (wrDiff > 35 || expDiff > 8);
+    const good = !dangerous && !unbalanced && wrDiff <= 15 && expDiff <= 4;
+    const warnA = hasUpcomingNear(a.id, fightDate);
+    const warnB = hasUpcomingNear(b.id, fightDate);
+    if (dangerous) return { label: "Perigoso", color: "#e05555", icon: "!", warnA, warnB };
+    if (unbalanced) return { label: "Desequilibrado", color: "#d4844c", icon: "~", warnA, warnB };
+    if (good) return { label: "Bom combate", color: "#4caf7d", icon: "*", warnA, warnB };
+    return { label: "Justo", color: T.GOLD, icon: "ok", warnA, warnB };
+  }
+
+  function search() {
+    const { modality, sub_modality, level, weight, country, fight_date } = filters;
+    const candidates = allFighters.filter(f => {
+      if (f.modality !== modality) return false;
+      if (sub_modality && f.sub_modality !== sub_modality) return false;
+      if (level && f.level !== level) return false;
+      if (weight && f.weight !== weight) return false;
+      if (country && getClubCountry(f.club_id) !== country) return false;
+      return true;
+    });
+    const result = [];
+    for (let i = 0; i < candidates.length; i++) {
+      for (let j = i + 1; j < candidates.length; j++) {
+        const a = candidates[i], b = candidates[j];
+        if (a.club_id === b.club_id) continue;
+        const ra = getRecord(a.id), rb = getRecord(b.id);
+        const ev = evaluatePair(a, b, ra, rb, fight_date);
+        result.push({ a, b, ra, rb, ev });
+      }
+    }
+    const order = { "Bom combate": 0, "Justo": 1, "Desequilibrado": 2, "Perigoso": 3 };
+    result.sort((x, y) => (order[x.ev.label] || 0) - (order[y.ev.label] || 0));
+    setPairs(result);
+    setSearched(true);
+  }
+
+  const clubCountries = [...new Set(allClubs.filter(c => c.country).map(c => c.country))].sort();
+
+  function FighterMiniCard({ fighter, record, warn }) {
+    const fc = allClubs.find(c => c.id === fighter.club_id);
+    return React.createElement("div", { style: { flex: 1, background: T.BG3, borderRadius: 8, padding: "10px 12px" } },
+      React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", marginBottom: 6 } },
+        React.createElement(Avatar, { name: fighter.name, size: 30, photo: fighter.photo, available: fighter.available }),
+        React.createElement("div", null,
+          React.createElement("div", { style: { fontWeight: 700, fontSize: 12, color: T.TEXT } }, fighter.name),
+          React.createElement("div", { style: { fontSize: 11, color: T.TEXT2 } }, fc?.name || fighter.club_id)
+        )
+      ),
+      React.createElement("div", { style: { display: "flex", gap: 8, fontSize: 12 } },
+        React.createElement("span", { style: { color: "#4caf7d", fontWeight: 700 } }, record.wins + "V"),
+        React.createElement("span", { style: { color: "#e05555", fontWeight: 700 } }, record.losses + "D"),
+        React.createElement("span", { style: { color: T.TEXT3 } }, record.draws + "E"),
+        record.kos > 0 && React.createElement("span", { style: { color: T.GOLD, fontSize: 11 } }, record.kos + " KO"),
+        record.wr !== null && React.createElement("span", { style: { color: T.TEXT2, fontSize: 11 } }, record.wr + "% WR")
+      ),
+      warn && React.createElement("div", { style: { fontSize: 10, color: "#e05555", marginTop: 4 } }, "! Pode ter luta nos 30 dias anteriores")
+    );
+  }
+
+  return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
+    React.createElement("div", { style: { maxWidth: 720, margin: "0 auto" } },
+      React.createElement(Header, { onLogout, user, currentPage: "matchmaking", setPage, pendingCount, club, viewAsClub, setViewAsClub }),
+      React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: T.TEXT, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 } }, "Matchmaking"),
+      React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginBottom: 16 } }, "Encontra combates equilibrados com base no histórico dos atletas."),
+      React.createElement(Card, { gold: true, style: { marginBottom: 16 } },
+        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
+          React.createElement("div", null,
+            React.createElement("label", { style: s.lbl }, "Modalidade"),
+            React.createElement("select", { style: s.inp, value: filters.modality, onChange: e => setFilters(p => ({ ...p, modality: e.target.value, sub_modality: (MODALITIES[e.target.value] || [])[0] || "", weight: "" })) },
+              Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: s.lbl }, "Disciplina"),
+            React.createElement("select", { style: s.inp, value: filters.sub_modality, onChange: e => setFilters(p => ({ ...p, sub_modality: e.target.value, weight: "" })) },
+              (MODALITIES[filters.modality] || []).map(m => React.createElement("option", { key: m }, m))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: s.lbl }, "Nível"),
+            React.createElement("select", { style: s.inp, value: filters.level, onChange: e => setFilters(p => ({ ...p, level: e.target.value })) },
+              LEVELS.map(l => React.createElement("option", { key: l }, l))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: s.lbl }, "País"),
+            React.createElement("select", { style: s.inp, value: filters.country, onChange: e => setFilters(p => ({ ...p, country: e.target.value })) },
+              React.createElement("option", { value: "" }, "Todos"),
+              clubCountries.map(c => React.createElement("option", { key: c, value: c }, c))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: s.lbl }, "Peso"),
+            React.createElement("input", { style: s.inp, placeholder: "ex: -60kg", value: filters.weight, onChange: e => setFilters(p => ({ ...p, weight: e.target.value })) })
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: s.lbl }, "Data prevista da luta"),
+            React.createElement("input", { type: "date", style: s.inp, value: filters.fight_date, onChange: e => setFilters(p => ({ ...p, fight_date: e.target.value })) })
+          )
+        ),
+        React.createElement("button", { onClick: search, disabled: loading, style: { ...s.btnGold, width: "100%", marginTop: 12 } }, loading ? "A carregar..." : "Pesquisar")
+      ),
+      searched && React.createElement("div", null,
+        React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginBottom: 10 } }, pairs.length + " par" + (pairs.length !== 1 ? "es" : "") + " encontrado" + (pairs.length !== 1 ? "s" : "")),
+        pairs.length === 0 && React.createElement(Card, null, React.createElement("div", { style: { color: T.TEXT3, textAlign: "center", padding: "24px 0" } }, "Nenhum par encontrado com estes critérios.")),
+        pairs.map((p, i) => React.createElement(Card, { key: i, style: { marginBottom: 10, borderLeft: "3px solid " + p.ev.color } },
+          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } },
+            React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: p.ev.color } }, p.ev.label),
+            React.createElement("span", { style: { fontSize: 11, color: T.TEXT3, marginLeft: "auto" } }, "Dif. WR: " + Math.abs((p.ra.wr ?? 50) - (p.rb.wr ?? 50)) + "% · Dif. lutas: " + Math.abs(p.ra.total - p.rb.total))
+          ),
+          React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center" } },
+            React.createElement(FighterMiniCard, { fighter: p.a, record: p.ra, warn: p.ev.warnA }),
+            React.createElement("div", { style: { color: T.TEXT3, fontWeight: 700, flexShrink: 0 } }, "vs"),
+            React.createElement(FighterMiniCard, { fighter: p.b, record: p.rb, warn: p.ev.warnB })
+          )
+        ))
+      ),
+      React.createElement(Footer)
     )
   );
 }
