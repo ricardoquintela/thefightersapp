@@ -21,11 +21,17 @@ const db = {
     return r.json();
   },
   async update(table, id, data) {
-    await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
       method: "PATCH",
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
       body: JSON.stringify(data)
     });
+    if (!r.ok) {
+      const err = await r.text();
+      console.error(`db.update ${table} failed:`, r.status, err);
+      throw new Error(err);
+    }
+    return true;
   },
   async delete(table, id) {
     await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
@@ -1464,9 +1470,13 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
 
   async function saveProfile() {
     setSaving(true);
-    const autoCategory = calcEscalao(f.birthdate, f.modality, f.sub_modality);
-    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: autoCategory || san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, birthdate: f.birthdate || "", available: f.available || false });
-    setSavedSnapshot(profileFields.reduce((o,k) => ({...o,[k]: f[k]}), {}));
+    try {
+      const autoCategory = calcEscalao(f.birthdate, f.modality, f.sub_modality);
+      await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: autoCategory || san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, birthdate: f.birthdate || "", available: f.available || false });
+      setSavedSnapshot(profileFields.reduce((o,k) => ({...o,[k]: f[k]}), {}));
+    } catch(e) {
+      alert("Erro ao guardar. Verifica a ligação e tenta novamente. " + e.message);
+    }
     setSaving(false);
   }
 
