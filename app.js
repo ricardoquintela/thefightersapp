@@ -1213,90 +1213,139 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
 }
 
 function DashboardPage({ onLogout, user, setPage, pendingCount, clubs, allFighters, allFights, viewAsClub, setViewAsClub }) {
-  const [expandedClub, setExpandedClub] = React.useState(null);
+  const [rankBy, setRankBy] = React.useState("wr");
 
-  const clubStats = (clubs || []).filter(c => c.active).map(club => {
+  const activeClubs = (clubs || []).filter(c => c.active);
+
+  const clubStats = activeClubs.map(club => {
     const cf = allFighters.filter(f => f.club_id === club.id && f.status !== "pending");
     const cfIds = new Set(cf.map(f => String(f.id)));
-    const cfights = allFights.filter(f => cfIds.has(String(f.fighter_id)));
-    const wins = cfights.filter(f => f.result === "V").length;
-    const losses = cfights.filter(f => f.result === "D").length;
-    const draws = cfights.filter(f => f.result === "E").length;
-    const kos = cfights.filter(f => f.result === "V" && f.method && f.method.includes("KO")).length;
-    const wr = cfights.length > 0 ? Math.round(wins / cfights.length * 100) : null;
+    const ff = allFights.filter(f => cfIds.has(String(f.fighter_id)));
+    const wins = ff.filter(x => x.result === "V").length;
+    const losses = ff.filter(x => x.result === "D").length;
+    const kos = ff.filter(x => x.result === "V" && x.method && x.method.includes("KO")).length;
+    const wr = ff.length >= 3 ? Math.round(wins / ff.length * 100) : null;
     const available = cf.filter(f => f.available).length;
-    // Top atletas por win rate (mín 3 lutas)
-    const topAthletes = cf.map(f => {
-      const ff = cfights.filter(x => String(x.fighter_id) === String(f.id));
-      const w = ff.filter(x => x.result === "V").length;
-      const wr2 = ff.length >= 3 ? Math.round(w / ff.length * 100) : null;
-      return { ...f, fights: ff.length, wins: w, wr: wr2 };
-    }).filter(f => f.fights > 0).sort((a, b) => (b.wr ?? -1) - (a.wr ?? -1)).slice(0, 3);
-    return { club, fighters: cf.length, fights: cfights.length, wins, losses, draws, kos, wr, available, topAthletes };
-  }).sort((a, b) => b.fighters - a.fighters);
+    return { club, fighters: cf.length, fights: ff.length, wins, losses, kos, wr, available };
+  });
+
+  const ranked = [...clubStats].sort((a, b) => {
+    if (rankBy === "wr") return (b.wr ?? -1) - (a.wr ?? -1);
+    if (rankBy === "fights") return b.fights - a.fights;
+    if (rankBy === "kos") return b.kos - a.kos;
+    if (rankBy === "athletes") return b.fighters - a.fighters;
+    return 0;
+  });
+
+  // Actividade recente — últimos 10 combates
+  const recentFights = [...allFights]
+    .filter(f => f.date)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 8);
+
+  const getFighterName = (id) => {
+    const f = allFighters.find(x => String(x.id) === String(id));
+    return f?.name || "—";
+  };
+
+  const getClubByFighter = (id) => {
+    const f = allFighters.find(x => String(x.id) === String(id));
+    return (clubs || []).find(c => c.id === f?.club_id);
+  };
+
+  // Novos atletas — último mês
+  const oneMonthAgo = new Date(); oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  const newAthletes = allFighters
+    .filter(f => f.registration_date && new Date(f.registration_date) > oneMonthAgo && f.status !== "pending")
+    .sort((a, b) => new Date(b.registration_date) - new Date(a.registration_date))
+    .slice(0, 5);
+
+  const rankLabels = { wr: "Win Rate", fights: "Combates", kos: "KOs", athletes: "Atletas" };
 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 720, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "dashboard", setPage, pendingCount, club: null, viewAsClub, setViewAsClub }),
-      React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: "#ff9900", marginBottom: 14, textTransform: "uppercase", letterSpacing: 1 } }, "Dashboard Global"),
-      React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 20 } },
-        React.createElement(StatBox, { label: "Clubes Ativos", value: (clubs || []).filter(c => c.active).length, color: T.GOLD }),
-        React.createElement(StatBox, { label: "Total Atletas", value: allFighters.filter(f => f.status !== "pending").length, color: "#4caf7d" }),
-        React.createElement(StatBox, { label: "Total Combates", value: allFights.length, color: "#5b8fd4" }),
+
+      React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: "#ff9900", marginBottom: 14, textTransform: "uppercase", letterSpacing: 1 } }, "Dashboard Analítico"),
+
+      // Stats globais
+      React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 20 } },
+        React.createElement(StatBox, { label: "Clubes", value: activeClubs.length, color: T.GOLD }),
+        React.createElement(StatBox, { label: "Atletas", value: allFighters.filter(f => f.status !== "pending").length, color: "#4caf7d" }),
+        React.createElement(StatBox, { label: "Combates", value: allFights.length, color: "#5b8fd4" }),
         React.createElement(StatBox, { label: "KO/TKO", value: allFights.filter(f => f.result === "V" && f.method && f.method.includes("KO")).length, color: "#e05555" })
       ),
+
+      // Ranking de equipas
       React.createElement(GoldDivider),
-      React.createElement("div", { style: { fontSize: 11, color: T.TEXT2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 } }, "Por Clube"),
-      clubStats.map(({ club, fighters, fights, wins, losses, draws, kos, wr, available, topAthletes }) =>
-        React.createElement("div", { key: club.id, style: { marginBottom: 8 } },
-          React.createElement(Card, { style: { cursor: "pointer" }, onClick: () => setExpandedClub(expandedClub === club.id ? null : club.id) },
-            React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
-              club.logo_url
-                ? React.createElement("img", { src: club.logo_url, style: { width: 32, height: 32, objectFit: "contain", borderRadius: 4 } })
-                : React.createElement("div", { style: { width: 32, height: 32, borderRadius: 4, background: (club.primary_color || T.GOLD) + "33", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 11, color: club.primary_color || T.GOLD } }, club.short_name || "?"),
-              React.createElement("div", { style: { flex: 1 } },
-                React.createElement("div", { style: { fontWeight: 700, color: club.primary_color || T.GOLD, fontSize: 13 } }, club.name),
-                React.createElement("div", { style: { display: "flex", gap: 10, fontSize: 11, color: T.TEXT2, marginTop: 2, flexWrap: "wrap" } },
-                  React.createElement("span", null, `${fighters} atletas`),
-                  React.createElement("span", null, `${fights} combates`),
-                  wins > 0 && React.createElement("span", { style: { color: "#4caf7d" } }, `${wins}V`),
-                  losses > 0 && React.createElement("span", { style: { color: "#e05555" } }, `${losses}D`),
-                  kos > 0 && React.createElement("span", { style: { color: T.GOLD } }, `${kos} KO`),
-                  wr !== null && React.createElement("span", { style: { color: wr >= 60 ? "#4caf7d" : wr >= 40 ? T.GOLD : "#e05555", fontWeight: 700 } }, `${wr}% WR`),
-                  available > 0 && React.createElement("span", { style: { color: "#4caf7d" } }, `${available} disponíveis`)
-                )
-              ),
-              React.createElement("svg", { width: 14, height: 14, viewBox: "0 0 24 24", fill: "none", stroke: T.TEXT3, strokeWidth: 2, style: { transform: expandedClub === club.id ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", flexShrink: 0 } },
-                React.createElement("polyline", { points: "6 9 12 15 18 9" })
-              )
-            )
-          ),
-          expandedClub === club.id && React.createElement(Card, { style: { marginTop: 4, background: T.BG3 } },
-            React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 } },
-              React.createElement(StatBox, { label: "Atletas", value: fighters, color: T.GOLD }),
-              React.createElement(StatBox, { label: "Combates", value: fights, color: "#5b8fd4" }),
-              React.createElement(StatBox, { label: "Win Rate", value: wr !== null ? `${wr}%` : "—", color: wr >= 60 ? "#4caf7d" : wr >= 40 ? T.GOLD : "#e05555" }),
-              React.createElement(StatBox, { label: "Disponíveis", value: available, color: "#4caf7d" })
-            ),
-            topAthletes.length > 0 && React.createElement("div", null,
-              React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 } }, "Top Atletas"),
-              topAthletes.map((a, i) => React.createElement("div", { key: a.id, style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6 } },
-                React.createElement("span", { style: { fontSize: 11, color: T.TEXT3, width: 14 } }, `${i+1}.`),
-                React.createElement(Avatar, { name: a.name, size: 24, photo: a.photo }),
-                React.createElement("span", { style: { fontSize: 12, color: T.TEXT, flex: 1 } }, a.name),
-                React.createElement("span", { style: { fontSize: 11, color: "#4caf7d" } }, `${a.wins}V`),
-                React.createElement("span", { style: { fontSize: 11, color: T.TEXT3 } }, `${a.fights} lutas`),
-                a.wr !== null && React.createElement("span", { style: { fontSize: 11, fontWeight: 700, color: a.wr >= 60 ? "#4caf7d" : T.GOLD } }, `${a.wr}% WR`)
-              ))
-            )
+      React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 } },
+        React.createElement("div", { style: { fontSize: 11, color: T.TEXT2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 } }, "Ranking de Equipas"),
+        React.createElement("div", { style: { display: "flex", gap: 4 } },
+          Object.entries(rankLabels).map(([key, label]) =>
+            React.createElement("button", { key, onClick: () => setRankBy(key), style: { fontSize: 10, padding: "3px 8px", borderRadius: 5, border: `1px solid ${rankBy === key ? T.GOLD : T.BORDER}`, background: rankBy === key ? T.GOLD + "22" : "transparent", color: rankBy === key ? T.GOLD : T.TEXT3, cursor: "pointer" } }, label)
           )
         )
       ),
+      ranked.map(({ club, fighters, fights, wins, losses, kos, wr, available }, i) =>
+        React.createElement(Card, { key: club.id, style: { marginBottom: 6, padding: "10px 14px" } },
+          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+            React.createElement("div", { style: { width: 22, height: 22, borderRadius: "50%", background: i === 0 ? "#C9A84C22" : i === 1 ? "#88888822" : i === 2 ? "#cd7f3222" : T.BG3, border: `1px solid ${i === 0 ? T.GOLD : i === 1 ? "#888" : i === 2 ? "#cd7f32" : T.BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: i === 0 ? T.GOLD : i === 1 ? "#aaa" : i === 2 ? "#cd7f32" : T.TEXT3, flexShrink: 0 } }, i + 1),
+            club.logo_url
+              ? React.createElement("img", { src: club.logo_url, style: { width: 26, height: 26, objectFit: "contain", borderRadius: 4, flexShrink: 0 } })
+              : React.createElement("div", { style: { width: 26, height: 26, borderRadius: 4, background: (club.primary_color || T.GOLD) + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900, color: club.primary_color || T.GOLD, flexShrink: 0 } }, club.short_name || "?"),
+            React.createElement("div", { style: { flex: 1 } },
+              React.createElement("div", { style: { fontWeight: 700, fontSize: 12, color: club.primary_color || T.GOLD } }, club.name),
+              React.createElement("div", { style: { display: "flex", gap: 8, fontSize: 11, color: T.TEXT2, marginTop: 2 } },
+                React.createElement("span", null, fighters + " atletas"),
+                fights > 0 && React.createElement("span", { style: { color: "#4caf7d" } }, wins + "V"),
+                fights > 0 && React.createElement("span", { style: { color: "#e05555" } }, losses + "D"),
+                kos > 0 && React.createElement("span", { style: { color: T.GOLD } }, kos + " KO"),
+                available > 0 && React.createElement("span", { style: { color: "#4caf7d" } }, available + " disp.")
+              )
+            ),
+            wr !== null && React.createElement("div", { style: { fontSize: 16, fontWeight: 700, color: wr >= 60 ? "#4caf7d" : wr >= 40 ? T.GOLD : "#e05555" } }, wr + "%")
+          )
+        )
+      ),
+
+      // Actividade recente
+      React.createElement(GoldDivider),
+      React.createElement("div", { style: { fontSize: 11, color: T.TEXT2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 } }, "Combates Recentes"),
+      recentFights.length === 0
+        ? React.createElement("div", { style: { color: T.TEXT3, fontSize: 12, marginBottom: 16 } }, "Nenhum combate registado.")
+        : recentFights.map((f, i) => {
+            const fc = getClubByFighter(f.fighter_id);
+            return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${T.BORDER}` } },
+              React.createElement("div", { style: { width: 28, height: 28, borderRadius: 4, background: (fc?.primary_color || T.GOLD) + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900, color: fc?.primary_color || T.GOLD, flexShrink: 0 } }, fc?.short_name || "?"),
+              React.createElement("div", { style: { flex: 1 } },
+                React.createElement("div", { style: { fontSize: 12, color: T.TEXT, fontWeight: 600 } }, getFighterName(f.fighter_id) + " vs. " + (f.opponent || "—")),
+                React.createElement("div", { style: { fontSize: 10, color: T.TEXT3 } }, (f.event || "") + (f.date ? " · " + f.date : ""))
+              ),
+              React.createElement("div", { style: { fontSize: 11, fontWeight: 700, color: f.result === "V" ? "#4caf7d" : f.result === "D" ? "#e05555" : T.TEXT3, minWidth: 24, textAlign: "right" } }, f.result)
+            );
+          }),
+
+      // Novos atletas
+      newAthletes.length > 0 && React.createElement("div", null,
+        React.createElement(GoldDivider),
+        React.createElement("div", { style: { fontSize: 11, color: T.TEXT2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 } }, "Novos Atletas (último mês)"),
+        newAthletes.map((f, i) => {
+          const fc = (clubs || []).find(c => c.id === f.club_id);
+          return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: `1px solid ${T.BORDER}` } },
+            React.createElement(Avatar, { name: f.name, size: 28, photo: f.photo }),
+            React.createElement("div", { style: { flex: 1 } },
+              React.createElement("div", { style: { fontSize: 12, color: T.TEXT, fontWeight: 600 } }, f.name),
+              React.createElement("div", { style: { fontSize: 10, color: T.TEXT3 } }, fc?.name || f.club_id)
+            ),
+            React.createElement("div", { style: { fontSize: 10, color: T.TEXT3 } }, f.registration_date ? f.registration_date.slice(0, 10) : "")
+          );
+        })
+      ),
+
       React.createElement(Footer)
     )
   );
 }
-
 function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const { inp, lbl } = s;
@@ -1511,22 +1560,70 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs, viewAsC
       React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.TEXT, marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 } }, `Equipas · ${teams.length}`),
       React.createElement("input", { style: { ...getStyles().inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Pesquisar equipa...", value: searchTeam, onChange: e => setSearchTeam(e.target.value) }),
       loading && React.createElement("div", { style: { color: T.TEXT2, textAlign: "center", padding: 24 } }, "A carregar..."),
-      teams.filter(t => !searchTeam || t.name.toLowerCase().includes(searchTeam.toLowerCase())).map(t => {
-        const totalFights = t.fighters.reduce((acc, f) => acc + allFights.filter(x => x.fighter_id === f.id).length, 0);
-        const totalWins = t.fighters.reduce((acc, f) => acc + allFights.filter(x => x.fighter_id === f.id && x.result === "V").length, 0);
-        return React.createElement("div", { key: t.name, style: { background: T.BG2, border: `1px solid ${T.BORDER}`, borderRadius: 10, padding: "16px", marginBottom: 8, cursor: "pointer" }, onMouseEnter: e => e.currentTarget.style.borderColor = T.GOLD_DIM, onMouseLeave: e => e.currentTarget.style.borderColor = T.BORDER, onClick: () => setSelected(t.name) },
-          React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } },
-            React.createElement("div", null,
-              React.createElement("div", { style: { fontWeight: 700, fontSize: 16, color: T.GOLD, marginBottom: 4 } }, t.name),
-              React.createElement("div", { style: { fontSize: 13, color: T.TEXT2 } },
-                `${t.fighters.length} atleta${t.fighters.length !== 1 ? "s" : ""}`,
-                totalFights > 0 && React.createElement("span", { style: { color: T.TEXT3, marginLeft: 8 } }, `· ${totalWins}V / ${totalFights - totalWins}D em ${totalFights} combates`)
+      (() => {
+        // Stats globais para o cabeçalho
+        const totalAthletes = teams.reduce((a, t) => a + t.fighters.length, 0);
+        const allTeamFights = allFights.length;
+        const allTeamWins = allFights.filter(x => x.result === "V").length;
+        const allKOs = allFights.filter(x => x.result === "V" && x.method && x.method.includes("KO")).length;
+        const availableTotal = teams.reduce((a, t) => a + t.fighters.filter(f => f.available).length, 0);
+
+        // Ranking de equipas por win rate (mín 3 combates)
+        const ranked = teams.map(t => {
+          const tf = t.fighters.reduce((a, f) => a + allFights.filter(x => String(x.fighter_id) === String(f.id)).length, 0);
+          const tw = t.fighters.reduce((a, f) => a + allFights.filter(x => String(x.fighter_id) === String(f.id) && x.result === "V").length, 0);
+          const td = t.fighters.reduce((a, f) => a + allFights.filter(x => String(x.fighter_id) === String(f.id) && x.result === "D").length, 0);
+          const tk = t.fighters.reduce((a, f) => a + allFights.filter(x => String(x.fighter_id) === String(f.id) && x.result === "V" && x.method && x.method.includes("KO")).length, 0);
+          const wr = tf >= 3 ? Math.round(tw / tf * 100) : null;
+          const av = t.fighters.filter(f => f.available).length;
+          // Find club for this team
+          const teamClub = (clubs || []).find(c => t.fighters.some(f => f.club_id === c.id));
+          return { ...t, tf, tw, td, tk, wr, av, teamClub };
+        }).sort((a, b) => (b.wr ?? -1) - (a.wr ?? -1));
+
+        const filtered = ranked.filter(t => !searchTeam || t.name.toLowerCase().includes(searchTeam.toLowerCase()));
+
+        return React.createElement("div", null,
+          // Stats globais
+          React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 16 } },
+            React.createElement(StatBox, { label: "Equipas", value: teams.length, color: T.GOLD }),
+            React.createElement(StatBox, { label: "Atletas", value: totalAthletes, color: "#4caf7d" }),
+            React.createElement(StatBox, { label: "Combates", value: allTeamFights, color: "#5b8fd4" }),
+            React.createElement(StatBox, { label: "Disponíveis", value: availableTotal, color: "#4caf7d" })
+          ),
+
+          // Lista de equipas enriquecida
+          filtered.map((t, rank) => {
+            const teamColor = t.teamClub?.primary_color || T.GOLD;
+            return React.createElement("div", { key: t.name, style: { background: T.BG2, border: `1px solid ${T.BORDER}`, borderRadius: 10, padding: "14px 16px", marginBottom: 8, cursor: "pointer" },
+              onMouseEnter: e => e.currentTarget.style.borderColor = teamColor + "88",
+              onMouseLeave: e => e.currentTarget.style.borderColor = T.BORDER,
+              onClick: () => setSelected(t.name)
+            },
+              React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+                // Rank badge
+                React.createElement("div", { style: { width: 24, height: 24, borderRadius: "50%", background: rank === 0 ? "#C9A84C22" : rank === 1 ? "#88888822" : rank === 2 ? "#cd7f3222" : T.BG3, border: `1px solid ${rank === 0 ? T.GOLD : rank === 1 ? "#888" : rank === 2 ? "#cd7f32" : T.BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: rank === 0 ? T.GOLD : rank === 1 ? "#aaa" : rank === 2 ? "#cd7f32" : T.TEXT3, flexShrink: 0 } }, rank + 1),
+                // Logo clube
+                t.teamClub?.logo_url
+                  ? React.createElement("img", { src: t.teamClub.logo_url, style: { width: 28, height: 28, objectFit: "contain", borderRadius: 4, flexShrink: 0 } })
+                  : React.createElement("div", { style: { width: 28, height: 28, borderRadius: 4, background: teamColor + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 900, color: teamColor, flexShrink: 0 } }, t.teamClub?.short_name || t.name[0]),
+                React.createElement("div", { style: { flex: 1 } },
+                  React.createElement("div", { style: { fontWeight: 700, fontSize: 14, color: teamColor, marginBottom: 3 } }, t.name),
+                  React.createElement("div", { style: { display: "flex", gap: 8, fontSize: 11, color: T.TEXT2, flexWrap: "wrap" } },
+                    React.createElement("span", null, `${t.fighters.length} atletas`),
+                    t.tf > 0 && React.createElement("span", { style: { color: "#4caf7d" } }, `${t.tw}V`),
+                    t.tf > 0 && React.createElement("span", { style: { color: "#e05555" } }, `${t.td}D`),
+                    t.tk > 0 && React.createElement("span", { style: { color: T.GOLD } }, `${t.tk} KO`),
+                    t.wr !== null && React.createElement("span", { style: { fontWeight: 700, color: t.wr >= 60 ? "#4caf7d" : t.wr >= 40 ? T.GOLD : "#e05555" } }, `${t.wr}% WR`),
+                    t.av > 0 && React.createElement("span", { style: { color: "#4caf7d" } }, `${t.av} disponíveis`)
+                  )
+                ),
+                React.createElement("div", { style: { fontSize: 16, color: T.TEXT3 } }, "›")
               )
-            ),
-            React.createElement("div", { style: { fontSize: 20, color: T.TEXT3 } }, "›")
-          )
+            );
+          })
         );
-      }),
+      })(),
       React.createElement(Footer)
     )
   );
