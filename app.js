@@ -1888,11 +1888,10 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
             React.createElement(Avatar, { name: f.name, size: 80, photo: f.photo }),
             isOwner && React.createElement("label", { style: { position: "absolute", bottom: 0, right: 0, background: T.GOLD, borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 13 } },
               "📷",
-              React.createElement("input", { type: "file", accept: "image/*", style: { display: "none" }, onChange: e => {
+              React.createElement("input", { type: "file", accept: "image/*", style: { display: "none" }, onChange: async e => {
                 const file = e.target.files[0]; if (!file) return;
                 if (file.size > MAX_FILE_SIZE) { alert("Foto demasiado grande. Máximo 500KB."); return; }
                 try {
-                  // Comprimir antes de fazer upload
                   const compressed = await compressImage(file, 600, 0.7);
                   const url = await uploadPhotoToStorage(compressed, f.id);
                   upd("photo", url);
