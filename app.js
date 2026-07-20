@@ -132,8 +132,7 @@ function getWeightCategories(subModality, escalao, gender, level) {
   }
   // Amador e Neo-Pro → WAKO 2025
   const disc = WEIGHT_CATEGORIES[subModality];
-  if (!disc) return [];
-    if (!escalao || !disc[escalao]) escalao = "Seniores (19-40 anos)";;
+  if (!disc || !escalao) return [];
   const esc = disc[escalao];
   if (!esc) return [];
   return esc[g] || [];
@@ -420,7 +419,7 @@ function AccountModal({ user, onClose }) {
   const [newPw, setNewPw] = React.useState("");
   const [confirmPw, setConfirmPw] = React.useState("");
   const [msg, setMsg] = React.useState(null);
-  const [err, setErr] = React.useState(""); const [share, setShare] = React.useState(null);
+  const [err, setErr] = React.useState("");
   const [saving, setSaving] = React.useState(false);
 
   async function changePassword() {
@@ -491,24 +490,23 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
     user && React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 10 } },
       React.createElement("div", { style: { textAlign: "center" } },
         React.createElement("div", { style: { fontSize: 12, color: T.TEXT, fontWeight: 600 } }, user.name),
-        React.createElement("div", { style: { fontSize: 11, color: user.role?.toLowerCase() === "superadmin" ? "#ff9900" : user.role?.toLowerCase() === "admin" ? T.GOLD : T.TEXT2 } },
-          user.role?.toLowerCase() === "superadmin" ? "⭐ Super Admin" : user.role?.toLowerCase() === "admin" ? "Admin" : "Atleta"
+        React.createElement("div", { style: { fontSize: 11, color: user.role === "superadmin" ? "#ff9900" : user.role === "admin" ? T.GOLD : T.TEXT2 } },
+          user.role === "superadmin" ? "⭐ Super Admin" : user.role === "admin" ? "Admin" : "Atleta"
         )
       ),
       React.createElement("button", { onClick: () => setShowAccount(true), style: { padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.GOLD_DIM}`, background: "transparent", color: T.GOLD, cursor: "pointer", fontSize: 12 } }, "Conta"),
       React.createElement("button", { onClick: onLogout, style: { padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.BORDER}`, background: "transparent", color: T.TEXT2, cursor: "pointer", fontSize: 12 } }, "Sair")
     ),
     user && setPage && React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", marginTop: 12, flexWrap: "wrap" } },
-      (user.role?.toLowerCase() === "admin" || user.role?.toLowerCase() === "superadmin") && React.createElement("button", { onClick: () => setPage("fighters"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "fighters" ? T.GOLD_DIM : "transparent", color: currentPage === "fighters" ? "#fff" : T.GOLD } }, "Lutadores"),
-      (user.role?.toLowerCase() === "admin" || user.role?.toLowerCase() === "superadmin") && React.createElement("button", { onClick: () => setPage("pending"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "pending" ? T.GOLD_DIM : "transparent", color: currentPage === "pending" ? "#fff" : T.GOLD, position: "relative" } },
+      (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("fighters"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "fighters" ? T.GOLD_DIM : "transparent", color: currentPage === "fighters" ? "#fff" : T.GOLD } }, "Lutadores"),
+      (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("pending"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "pending" ? T.GOLD_DIM : "transparent", color: currentPage === "pending" ? "#fff" : T.GOLD, position: "relative" } },
         "Pedidos",
         pendingCount > 0 && React.createElement("span", { style: { position: "absolute", top: -7, right: -7, background: "#e05555", color: "#fff", borderRadius: "50%", width: 17, height: 17, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" } }, pendingCount > 9 ? "9+" : pendingCount)
       ),
-      (user.role?.toLowerCase() === "admin" || user.role?.toLowerCase() === "superadmin") && React.createElement("button", { onClick: () => setPage("teams"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "teams" ? T.GOLD_DIM : "transparent", color: currentPage === "teams" ? "#fff" : T.GOLD } }, "Equipas"),
-      user.role?.toLowerCase() === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("dashboard"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "dashboard" ? "#ff990066" : "transparent", color: currentPage === "dashboard" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Dashboard"),
-      user.role?.toLowerCase() === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("clubs"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "clubs" ? "#ff990066" : "transparent", color: currentPage === "clubs" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Clubes"),
-      React.createElement("button", { onClick: () => setPage("calendar"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? T.GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : T.GOLD } }, "Calendário"),
-      user.role?.toLowerCase() === "superadmin" && React.createElement("button", { onClick: () => setPage("confirmations"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "confirmations" ? T.GOLD_DIM : "transparent", color: currentPage === "confirmations" ? "#fff" : T.GOLD } }, "Confirmações")
+      (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("teams"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "teams" ? T.GOLD_DIM : "transparent", color: currentPage === "teams" ? "#fff" : T.GOLD } }, "Equipas"),
+      user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("dashboard"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "dashboard" ? "#ff990066" : "transparent", color: currentPage === "dashboard" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Dashboard"),
+      user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("clubs"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "clubs" ? "#ff990066" : "transparent", color: currentPage === "clubs" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Clubes"),
+      React.createElement("button", { onClick: () => setPage("calendar"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? T.GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : T.GOLD } }, "Calendário")
     )
   );
 }
@@ -577,7 +575,7 @@ function CalendarPage({ onLogout, user, setPage, pendingCount, club, viewAsClub,
   const [delEventId, setDelEventId] = useState(null);
   const [ne, setNe] = useState({ ...EMPTY_EVENT });
   const [searchCal, setSearchCal] = useState("");
-  const canEdit = user && (user.role?.toLowerCase() === "admin" || user.role?.toLowerCase() === "superadmin");
+  const canEdit = user && (user.role === "admin" || user.role === "superadmin");
 
   useEffect(() => { db.get("events").then(all => { setEvents(all.sort((a, b) => new Date(a.date) - new Date(b.date))); setLoading(false); }); }, []);
 
@@ -985,7 +983,7 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
       const activeClubId = viewAsClub ? viewAsClub.id : user.club_id;
       const filtered = viewAsClub
         ? all.filter(f => f.status === "pending" && f.club_id === activeClubId)
-        : user.role?.toLowerCase() === "superadmin"
+        : user.role === "superadmin"
           ? all.filter(f => f.status === "pending")
           : all.filter(f => f.status === "pending" && f.club_id === activeClubId);
       setPending(filtered); setLoading(false);
@@ -1022,121 +1020,13 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
             React.createElement("div", { style: { flex: 1 } },
               React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: T.TEXT } }, f.name),
               fClub && React.createElement("div", { style: { fontSize: 11, color: fClub.primary_color, fontWeight: 700, marginTop: 1 } }, fClub.name),
-              React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `${f.email} · ${f.modality} · ${f.level} · ${f.weight}${f.birthdate ? " · " + calcEscalaoGlobal(f.birthdate, f.modality, f.sub_modality) : ""}`),
+              React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `${f.email} · ${f.modality} · ${f.level} · ${f.weight}`),
               React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 2 } }, `Pedido: ${f.registration_date ? new Date(f.registration_date).toLocaleDateString("pt-PT") : "—"}`)
             ),
             React.createElement("div", { style: { display: "flex", gap: 8 } },
               React.createElement("button", { onClick: () => approve(f), style: { ...s.btnGreen, padding: "5px 14px", fontSize: 12 } }, "✓ Aprovar"),
               React.createElement("button", { onClick: () => reject(f.id), style: { ...s.btnRed, padding: "5px 14px", fontSize: 12 } }, "✕ Rejeitar")
             )
-          )
-        );
-      }),
-      React.createElement(Footer)
-    )
-  );
-}
-
-function ConfirmationsPage({ onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub }) {
-  const s = getStyles();
-  const [items, setItems] = useState([]);
-  const [fighters, setFighters] = useState([]);
-  const [fights, setFights] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [assignFor, setAssignFor] = useState(null);
-  const [assignSearch, setAssignSearch] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function load() {
-    const [confs, fgs, fts] = await Promise.all([db.get("fight_confirmations"), db.get("fighters"), db.get("fights")]);
-    const open = (confs||[]).filter(c => c.status === "not_me" || c.status === "disputed");
-    open.sort((a,b) => (b.created_at||"").localeCompare(a.created_at||""));
-    setItems(open); setFighters(fgs||[]); setFights(fts||[]); setLoading(false);
-  }
-  useEffect(() => { load(); }, []);
-
-  const fightOf = (c) => fights.find(f => String(f.id) === String(c.fight_id));
-  const fighterOf = (id) => fighters.find(f => String(f.id) === String(id));
-
-  async function closeCase(c, newStatus) {
-    setBusy(true);
-    try { await db.update("fight_confirmations", c.id, { status: newStatus, resolved_at: new Date().toISOString() }); } catch (e) { console.warn("close falhou", e); }
-    setBusy(false);
-    setItems(p => p.filter(x => x.id !== c.id));
-    setAssignFor(null); setAssignSearch("");
-  }
-
-  async function assignTo(c, target) {
-    setBusy(true);
-    const fight = fightOf(c);
-    if (fight) {
-      const owner = fighterOf(fight.fighter_id);
-      const mirror = fight.result === "V" ? "D" : fight.result === "D" ? "V" : "E";
-      const newId = `f${Date.now()}_${fight.id}`;
-      try {
-        await db.insert("fights", {
-          id: newId, fighter_id: target.id,
-          opponent: owner ? owner.name : (fight.opponent_team || "Desconhecido"),
-          opponent_team: owner ? (owner.team || "") : "",
-          result: mirror, method: fight.method, event: fight.event, date: fight.date,
-          modality: fight.modality, sub_modality: fight.sub_modality, level: fight.level,
-          weight: fight.weight, federation: fight.federation || "", country: fight.country || "",
-          confirmed_from: fight.id
-        });
-      } catch (e) { console.warn("replicar falhou", e); }
-    }
-    try { await db.update("fight_confirmations", c.id, { status: "reassigned", new_fighter_id: Number(target.id), replicated_fight_id: fight ? `f${Date.now()}_${fight.id}` : null, resolved_at: new Date().toISOString() }); } catch (e) {}
-    setBusy(false);
-    setItems(p => p.filter(x => x.id !== c.id));
-    setAssignFor(null); setAssignSearch("");
-  }
-
-  const matchList = assignFor ? fighters.filter(f => {
-    const q = assignSearch.toLowerCase().trim();
-    if (!q) return true;
-    return (f.name||"").toLowerCase().includes(q) || (f.team||"").toLowerCase().includes(q);
-  }).slice(0, 20) : [];
-
-  return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
-    React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
-      React.createElement(Header, { onLogout, user, currentPage: "confirmations", setPage, pendingCount, club, viewAsClub, setViewAsClub }),
-      React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: T.TEXT, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 } }, `Confirma\u00e7\u00f5es de combates \u00b7 ${items.length}`),
-      React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginBottom: 16 } }, "Casos em que um atleta disse que n\u00e3o \u00e9 ele, ou contestou o resultado."),
-      loading && React.createElement("div", { style: { color: T.TEXT2, textAlign: "center", padding: 24 } }, "A carregar..."),
-      !loading && items.length === 0 && React.createElement("div", { style: { color: T.TEXT2, textAlign: "center", padding: 24 } }, "Sem casos pendentes."),
-      items.map(c => {
-        const fight = fightOf(c);
-        const owner = fighterOf(c.owner_fighter_id) || (fight && fighterOf(fight.fighter_id));
-        const ef = c.edited_fields || {};
-        const isDispute = c.status === "disputed";
-        const rejectedBy = ef.rejected_by || (fighterOf(c.new_fighter_id) && fighterOf(c.new_fighter_id).name) || "\u2014";
-        const rejectedTeam = ef.rejected_team || "";
-        const opponentName = (fight && fight.opponent) || ef.opponent || "\u2014";
-        const opponentTeam = (fight && fight.opponent_team) || ef.opponent_team || "";
-        return React.createElement(Card, { key: c.id, style: { marginBottom: 10 } },
-          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } },
-            React.createElement(Badge, { type: isDispute ? "gold" : "default" }, isDispute ? "Resultado contestado" : "N\u00e3o \u00e9 ele"),
-            React.createElement("span", { style: { fontSize: 11, color: T.TEXT3 } }, c.created_at ? new Date(c.created_at).toLocaleDateString("pt-PT") : "")
-          ),
-          React.createElement("div", { style: { fontSize: 14, color: T.TEXT, fontWeight: 700 } }, `${owner ? owner.name : "Algu\u00e9m"}${owner && owner.team ? " ("+owner.team+")" : ""}  vs.  ${opponentName}${opponentTeam ? " ("+opponentTeam+")" : ""}`),
-          React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 3 } }, `${(fight && fight.event) || ef.event || "\u2014"} \u00b7 ${(fight && fight.date) || "\u2014"} \u00b7 ${(fight && fight.modality) || ""} ${(fight && fight.sub_modality) || ""}`),
-          React.createElement("div", { style: { fontSize: 12, color: "#e0a555", marginTop: 6 } }, isDispute ? `${rejectedBy} contesta o resultado \u2014 verificar com a federa\u00e7\u00e3o.` : `${rejectedBy}${rejectedTeam ? " ("+rejectedTeam+")" : ""} diz que n\u00e3o \u00e9 ele.`),
-          assignFor === c.id ? React.createElement("div", { style: { marginTop: 10 } },
-            React.createElement("input", { value: assignSearch, onChange: e => setAssignSearch(e.target.value), placeholder: "Procurar atleta por nome ou equipa...", style: { ...s.inp, marginTop: 0 } }),
-            React.createElement("div", { style: { maxHeight: 220, overflowY: "auto", marginTop: 8, border: `1px solid ${T.BORDER}`, borderRadius: 8 } },
-              matchList.length === 0 ? React.createElement("div", { style: { padding: 10, fontSize: 12, color: T.TEXT2 } }, "Sem resultados.") :
-              matchList.map(f => React.createElement("div", { key: f.id, onClick: () => !busy && assignTo(c, f), style: { padding: "8px 10px", cursor: "pointer", borderBottom: `1px solid ${T.BORDER}`, display: "flex", alignItems: "center", gap: 8 } },
-                React.createElement(Avatar, { name: f.name, size: 26, photo: f.photo }),
-                React.createElement("div", null,
-                  React.createElement("div", { style: { fontSize: 13, color: T.TEXT, fontWeight: 600 } }, f.name),
-                  React.createElement("div", { style: { fontSize: 11, color: T.TEXT2 } }, f.team || ""), f.birthdate && React.createElement("div", { style: { fontSize: 11, color: T.TEXT3 } }, calcEscalaoGlobal(f.birthdate, f.modality, f.sub_modality))
-                )
-              ))
-            ),
-            React.createElement("button", { onClick: () => { setAssignFor(null); setAssignSearch(""); }, style: { ...s.btnGold, marginTop: 8, background: "transparent", color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Cancelar")
-          ) : React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" } },
-            !isDispute && React.createElement("button", { onClick: () => setAssignFor(c.id), disabled: busy, style: { ...s.btnGold, marginTop: 0, padding: "6px 14px", fontSize: 12 } }, "Atribuir a outro atleta"),
-            React.createElement("button", { onClick: () => closeCase(c, isDispute ? "disputed_closed" : "not_me_closed"), disabled: busy, style: { ...s.btnRed, padding: "6px 14px", fontSize: 12 } }, isDispute ? "Marcar verificado / encerrar" : "Confirmar que n\u00e3o \u00e9 ele")
           )
         );
       }),
@@ -1276,7 +1166,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs, viewAsC
       const [fighters, fights] = await Promise.all([db.get("fighters"), db.get("fights")]);
       const approved = fighters.filter(f => {
         if (f.status === "pending" || f.status === "rejected") return false;
-        // admins veem todas as equipas (apenas leitura)
+        if (user.role === "admin") return f.club_id === user.club_id;
         return true;
       });
       setAllFighters(approved); setAllFights(fights);
@@ -1370,7 +1260,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs, viewAsC
                   React.createElement(ClubTag, { clubId: f.club_id, clubs }),
                   React.createElement(Badge, null, f.modality),
                   f.sub_modality && React.createElement(Badge, { type: "gold" }, f.sub_modality),
-                  React.createElement(Badge, { type: "blue" }, f.level), f.birthdate && React.createElement(Badge, { type: "gold" }, calcEscalaoGlobal(f.birthdate, f.modality, f.sub_modality)),
+                  React.createElement(Badge, { type: "blue" }, f.level),
                   React.createElement(Badge, null, f.weight)
                 ),
                 React.createElement("div", { style: { display: "flex", gap: 12, fontSize: 13 } },
@@ -1518,48 +1408,18 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   const todayD = new Date(); todayD.setHours(0,0,0,0);
   const nextFight = (f.upcoming || []).filter(u => u.date && new Date(u.date) >= todayD).sort((a,b) => new Date(a.date)-new Date(b.date))[0];
   const daysLeft = nextFight ? daysUntil(nextFight.date) : null;
-  const combatPhotos = Array.isArray(f.combat_photos) ? f.combat_photos : [];
+
   const fClub = (clubs || []).find(c => c.id === fighter.club_id);
 
   async function saveProfile() {
     setSaving(true);
     const autoCategory = calcEscalao(f.birthdate, f.modality, f.sub_modality);
-    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: autoCategory || san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, combat_photos: f.combat_photos, birthdate: f.birthdate || "" , team: f.team || ""});
-    if (typeof onSave === "function") onSave(f);
+    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: autoCategory || san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, combat_photos: f.combat_photos, birthdate: f.birthdate || "" });
     setSavedSnapshot(profileFields.reduce((o,k) => ({...o,[k]: f[k]}), {}));
     setSaving(false);
   }
 
-  async function addCombatPhoto(e) {
-    const file = e.target.files[0]; if (!file) return;
-    if (file.size > MAX_FILE_SIZE) { alert("Foto demasiado grande. Máximo 2MB."); return; }
-    if (combatPhotos.length >= 3) return;
-    const reader = new FileReader();
-    reader.onload = async ev => {
-      const img = new window.Image();
-      img.onload = async () => {
-        const canvas = document.createElement("canvas");
-        const MAX = 800;
-        let w = img.width, h = img.height;
-        if (w > MAX || h > MAX) {
-          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-          else { w = Math.round(w * MAX / h); h = MAX; }
-        }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        const compressed = canvas.toDataURL("image/jpeg", 0.75);
-        const np = [...combatPhotos, compressed];
-        upd("combat_photos", np);
-        await db.update("fighters", f.id, { combat_photos: np });
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
 
-  async function removeCombatPhoto(idx) {
-    const np = combatPhotos.filter((_, i) => i !== idx); upd("combat_photos", np); await db.update("fighters", f.id, { combat_photos: np });
-  }
 
   async function saveFight() {
     const fight = { ...nf, opponent: san(nf.opponent, 100), opponent_team: san(nf.opponent_team, 100), event: san(nf.event, 100), id: `f${Date.now()}`, fighter_id: f.id };
@@ -1604,19 +1464,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
 
   const tabContent = () => {
     if (tab === 0) return React.createElement("div", null,
-      React.createElement(Card, { style: { marginBottom: 12 } },
-        React.createElement("div", { style: { fontSize: 12, color: T.GOLD, fontWeight: 700, marginBottom: 10, textTransform: "uppercase" } }, `Fotos em Combate · ${combatPhotos.length}/3`),
-        React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
-          combatPhotos.map((photo, idx) => React.createElement("div", { key: idx, style: { position: "relative", width: 90, height: 90 } },
-            React.createElement("img", { src: photo, onClick: () => setLightbox(photo), style: { width: 90, height: 90, objectFit: "cover", objectPosition: "center", borderRadius: 8, cursor: "pointer", border: `1px solid ${T.GOLD_DIM}` } }),
-            isOwner && React.createElement("button", { onClick: () => removeCombatPhoto(idx), style: { position: "absolute", top: -6, right: -6, background: "#e05555", border: "none", borderRadius: "50%", width: 20, height: 20, color: "#fff", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, "×")
-          )),
-          isOwner && combatPhotos.length < 3 && React.createElement("label", { style: { width: 90, height: 90, border: `2px dashed ${T.BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: T.TEXT3, fontSize: 28, flexDirection: "column", gap: 4 } },
-            "+", React.createElement("span", { style: { fontSize: 9, color: T.TEXT3 } }, "máx 2MB"),
-            React.createElement("input", { type: "file", accept: "image/*", style: { display: "none" }, onChange: addCombatPhoto })
-          )
-        )
-      ),
+
       React.createElement(Card, null,
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
           // Nome Completo
@@ -2048,7 +1896,7 @@ function AcceptInvitePage({ token, clubs }) {
   const { inp, lbl } = s;
   const [invite, setInvite] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
-  const [err, setErr] = React.useState(""); const [share, setShare] = React.useState(null);
+  const [err, setErr] = React.useState("");
   const [name, setName] = React.useState("");
   const [pw, setPw] = React.useState("");
   const [pw2, setPw2] = React.useState("");
@@ -2118,7 +1966,7 @@ function AcceptInvitePage({ token, clubs }) {
     )
   );
 
-  const roleLabel = invite.role?.toLowerCase() === "admin" ? "Administrador" : "Atleta";
+  const roleLabel = invite.role === "admin" ? "Administrador" : "Atleta";
 
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
     React.createElement("div", { style: { width: "100%", maxWidth: 420 } },
@@ -2169,16 +2017,16 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
   // Atletas sem conta ou sem convite enviado
   const pendingFighters = (fighters || []).filter(f => {
     const hasUser = (users || []).some(u => u.fighter_id === f.id);
-    const matchClub = user.role?.toLowerCase() === "superadmin" ? (clubId ? f.club_id === clubId : true) : f.club_id === user.club_id;
+    const matchClub = user.role === "superadmin" ? (clubId ? f.club_id === clubId : true) : f.club_id === user.club_id;
     return !hasUser && matchClub && f.email;
   });
   const [sending, setSending] = React.useState(false);
   const [done, setDone] = React.useState("");
-  const [err, setErr] = React.useState(""); const [share, setShare] = React.useState(null);
+  const [err, setErr] = React.useState("");
 
-  const isSuperAdmin = user.role?.toLowerCase() === "superadmin";
+  const isSuperAdmin = user.role === "superadmin";
 
-  async function handleSend() { let autoSent = false;
+  async function handleSend() {
     setErr("");
     if (!email.includes("@")) return setErr("Email inválido.");
     if (!clubId) return setErr("Selecciona um clube.");
@@ -2195,12 +2043,7 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
     if (allUsers.some(u => u.username === username)) return setErr("Username já existe — tenta outro email.");
 
     // Criar o utilizador
-    let fighter = fighters.find(f => f.email && f.email.toLowerCase() === email.trim().toLowerCase());
-        if (!fighter) {
-          fighter = { id: Date.now(), name: email.split("@")[0], weight: "", category: "", modality: "", sub_modality: "", level: "", available: false, contact: "", email: email.trim(), team: "", photo: "", status: "approved", combat_photos: [], club_id: clubId, birthdate: "", gender: "" };
-          await db.insert("fighters", fighter);
-          fighters.push(fighter);
-        };
+    const fighter = (fighters || []).find(f => f.email && f.email.toLowerCase() === email.trim().toLowerCase());
     const newUser = {
       id: `user_${Date.now()}`,
       name: fighter ? fighter.name : email.split("@")[0],
@@ -2224,7 +2067,7 @@ function InviteModal({ onClose, user, club, clubs, defaultEmail, defaultClubId, 
       const data = await r.json();
       if (data.success && !data.fallback) {
         setDone(`Email enviado automaticamente para ${email}`);
-        setEmail(""); autoSent = true;
+        setEmail(""); return;
       }
     } catch {}
 
@@ -2242,8 +2085,8 @@ Password: ${password}
 Por segurança, altera a password após o primeiro login.
 
 The Fighters App`);
-    if (!autoSent) window.open(`mailto:${email.trim()}?subject=${subject}&body=${body}`, "_blank"); setShare({ enc: body, txt: decodeURIComponent(body) });
-    if (!autoSent) setDone(`Email preparado para ${email}`);
+    window.open(`mailto:${email.trim()}?subject=${subject}&body=${body}`, "_blank");
+    setDone(`Email preparado para ${email}`);
     setEmail("");
   }
 
@@ -2292,7 +2135,7 @@ The Fighters App`);
       ),
       err && React.createElement("div", { style: { fontSize: 13, color: "#e05555", marginBottom: 12 } }, err),
       done && React.createElement("div", { style: { fontSize: 13, color: "#4caf7d", marginBottom: 12, padding: "10px 14px", background: "#0a1a0e", borderRadius: 8 } }, "✓ " + done),
-      React.createElement("button", { onClick: handleSend, style: { ...s.btnGold, width: "100%", marginTop: 0 } }, "✉ Enviar Convite por Email"), share && React.createElement("button", { onClick: () => window.open("https://wa.me/?text=" + share.enc, "_blank"), style: { ...s.btnGold, width: "100%", marginTop: 8 } }, "💬 Enviar por WhatsApp"), share && React.createElement("button", { onClick: () => { navigator.clipboard.writeText(share.txt); setDone("Mensagem copiada para a área de transferência!"); }, style: { ...s.btnGold, width: "100%", marginTop: 8 } }, "📋 Copiar mensagem"),
+      React.createElement("button", { onClick: handleSend, style: { ...s.btnGold, width: "100%", marginTop: 0 } }, "✉ Enviar Convite por Email"),
       React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 12, textAlign: "center" } }, "Abre o teu cliente de email com a mensagem pronta a enviar.")
     )
   );
@@ -2328,7 +2171,7 @@ function NewFighterForm({ onSave, onBack, onLogout, user, existingUsernames, clu
       React.createElement("div", { style: { width: 30, height: 2, background: T.GOLD, marginBottom: 16, borderRadius: 2 } }),
       React.createElement(Card, null,
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 } },
-          user.role?.toLowerCase() === "superadmin" && React.createElement("div", { style: { gridColumn: "1 / -1" } },
+          user.role === "superadmin" && React.createElement("div", { style: { gridColumn: "1 / -1" } },
             React.createElement("label", { style: { ...lbl, color: "#ff9900" } }, "Clube"),
             React.createElement("select", { style: inp, value: f.club_id, onChange: e => upd("club_id", e.target.value) },
               React.createElement("option", { value: "" }, "Seleccionar clube..."),
@@ -2390,7 +2233,6 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   if (page === "teams") return React.createElement(TeamsPage, { onLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub });
   if (page === "calendar") return React.createElement(CalendarPage, { onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub });
   if (page === "dashboard") return React.createElement(DashboardPage, { onLogout, user, setPage, pendingCount, clubs, allFighters, allFights, viewAsClub, setViewAsClub });
-  if (page === "confirmations") return React.createElement(ConfirmationsPage, { onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub });
   if (page === "clubs") return React.createElement(ClubsPage, { onLogout, user, setPage, pendingCount, clubs, setClubes, viewAsClub, setViewAsClub });
 
   // Modal password redefinida
@@ -2409,7 +2251,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   if (showNewForm) return React.createElement(NewFighterForm, {
     onBack: () => setShowNewForm(false),
     onSave: async (fighter, newUser) => {
-      await db.insert("fighters", { ...fighter, available: false, status: "approved"  });
+      await db.insert("fighters", { ...fighter, available: false, status: "approved" , viewAsClub, setViewAsClub });
       await db.insert("users", newUser);
       setFighters(p => [...p, fighter]); setUsers(p => [...p, newUser]);
       setShowNewForm(false); setInviteData({ fighter, user: newUser });
@@ -2427,14 +2269,13 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
 
       React.createElement(Header, { onLogout, user, currentPage: "fighters", setPage, pendingCount, club, viewAsClub, setViewAsClub }),
-                              user.role?.toLowerCase() === "superadmin" && club ? React.createElement("select", { value: (viewAsClub && viewAsClub.id === "__all__") ? "__all__" : (viewAsClub ? viewAsClub.id : (clubs.find(c => c.id === user.club_id) || {}).id), onChange: e => { const v = e.target.value; const myc = clubs.find(c => c.id === user.club_id); if (v === "__all__") setViewAsClub({ id: "__all__" }); else if (myc && v === myc.id) setViewAsClub(null); else setViewAsClub(clubs.find(c => c.id === v) || null); }, style: { ...s.inp, marginBottom: 14, background: T.BG2 } }, [((function(){var oc=clubs.find(c => c.id === user.club_id);return oc ? React.createElement("option", { key: "own", value: oc.id }, oc.name + " (a minha equipa)") : null;})()), React.createElement("option", { key: "all", value: "__all__" }, "Todos os clubes"), ...clubs.filter(c => c.id !== user.club_id).map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))]) : null,
       React.createElement("input", { style: { ...s.inp, marginBottom: 14, background: T.BG2 }, placeholder: "🔍  Nome ou modalidade...", value: search, onChange: e => setSearch(e.target.value) }),
       showInvite && React.createElement(InviteModal, { onClose: () => setShowInvite(false), user, club, clubs, defaultEmail: inviteData?.fighter?.email || "", fighters, users }),
       inviteData && React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 10, padding: "12px 16px", marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: 13, color: "#4caf7d", marginBottom: 8, fontWeight: 700 } }, `✓ Perfil criado — ${inviteData.fighter.name}`),
         React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginBottom: 8 } }, `Username: ${inviteData.user.username} · Password: ${inviteData.user.password}`),
         React.createElement("div", { style: { display: "flex", gap: 8 } },
-          React.createElement("button", { onClick: () => setShowInvite(true), style: { ...s.btnGreen, padding: "4px 12px", fontSize: 12, marginTop: 0 } }, "✉ Enviar convite por email"), React.createElement("button", { onClick: () => { var nl = String.fromCharCode(10); var m = "Olá! Foi-te criado um acesso à The Fighters App." + nl + nl + "Entra em: https://thefightersapp.vercel.app" + nl + "Utilizador: " + inviteData.user.username + nl + "Palavra-passe: " + inviteData.user.password; window.open("https://wa.me/?text=" + encodeURIComponent(m), "_blank"); }, style: { ...s.btnGreen, padding: "4px 12px", fontSize: 12, marginTop: 0, marginLeft: 8 } }, "💬 WhatsApp"), React.createElement("button", { onClick: () => { var nl = String.fromCharCode(10); var m = "Olá! Foi-te criado um acesso à The Fighters App." + nl + nl + "Entra em: https://thefightersapp.vercel.app" + nl + "Utilizador: " + inviteData.user.username + nl + "Palavra-passe: " + inviteData.user.password; navigator.clipboard.writeText(m); }, style: { ...s.btnGreen, padding: "4px 12px", fontSize: 12, marginTop: 0, marginLeft: 8 } }, "📋 Copiar"),
+          React.createElement("button", { onClick: () => setShowInvite(true), style: { ...s.btnGreen, padding: "4px 12px", fontSize: 12, marginTop: 0 } }, "✉ Enviar convite por email"),
           React.createElement("button", { onClick: () => setInviteData(null), style: { ...s.btnOutline, padding: "4px 12px", fontSize: 12 } }, "Fechar")
         )
       ),
@@ -2464,7 +2305,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
                   React.createElement(ClubTag, { clubId: f.club_id, clubs }),
                   React.createElement(Badge, { type: "gold" }, f.team)
                 ),
-                React.createElement("div", { style: { fontSize: 13, color: T.TEXT2 } }, `${f.modality} · ${f.sub_modality} · ${f.level} · ${f.weight}${f.birthdate ? " · " + calcEscalaoGlobal(f.birthdate, f.modality, f.sub_modality) : ""}`),
+                React.createElement("div", { style: { fontSize: 13, color: T.TEXT2 } }, `${f.modality} · ${f.sub_modality} · ${f.level} · ${f.weight}`),
                 fu && React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, marginTop: 2 } }, `@${fu.username} · ${f.email}`)
               )
             ),
@@ -2489,7 +2330,12 @@ function AthleteView({ fighters, user, onLogout, setPage, pendingCount: allPendi
   if (!fighter) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
     React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "", setPage, pendingCount, club }),
-      React.createElement(Card, null, React.createElement("div", { style: { color: T.TEXT2, textAlign: "center", padding: "24px 0" } }, "Perfil ainda não criado. Contacta o admin."))
+      React.createElement(Card, { gold: true },
+        React.createElement("div", { style: { textAlign: "center", padding: "24px 0" } },
+          React.createElement("div", { style: { fontSize: 16, fontWeight: 700, color: T.GOLD, marginBottom: 8 } }, "Registo pendente de aprovação"),
+          React.createElement("div", { style: { fontSize: 14, color: T.TEXT2 } }, "O teu perfil está a aguardar aprovação pelo administrador do clube.")
+        )
+      )
     )
   );
   return React.createElement("div", null,
@@ -2504,212 +2350,119 @@ function AthleteView({ fighters, user, onLogout, setPage, pendingCount: allPendi
 // ═══════════════════════════════════════════════════════════
 
 function MatchConfirmModal({ fighter, onDone }) {
+  const s = getStyles();
   const [matches, setMatches] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
-  const [idx, setIdx] = React.useState(0);
-  const [step, setStep] = React.useState(1);
-  const [edits, setEdits] = React.useState({});
-  const [owners, setOwners] = React.useState({});
+  const [confirmed, setConfirmed] = React.useState({});
   const [saving, setSaving] = React.useState(false);
   const [done, setDone] = React.useState(false);
-  const [resolvedCount, setResolvedCount] = React.useState(0);
 
   React.useEffect(() => {
     async function findMatches() {
       const allFights = await db.get("fights");
-      const allFighters = await db.get("fighters");
-      const norm = (str) => (str||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\(teste\)/g, "").trim();
-      const name = norm(fighter.name);
-      const nameTokens = name.split(/\s+/).filter(t => t.length > 2);
-      const myTeam = norm(fighter.team);
-      const myIdStr = String(fighter.id);
-      const found = allFights.filter(f => {
-        if (String(f.fighter_id) === myIdStr) return false;
-        if (f.confirmed_from) return false;
-        const op = norm(f.opponent);
-        const ot = norm(f.opponent_team);
-        const overlap = nameTokens.filter(t => op.includes(t)).length;
-        const nh = nameTokens.length > 0 && overlap >= Math.min(2, nameTokens.length);
-        const th = myTeam && ot && (ot.includes(myTeam) || myTeam.includes(ot));
-        return nh && th;
-      });
-      const ownerMap = {};
-      found.forEach(f => { const o = allFighters.find(x => String(x.id) === String(f.fighter_id)); if (o) ownerMap[f.id] = o; });
-      setOwners(ownerMap);
+      const name = fighter.name.toLowerCase().trim();
+      // Encontrar combates onde este atleta aparece como adversário mas não tem fighter_id próprio
+      const found = allFights.filter(f =>
+        f.fighter_id !== fighter.id &&
+        f.opponent && f.opponent.toLowerCase().trim() === name
+      );
       setMatches(found);
       setLoading(false);
-      if (found.length === 0) { setDone(true); onDone && onDone(); }
+      // Se não há matches, terminar imediatamente
+      if (found.length === 0) onDone();
     }
     findMatches();
   }, []);
 
-  const current = matches[idx];
-  const ed = (current && edits[current.id]) || {};
-  const getField = (k) => (ed[k] !== undefined ? ed[k] : (current ? current[k] : ""));
-  const setField = (k, v) => setEdits(p => ({ ...p, [current.id]: { ...(p[current.id]||{}), [k]: v } }));
-
-  function advance() {
-    if (idx + 1 >= matches.length) { setDone(true); onDone && onDone(); }
-    else { setIdx(idx + 1); setStep(1); }
-  }
-
-  // "Não sou eu" — ignorar este combate
-  async function handleNotMe() {
-    setSaving(true);
-    const fight = current;
-    try {
-      await db.insert("fight_confirmations", {
-        id: `c${Date.now()}_${fight.id}`,
-        fight_id: fight.id,
-        owner_fighter_id: Number(fight.fighter_id),
-        new_fighter_id: Number(fighter.id),
-        status: "not_me",
-        edited_fields: { rejected_by: fighter.name, rejected_team: fighter.team || "", opponent: fight.opponent, opponent_team: fight.opponent_team || "" },
-        owner_notified: false,
-        resolved_at: new Date().toISOString()
-      });
-    } catch (e) { console.warn("fight_confirmations (not_me) insert falhou", e); }
-    setSaving(false);
-    setResolvedCount(c => c + 1);
-    advance();
-  }
-
-  // Confirma identidade -> passo 2
-  function handleIsMe() { setStep(2); }
-
-  // Confirma dados corretos -> replica no histórico
   async function handleConfirm() {
     setSaving(true);
-    const fight = current;
-    const owner = owners[fight.id];
-    const mirrorResult = fight.result === "V" ? "D" : fight.result === "D" ? "V" : "E";
-    const editedFields = edits[fight.id] || {};
-    const newId = `f${Date.now()}_${fight.id}`;
-    await db.insert("fights", {
-      id: newId,
-      fighter_id: fighter.id,
-      opponent: owner ? owner.name : (fight.opponent_team || "Desconhecido"),
-      opponent_team: owner ? (owner.team || "") : "",
-      result: mirrorResult,
-      method: getField("method"),
-      event: getField("event"),
-      date: getField("date"),
-      modality: getField("modality"),
-      sub_modality: getField("sub_modality"),
-      level: getField("level"),
-      weight: getField("weight"),
-      federation: getField("federation") || "",
-      country: getField("country") || "",
-      confirmed_from: fight.id
-    });
-    const hasEdits = Object.keys(editedFields).length > 0;
-    try {
-      await db.insert("fight_confirmations", {
-        id: `c${Date.now()}_${fight.id}`,
-        fight_id: fight.id,
-        owner_fighter_id: Number(fight.fighter_id),
-        new_fighter_id: Number(fighter.id),
-        status: "confirmed",
-        edited_fields: hasEdits ? editedFields : null,
-        replicated_fight_id: newId,
-        owner_notified: false,
-        resolved_at: new Date().toISOString()
+    const toConfirm = matches.filter(f => confirmed[f.id]);
+    for (const fight of toConfirm) {
+      // Resultado invertido
+      const mirrorResult = fight.result === "V" ? "D" : fight.result === "D" ? "V" : "E";
+      // Buscar o atleta que registou o combate
+      const ownerFighters = await db.get("fighters", { id: fight.fighter_id });
+      const owner = ownerFighters && ownerFighters[0];
+      await db.insert("fights", {
+        id: `f${Date.now()}_${fight.id}`,
+        fighter_id: fighter.id,
+        opponent: owner ? owner.name : fight.opponent_team || "Desconhecido",
+        opponent_team: owner ? (owner.team || "") : "",
+        result: mirrorResult,
+        method: fight.method,
+        event: fight.event,
+        date: fight.date,
+        modality: fight.modality,
+        sub_modality: fight.sub_modality,
+        level: fight.level,
+        weight: fight.weight,
+        federation: fight.federation || "",
+        confirmed_from: fight.id
       });
-    } catch (e) { console.warn("fight_confirmations insert falhou", e); }
+    }
     setSaving(false);
-    setResolvedCount(c => c + 1);
-    advance();
-  }
-
-  // Nega o resultado -> disputa para o superadmin verificar
-  async function handleDispute() {
-    setSaving(true);
-    const fight = current;
-    try {
-      await db.update("fights", fight.id, { flagged: true, flag_note: `Resultado contestado por ${fighter.name} (${fighter.team||""}) — verificar com a federação` });
-    } catch (e) { console.warn("flag falhou", e); }
-    try {
-      await db.insert("fight_confirmations", {
-        id: `c${Date.now()}_${fight.id}`,
-        fight_id: fight.id,
-        owner_fighter_id: Number(fight.fighter_id),
-        new_fighter_id: Number(fighter.id),
-        status: "disputed",
-        edited_fields: edits[fight.id] || null,
-        owner_notified: false,
-        resolved_at: new Date().toISOString()
-      });
-    } catch (e) { console.warn("fight_confirmations insert falhou", e); }
-    setSaving(false);
-    setResolvedCount(c => c + 1);
-    advance();
+    setDone(true);
+    setTimeout(() => onDone(), 1500);
   }
 
   if (loading) return null;
   if (matches.length === 0) return null;
 
-  if (done) return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 } },
-    React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 14, padding: 30, maxWidth: 420, textAlign: "center" } },
-      React.createElement("div", { style: { fontSize: 18, color: "#4caf7d", fontWeight: 700, marginBottom: 8 } }, "\u2713 Conclu\u00eddo"),
-      React.createElement("div", { style: { fontSize: 14, color: T.TEXT2, marginBottom: 18 } }, resolvedCount > 0 ? `Processaste ${resolvedCount} combate${resolvedCount !== 1 ? "s" : ""}. Os confirmados j\u00e1 est\u00e3o no teu hist\u00f3rico.` : "Sem combates por confirmar."),
-      React.createElement("button", { onClick: onDone, style: { ...s.btnGold, marginTop: 0 } }, "Continuar")
+  if (done) return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: 16 } },
+    React.createElement("div", { style: { background: "#0a1a0e", border: "1px solid #4caf7d44", borderRadius: 12, padding: 32, textAlign: "center", maxWidth: 400 } },
+      React.createElement("div", { style: { fontSize: 18, color: "#4caf7d", fontWeight: 700, marginBottom: 8 } }, "Histórico actualizado!"),
+      React.createElement("div", { style: { fontSize: 14, color: T.TEXT2 } }, "Os combates confirmados foram adicionados ao teu perfil.")
     )
   );
 
-  const owner = owners[current.id];
-  const ownerName = owner ? owner.name : (current.opponent_team || "Outro atleta");
-  const ownerTeam = owner ? (owner.team || "") : (current.opponent_team || "");
-  const mirrorTxt = current.result === "V" ? "Derrota para ti" : current.result === "D" ? "Vit\u00f3ria para ti" : "Empate";
-
-  const wrap = (children) => React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" } },
-    React.createElement("div", { style: { background: T.BG2, border: `1px solid ${T.BORDER_GOLD}`, borderRadius: 14, padding: 26, maxWidth: 520, width: "100%", maxHeight: "90vh", overflowY: "auto" } }, children)
-  );
-
-  const progress = React.createElement("div", { style: { fontSize: 11, color: T.TEXT2, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 } }, `Combate ${idx + 1} de ${matches.length}`);
-
-  if (step === 1) {
-    return wrap([
-      progress,
-      React.createElement("div", { key: "t", style: { fontSize: 17, fontWeight: 700, color: T.GOLD, marginBottom: 10 } }, "Este combate \u00e9s tu?"),
-      React.createElement("div", { key: "d", style: { fontSize: 14, color: T.TEXT, marginBottom: 6 } }, `${ownerName}${ownerTeam ? " ("+ownerTeam+")" : ""} registou um combate contra `, React.createElement("b", { style: { color: T.GOLD } }, `${current.opponent}`), current.opponent_team ? ` do ${current.opponent_team}.` : "."),
-      React.createElement("div", { key: "m", style: { fontSize: 13, color: T.TEXT2, marginBottom: 18 } }, `${current.event || "\u2014"} \u00b7 ${current.date || "\u2014"} \u00b7 ${current.modality||""} ${current.sub_modality||""}`),
-      React.createElement("div", { key: "b", style: { display: "flex", gap: 10 } },
-        React.createElement("button", { key: "y", onClick: handleIsMe, style: { ...s.btnGold, flex: 1, marginTop: 0 } }, "Sim, sou eu"),
-        React.createElement("button", { key: "n", onClick: handleNotMe, style: { ...s.btnGold, flex: 1, marginTop: 0, background: "transparent", color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "N\u00e3o sou eu")
+  return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: 16, overflowY: "auto" } },
+    React.createElement("div", { style: { background: T.BG2, border: `1px solid ${T.BORDER_GOLD}`, borderRadius: 12, padding: 24, width: "100%", maxWidth: 500 } },
+      React.createElement("div", { style: { fontSize: 16, fontWeight: 700, color: T.GOLD, marginBottom: 6 } }, "Encontrámos combates com o teu nome!"),
+      React.createElement("div", { style: { fontSize: 13, color: T.TEXT2, marginBottom: 20 } },
+        `Outros atletas registaram ${matches.length} combate${matches.length !== 1 ? "s" : ""} onde apareces como adversário. Confirma os que são teus para os adicionar ao teu histórico.`
+      ),
+      matches.map(fight => {
+        const isConfirmed = confirmed[fight.id];
+        return React.createElement("div", {
+          key: fight.id,
+          style: { background: isConfirmed ? "#0a1a0e" : T.BG3, border: `1px solid ${isConfirmed ? "#4caf7d44" : T.BORDER}`, borderRadius: 8, padding: "12px 14px", marginBottom: 10, cursor: "pointer" },
+          onClick: () => setConfirmed(p => ({ ...p, [fight.id]: !p[fight.id] }))
+        },
+          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+            React.createElement("div", { style: { width: 22, height: 22, borderRadius: 4, border: `2px solid ${isConfirmed ? "#4caf7d" : T.BORDER}`, background: isConfirmed ? "#4caf7d" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } },
+              isConfirmed && React.createElement("span", { style: { color: "#fff", fontSize: 13, fontWeight: 700 } }, "✓")
+            ),
+            React.createElement("div", { style: { flex: 1 } },
+              React.createElement("div", { style: { fontWeight: 700, fontSize: 14, color: T.TEXT } },
+                `vs. `,
+                React.createElement("span", { style: { color: T.GOLD } }, "Adversário registado por outro atleta"),
+                React.createElement("span", { style: { color: fight.result === "V" ? "#e05555" : "#4caf7d", marginLeft: 8, fontSize: 12, fontWeight: 700 } },
+                  fight.result === "V" ? "← Derrota para ti" : fight.result === "D" ? "← Vitória para ti" : "Empate"
+                )
+              ),
+              React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 3 } },
+                `${fight.event || "—"} · ${fight.date || "—"}`
+              ),
+              React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" } },
+                React.createElement(Badge, null, fight.modality),
+                fight.sub_modality && React.createElement(Badge, { type: "gold" }, fight.sub_modality),
+                React.createElement(Badge, { type: "blue" }, fight.level),
+                fight.weight && React.createElement(Badge, null, fight.weight)
+              )
+            )
+          )
+        );
+      }),
+      React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 20 } },
+        React.createElement("button", {
+          onClick: handleConfirm,
+          disabled: saving || Object.values(confirmed).every(v => !v),
+          style: { ...s.btnGold, flex: 1, marginTop: 0, opacity: (saving || Object.values(confirmed).every(v => !v)) ? 0.5 : 1 }
+        }, saving ? "A guardar..." : `Confirmar ${Object.values(confirmed).filter(Boolean).length} combate${Object.values(confirmed).filter(Boolean).length !== 1 ? "s" : ""}`),
+        React.createElement("button", { onClick: onDone, style: { ...s.btnGold, marginTop: 0, background: T.BG4, color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Ignorar")
       )
-    ]);
-  }
-
-  // step 2 — confirmar dados (editar tudo menos resultado)
-  const fieldRow = (label, key, opts) => React.createElement("div", { key: key, style: { marginBottom: 10 } },
-    React.createElement("div", { style: { fontSize: 11, color: T.TEXT2, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 } }, label),
-    opts ? React.createElement("select", { value: getField(key) || "", onChange: e => setField(key, e.target.value), style: { ...s.inp, marginTop: 0 } }, opts.map(o => React.createElement("option", { key: o, value: o }, o)))
-      : React.createElement("input", { value: getField(key) || "", onChange: e => setField(key, e.target.value), style: { ...s.inp, marginTop: 0 } })
-  );
-
-  return wrap([
-    progress,
-    React.createElement("div", { key: "t", style: { fontSize: 17, fontWeight: 700, color: T.GOLD, marginBottom: 6 } }, "Os dados est\u00e3o corretos?"),
-    React.createElement("div", { key: "s", style: { fontSize: 13, color: T.TEXT2, marginBottom: 14 } }, "Podes editar tudo exceto o resultado. Se editares, " + ownerName + " ser\u00e1 notificado."),
-    React.createElement("div", { key: "res", style: { background: T.BG3, border: `1px solid ${T.BORDER}`, borderRadius: 8, padding: "10px 12px", marginBottom: 14, fontSize: 14 } },
-      React.createElement("span", { style: { color: T.TEXT2 } }, "Resultado: "),
-      React.createElement("b", { style: { color: current.result === "V" ? "#e05555" : current.result === "D" ? "#4caf7d" : T.GOLD } }, mirrorTxt),
-      React.createElement("span", { style: { color: T.TEXT2, fontSize: 12 } }, "  (n\u00e3o edit\u00e1vel)")
-    ),
-    fieldRow("Evento", "event"),
-    fieldRow("Data", "date"),
-    fieldRow("Modalidade", "modality"),
-    fieldRow("Sub-modalidade", "sub_modality"),
-    fieldRow("N\u00edvel", "level", ["Amador", "Neo-Profissional", "Profissional"]),
-    fieldRow("Peso", "weight"),
-    fieldRow("Federa\u00e7\u00e3o", "federation"),
-    fieldRow("Pa\u00eds", "country"),
-    React.createElement("div", { key: "b", style: { display: "flex", flexDirection: "column", gap: 8, marginTop: 18 } },
-      React.createElement("button", { key: "ok", onClick: handleConfirm, disabled: saving, style: { ...s.btnGold, marginTop: 0, opacity: saving ? 0.6 : 1 } }, saving ? "A guardar..." : "Confirmar e adicionar ao meu hist\u00f3rico"),
-      React.createElement("button", { key: "disp", onClick: handleDispute, disabled: saving, style: { ...s.btnGold, marginTop: 0, background: "transparent", color: "#e0a555", border: "1px solid #e0a55566" } }, "Contestar o resultado"),
-      React.createElement("button", { key: "back", onClick: () => setStep(1), disabled: saving, style: { ...s.btnGold, marginTop: 0, background: "transparent", color: T.TEXT2, border: `1px solid ${T.BORDER}` } }, "Voltar")
     )
-  ]);
+  );
 }
 
 // ─── APP ROOT ──────────────────────────────────────────────
@@ -2763,12 +2516,12 @@ function App() {
       const [f, u, fi] = await Promise.all([db.get("fighters"), db.get("users"), db.get("fights")]);
       const approved = f.filter(x => x.status !== "pending" && x.status !== "rejected");
       const pending = f.filter(x => x.status === "pending");
-      setAllFighters(approved);
+      setAllFighters(f.filter(x => x.status !== "rejected"));
       setAllFights(fi);
-      setFighters(user.role?.toLowerCase() === "superadmin" ? approved : approved.filter(x => x.club_id === user.club_id));
+      setFighters(user.role === "superadmin" ? approved : approved.filter(x => x.club_id === user.club_id));
       setPendingCount(viewAsClub
         ? pending.filter(x => x.club_id === viewAsClub.id).length
-        : user.role?.toLowerCase() === "superadmin"
+        : user.role === "superadmin"
           ? pending.length
           : pending.filter(x => x.club_id === user.club_id).length);
       setUsers(u);
@@ -2799,12 +2552,12 @@ function App() {
   if (page === "calendar") return React.createElement(CalendarPage, { onLogout: handleLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub });
 
   // Superadmin a ver como outro clube
-  const effectiveClub = (viewAsClub && viewAsClub.id !== "__all__") ? viewAsClub : club;
+  const effectiveClub = viewAsClub || club;
   const effectiveFighters = viewAsClub
-    ? (viewAsClub.id === "__all__" ? allFighters : allFighters.filter(f => f.club_id === viewAsClub.id))
-    : (user.role?.toLowerCase() === "superadmin" && user.club_id) ? allFighters.filter(f => f.club_id === user.club_id) : fighters;
+    ? allFighters.filter(f => f.club_id === viewAsClub.id)
+    : fighters;
 
-  if (user.role?.toLowerCase() === "admin" || user.role?.toLowerCase() === "superadmin") return React.createElement(AdminDashboard, {
+  if (user.role === "admin" || user.role === "superadmin") return React.createElement(AdminDashboard, {
     fighters: effectiveFighters, setFighters, users, setUsers,
     onLogout: handleLogout,
     user, page, setPage, pendingCount,
