@@ -555,16 +555,17 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
       React.createElement("button", { onClick: onLogout, style: { padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.BORDER}`, background: "transparent", color: T.TEXT2, cursor: "pointer", fontSize: 12 } }, "Sair")
     ),
     user && setPage && React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", marginTop: 12, flexWrap: "wrap" } },
-      (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("fighters"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "fighters" ? T.GOLD_DIM : "transparent", color: currentPage === "fighters" ? "#fff" : T.GOLD } }, "Lutadores"),
-      (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("pending"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "pending" ? T.GOLD_DIM : "transparent", color: currentPage === "pending" ? "#fff" : T.GOLD, position: "relative" } },
-        "Pedidos",
-        pendingCount > 0 && React.createElement("span", { style: { position: "absolute", top: -7, right: -7, background: "#e05555", color: "#fff", borderRadius: "50%", width: 17, height: 17, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" } }, pendingCount > 9 ? "9+" : pendingCount)
-      ),
-      (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("teams"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "teams" ? T.GOLD_DIM : "transparent", color: currentPage === "teams" ? "#fff" : T.GOLD } }, "Equipas"),
-      user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("dashboard"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "dashboard" ? "#ff990066" : "transparent", color: currentPage === "dashboard" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Dashboard"),
-      user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("clubs"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "clubs" ? "#ff990066" : "transparent", color: currentPage === "clubs" ? "#fff" : "#ff9900", borderColor: "#ff990066" } }, "Clubes"),
-      React.createElement("button", { onClick: () => setPage("calendar"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "calendar" ? T.GOLD_DIM : "transparent", color: currentPage === "calendar" ? "#fff" : T.GOLD } }, "Calendário"),
-      React.createElement("button", { onClick: () => setPage("matchmaking"), style: { ...s.btnOutline, fontSize: 11, padding: "4px 12px", background: currentPage === "matchmaking" ? T.GOLD_DIM : "transparent", color: currentPage === "matchmaking" ? "#fff" : T.GOLD } }, "Matchmaking")
+      React.createElement("div", { style: { display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" } },
+        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("fighters"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "fighters" ? T.GOLD_DIM : T.BORDER}`, background: currentPage === "fighters" ? "#C9A84C33" : "transparent", color: currentPage === "fighters" ? "#fff" : T.GOLD, cursor: "pointer", fontSize: 10, fontWeight: 500, transition: "all 0.15s", position: "relative" } }, React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("circle", { cx: 12, cy: 8, r: 4 }), React.createElement("path", { d: "M4 20c0-4 3.6-7 8-7s8 3 8 7" })), "Lutadores"),
+        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("pending"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "pending" ? T.GOLD_DIM : T.BORDER}`, background: currentPage === "pending" ? "#C9A84C33" : "transparent", color: currentPage === "pending" ? "#fff" : T.GOLD, cursor: "pointer", fontSize: 10, fontWeight: 500, transition: "all 0.15s", position: "relative" } }, React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("path", { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" })), "Pedidos", pendingCount > 0 && React.createElement("span", { style: { position: "absolute", top: -5, right: -5, background: "#e05555", color: "#fff", borderRadius: "50%", width: 15, height: 15, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" } }, pendingCount > 9 ? "9+" : pendingCount)),
+        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("teams"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "teams" ? T.GOLD_DIM : T.BORDER}`, background: currentPage === "teams" ? "#C9A84C33" : "transparent", color: currentPage === "teams" ? "#fff" : T.GOLD, cursor: "pointer", fontSize: 10, fontWeight: 500, transition: "all 0.15s", position: "relative" } }, React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("path", { d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" }), React.createElement("circle", { cx: 9, cy: 7, r: 4 }), React.createElement("path", { d: "M23 21v-2a4 4 0 0 0-3-3.87" }), React.createElement("path", { d: "M16 3.13a4 4 0 0 1 0 7.75" })), "Equipas"),
+        user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("dashboard"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "dashboard" ? "#ff990066" : T.BORDER}`, background: currentPage === "dashboard" ? "#ff990033" : "transparent", color: currentPage === "dashboard" ? "#fff" : "#ff9900", cursor: "pointer", fontSize: 10, fontWeight: 500, transition: "all 0.15s", position: "relative" } }, React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("rect", { x: 3, y: 3, width: 7, height: 7 }), React.createElement("rect", { x: 14, y: 3, width: 7, height: 7 }), React.createElement("rect", { x: 14, y: 14, width: 7, height: 7 }), React.createElement("rect", { x: 3, y: 14, width: 7, height: 7 })), "Dashboard"),
+        user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("clubs"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "clubs" ? "#ff990066" : T.BORDER}`, background: currentPage === "clubs" ? "#ff990033" : "transparent", color: currentPage === "clubs" ? "#fff" : "#ff9900", cursor: "pointer", fontSize: 10, fontWeight: 500, transition: "all 0.15s", position: "relative" } }, React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("path", { d: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" }), React.createElement("polyline", { points: "9 22 9 12 15 12 15 22" })), "Clubes"),
+        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("calendar"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "calendar" ? T.GOLD_DIM : T.BORDER}`, background: currentPage === "calendar" ? "#C9A84C33" : "transparent", color: currentPage === "calendar" ? "#fff" : T.GOLD, cursor: "pointer", fontSize: 10, fontWeight: 500, transition: "all 0.15s", position: "relative" } }, React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("rect", { x: 3, y: 4, width: 18, height: 18, rx: 2 }), React.createElement("line", { x1: 16, y1: 2, x2: 16, y2: 6 }), React.createElement("line", { x1: 8, y1: 2, x2: 8, y2: 6 }), React.createElement("line", { x1: 3, y1: 10, x2: 21, y2: 10 })), "Calendário"),
+        React.createElement("button", { onClick: () => setPage("matchmaking"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "matchmaking" ? "#4caf7d" : "#4caf7d44"}`, background: currentPage === "matchmaking" ? "#4caf7d22" : "transparent", color: "#4caf7d", cursor: "pointer", fontSize: 10, fontWeight: 600, transition: "all 0.15s" } },
+          React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("circle", { cx: 8, cy: 12, r: 3 }), React.createElement("circle", { cx: 16, cy: 8, r: 3 }), React.createElement("circle", { cx: 16, cy: 16, r: 3 }), React.createElement("line", { x1: 11, y1: 12, x2: 13, y2: 9 }), React.createElement("line", { x1: 11, y1: 12, x2: 13, y2: 15 })), "Matching"
+        )
+      )
     )
   );
 }
@@ -1094,34 +1095,82 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
 }
 
 function DashboardPage({ onLogout, user, setPage, pendingCount, clubs, allFighters, allFights, viewAsClub, setViewAsClub }) {
-  const clubStats = (clubs || []).map(club => {
-    const cf = allFighters.filter(f => f.club_id === club.id);
-    const cfights = allFights.filter(f => cf.some(fi => fi.id === f.fighter_id));
-    return { club, fighters: cf.length, fights: cfights.length, wins: cfights.filter(f => f.result === "V").length };
-  });
+  const [expandedClub, setExpandedClub] = React.useState(null);
+
+  const clubStats = (clubs || []).filter(c => c.active).map(club => {
+    const cf = allFighters.filter(f => f.club_id === club.id && f.status !== "pending");
+    const cfIds = new Set(cf.map(f => String(f.id)));
+    const cfights = allFights.filter(f => cfIds.has(String(f.fighter_id)));
+    const wins = cfights.filter(f => f.result === "V").length;
+    const losses = cfights.filter(f => f.result === "D").length;
+    const draws = cfights.filter(f => f.result === "E").length;
+    const kos = cfights.filter(f => f.result === "V" && f.method && f.method.includes("KO")).length;
+    const wr = cfights.length > 0 ? Math.round(wins / cfights.length * 100) : null;
+    const available = cf.filter(f => f.available).length;
+    // Top atletas por win rate (mín 3 lutas)
+    const topAthletes = cf.map(f => {
+      const ff = cfights.filter(x => String(x.fighter_id) === String(f.id));
+      const w = ff.filter(x => x.result === "V").length;
+      const wr2 = ff.length >= 3 ? Math.round(w / ff.length * 100) : null;
+      return { ...f, fights: ff.length, wins: w, wr: wr2 };
+    }).filter(f => f.fights > 0).sort((a, b) => (b.wr ?? -1) - (a.wr ?? -1)).slice(0, 3);
+    return { club, fighters: cf.length, fights: cfights.length, wins, losses, draws, kos, wr, available, topAthletes };
+  }).sort((a, b) => b.fighters - a.fighters);
+
   return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, padding: "20px 16px" } },
-    React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
+    React.createElement("div", { style: { maxWidth: 720, margin: "0 auto" } },
       React.createElement(Header, { onLogout, user, currentPage: "dashboard", setPage, pendingCount, club: null, viewAsClub, setViewAsClub }),
-      React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: "#ff9900", marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 } }, "⭐ Dashboard Global"),
-      React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 } },
+      React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: "#ff9900", marginBottom: 14, textTransform: "uppercase", letterSpacing: 1 } }, "Dashboard Global"),
+      React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 20 } },
         React.createElement(StatBox, { label: "Clubes Ativos", value: (clubs || []).filter(c => c.active).length, color: T.GOLD }),
-        React.createElement(StatBox, { label: "Total Atletas", value: allFighters.length, color: "#4caf7d" }),
+        React.createElement(StatBox, { label: "Total Atletas", value: allFighters.filter(f => f.status !== "pending").length, color: "#4caf7d" }),
         React.createElement(StatBox, { label: "Total Combates", value: allFights.length, color: "#5b8fd4" }),
-        React.createElement(StatBox, { label: "KO/TKO", value: allFights.filter(f => f.result === "V" && f.method === "KO/TKO").length, color: "#e05555" })
+        React.createElement(StatBox, { label: "KO/TKO", value: allFights.filter(f => f.result === "V" && f.method && f.method.includes("KO")).length, color: "#e05555" })
       ),
       React.createElement(GoldDivider),
-      React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 } }, "Por Clube"),
-      clubStats.map(({ club, fighters, fights, wins }) =>
-        React.createElement(Card, { key: club.id, style: { marginBottom: 8 } },
-          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
-            club.logo_url
-              ? React.createElement("img", { src: club.logo_url, style: { width: 36, height: 36, objectFit: "contain", borderRadius: 6 } })
-              : React.createElement("div", { style: { width: 36, height: 36, borderRadius: 6, background: club.primary_color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: club.primary_color } }, club.short_name || "?"),
-            React.createElement("div", { style: { flex: 1 } },
-              React.createElement("div", { style: { fontWeight: 700, color: club.primary_color, fontSize: 14 } }, club.name),
-              React.createElement("div", { style: { fontSize: 12, color: T.TEXT2, marginTop: 2 } }, `${fighters} atletas · ${fights} combates · ${wins}V / ${fights - wins}D`)
+      React.createElement("div", { style: { fontSize: 11, color: T.TEXT2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 } }, "Por Clube"),
+      clubStats.map(({ club, fighters, fights, wins, losses, draws, kos, wr, available, topAthletes }) =>
+        React.createElement("div", { key: club.id, style: { marginBottom: 8 } },
+          React.createElement(Card, { style: { cursor: "pointer" }, onClick: () => setExpandedClub(expandedClub === club.id ? null : club.id) },
+            React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+              club.logo_url
+                ? React.createElement("img", { src: club.logo_url, style: { width: 32, height: 32, objectFit: "contain", borderRadius: 4 } })
+                : React.createElement("div", { style: { width: 32, height: 32, borderRadius: 4, background: (club.primary_color || T.GOLD) + "33", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 11, color: club.primary_color || T.GOLD } }, club.short_name || "?"),
+              React.createElement("div", { style: { flex: 1 } },
+                React.createElement("div", { style: { fontWeight: 700, color: club.primary_color || T.GOLD, fontSize: 13 } }, club.name),
+                React.createElement("div", { style: { display: "flex", gap: 10, fontSize: 11, color: T.TEXT2, marginTop: 2, flexWrap: "wrap" } },
+                  React.createElement("span", null, `${fighters} atletas`),
+                  React.createElement("span", null, `${fights} combates`),
+                  wins > 0 && React.createElement("span", { style: { color: "#4caf7d" } }, `${wins}V`),
+                  losses > 0 && React.createElement("span", { style: { color: "#e05555" } }, `${losses}D`),
+                  kos > 0 && React.createElement("span", { style: { color: T.GOLD } }, `${kos} KO`),
+                  wr !== null && React.createElement("span", { style: { color: wr >= 60 ? "#4caf7d" : wr >= 40 ? T.GOLD : "#e05555", fontWeight: 700 } }, `${wr}% WR`),
+                  available > 0 && React.createElement("span", { style: { color: "#4caf7d" } }, `${available} disponíveis`)
+                )
+              ),
+              React.createElement("svg", { width: 14, height: 14, viewBox: "0 0 24 24", fill: "none", stroke: T.TEXT3, strokeWidth: 2, style: { transform: expandedClub === club.id ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", flexShrink: 0 } },
+                React.createElement("polyline", { points: "6 9 12 15 18 9" })
+              )
+            )
+          ),
+          expandedClub === club.id && React.createElement(Card, { style: { marginTop: 4, background: T.BG3 } },
+            React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 } },
+              React.createElement(StatBox, { label: "Atletas", value: fighters, color: T.GOLD }),
+              React.createElement(StatBox, { label: "Combates", value: fights, color: "#5b8fd4" }),
+              React.createElement(StatBox, { label: "Win Rate", value: wr !== null ? `${wr}%` : "—", color: wr >= 60 ? "#4caf7d" : wr >= 40 ? T.GOLD : "#e05555" }),
+              React.createElement(StatBox, { label: "Disponíveis", value: available, color: "#4caf7d" })
             ),
-            React.createElement("div", { style: { background: club.active ? "#0a1a0e" : "#1a0a0a", color: club.active ? "#4caf7d" : "#e05555", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 4 } }, club.active ? "Ativo" : "Inativo")
+            topAthletes.length > 0 && React.createElement("div", null,
+              React.createElement("div", { style: { fontSize: 11, color: T.TEXT3, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 } }, "Top Atletas"),
+              topAthletes.map((a, i) => React.createElement("div", { key: a.id, style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6 } },
+                React.createElement("span", { style: { fontSize: 11, color: T.TEXT3, width: 14 } }, `${i+1}.`),
+                React.createElement(Avatar, { name: a.name, size: 24, photo: a.photo }),
+                React.createElement("span", { style: { fontSize: 12, color: T.TEXT, flex: 1 } }, a.name),
+                React.createElement("span", { style: { fontSize: 11, color: "#4caf7d" } }, `${a.wins}V`),
+                React.createElement("span", { style: { fontSize: 11, color: T.TEXT3 } }, `${a.fights} lutas`),
+                a.wr !== null && React.createElement("span", { style: { fontSize: 11, fontWeight: 700, color: a.wr >= 60 ? "#4caf7d" : T.GOLD } }, `${a.wr}% WR`)
+              ))
+            )
           )
         )
       ),
