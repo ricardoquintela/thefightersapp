@@ -405,12 +405,17 @@ function GoldDivider() {
   return React.createElement("div", { style: { height: 1, background: `linear-gradient(90deg, transparent, ${T.GOLD_DIM}, transparent)`, margin: "14px 0" } });
 }
 
-function Avatar({ name, size = 44, photo }) {
+function Avatar({ name, size = 44, photo, available }) {
   const initials = name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
-  if (photo) return React.createElement("div", { style: { width: size, height: size * 1.4, borderRadius: 8, overflow: "hidden", flexShrink: 0, border: `1px solid ${T.GOLD_DIM}` } },
-    React.createElement("img", { src: photo, alt: name, style: { width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" } })
+  const border = available ? "2px solid #4caf7d" : `1px solid ${T.GOLD_DIM}`;
+  const wrap = (child) => React.createElement("div", { style: { position: "relative", flexShrink: 0 } },
+    child,
+    available && React.createElement("div", { style: { position: "absolute", bottom: -3, right: -3, width: 10, height: 10, borderRadius: "50%", background: "#4caf7d", border: "2px solid #0a0a0a" } })
   );
-  return React.createElement("div", { style: { width: size, height: size * 1.4, borderRadius: 8, background: `linear-gradient(135deg, ${T.GOLD_DIM}, ${T.GOLD})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: size * 0.32, color: "#fff", flexShrink: 0, border: `1px solid ${T.GOLD_DIM}` } }, initials);
+  if (photo) return wrap(React.createElement("div", { style: { width: size, height: size * 1.4, borderRadius: 8, overflow: "hidden", border } },
+    React.createElement("img", { src: photo, alt: name, style: { width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" } })
+  ));
+  return wrap(React.createElement("div", { style: { width: size, height: size * 1.4, borderRadius: 8, background: `linear-gradient(135deg, ${T.GOLD_DIM}, ${T.GOLD})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: size * 0.32, color: "#fff", border } }, initials));
 }
 
 function Badge({ children, type = "default" }) {
@@ -1299,7 +1304,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs, viewAsC
           const rec = getRecord(f.id);
           return React.createElement("div", { key: f.id, style: { background: T.BG2, border: `1px solid ${T.BORDER}`, borderRadius: 10, padding: "14px 16px", marginBottom: 8, cursor: "pointer" }, onMouseEnter: e => e.currentTarget.style.borderColor = T.GOLD_DIM, onMouseLeave: e => e.currentTarget.style.borderColor = T.BORDER, onClick: () => setSelFighter(f) },
             React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
-              React.createElement(Avatar, { name: f.name, size: 36, photo: f.photo }),
+              React.createElement(Avatar, { name: f.name, size: 36, photo: f.photo, available: f.available }),
               React.createElement("div", { style: { flex: 1 } },
                 React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: T.TEXT, marginBottom: 4 } }, f.name),
                 React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 6 } },
@@ -1885,7 +1890,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
       React.createElement(Card, { gold: true, style: { marginBottom: 14 } },
         React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 14 } },
           React.createElement("div", { style: { position: "relative", flexShrink: 0 } },
-            React.createElement(Avatar, { name: f.name, size: 80, photo: f.photo }),
+            React.createElement(Avatar, { name: f.name, size: 80, photo: f.photo, available: f.available }),
             isOwner && React.createElement("label", { style: { position: "absolute", bottom: 0, right: 0, background: T.GOLD, borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 13 } },
               "📷",
               React.createElement("input", { type: "file", accept: "image/*", style: { display: "none" }, onChange: async e => {
@@ -1913,6 +1918,19 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
               React.createElement(Badge, null, f.modality),
               React.createElement(Badge, { type: "blue" }, f.level),
               React.createElement(Badge, null, f.weight)
+            ),
+            (isOwner || user.role === "admin" || user.role === "superadmin") && React.createElement("div", {
+              style: { marginTop: 10, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" },
+              onClick: async () => {
+                const newVal = !f.available;
+                upd("available", newVal);
+                await db.update("fighters", f.id, { available: newVal });
+              }
+            },
+              React.createElement("div", { style: { width: 36, height: 20, borderRadius: 10, background: f.available ? "#4caf7d" : T.BG4, border: `1px solid ${f.available ? "#4caf7d" : T.BORDER}`, position: "relative", transition: "background 0.2s" } },
+                React.createElement("div", { style: { position: "absolute", top: 2, left: f.available ? 18 : 2, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.2s" } })
+              ),
+              React.createElement("span", { style: { fontSize: 12, color: f.available ? "#4caf7d" : T.TEXT3, fontWeight: 600 } }, f.available ? "Disponível para lutar" : "Não disponível")
             ),
             daysLeft !== null && daysLeft >= 0 && React.createElement("div", { style: { marginTop: 10, display: "flex", alignItems: "center", gap: 8, background: T.BG3, borderRadius: 8, padding: "8px 12px", border: `1px solid ${daysLeft <= 7 ? "#e05555" : daysLeft <= 30 ? T.GOLD_DIM : T.BORDER}` } },
               React.createElement("div", { style: { flex: 1 } },
@@ -2286,6 +2304,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   if (page === "calendar") return React.createElement(CalendarPage, { onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub });
   if (page === "dashboard") return React.createElement(DashboardPage, { onLogout, user, setPage, pendingCount, clubs, allFighters, allFights, viewAsClub, setViewAsClub });
   if (page === "clubs") return React.createElement(ClubsPage, { onLogout, user, setPage, pendingCount, clubs, setClubes, viewAsClub, setViewAsClub });
+  if (page === "matchmaking") return React.createElement(MatchmakingPage, { onLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub });
 
   // Modal password redefinida
   if (resetData) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
@@ -2350,7 +2369,7 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
           const fu = users.find(u => u.fighter_id === f.id);
           return React.createElement("div", { key: f.id, style: { background: T.BG2, border: `1px solid ${T.BORDER}`, borderRadius: 10, padding: "14px 16px" }, onMouseEnter: e => e.currentTarget.style.borderColor = T.GOLD_DIM, onMouseLeave: e => e.currentTarget.style.borderColor = T.BORDER },
             React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }, onClick: () => setSelected(f) },
-              React.createElement(Avatar, { name: f.name, size: 36, photo: f.photo }),
+              React.createElement(Avatar, { name: f.name, size: 36, photo: f.photo, available: f.available }),
               React.createElement("div", { style: { flex: 1 } },
                 React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 } },
                   React.createElement("span", { style: { fontWeight: 700, fontSize: 16, color: T.TEXT } }, f.name),
@@ -2621,6 +2640,7 @@ function App() {
   if (!user) return React.createElement(Login, { onLogin: handleLogin, clubs });
 
   if (page === "calendar") return React.createElement(CalendarPage, { onLogout: handleLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub });
+  if (page === "matchmaking") return React.createElement(MatchmakingPage, { onLogout: handleLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub });
 
   // Superadmin a ver como outro clube
   const effectiveClub = viewAsClub || club;
