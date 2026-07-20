@@ -2430,11 +2430,11 @@ function MatchConfirmModal({ fighter, onDone }) {
         if (f.confirmed_from) return false; // já confirmada
         const op = norm(f.opponent);
         const ot = norm(f.opponent_team);
-        // Pelo menos 2 tokens do nome em comum (ou 1 se só tiver 1 token >2 letras)
+        // Nome: pelo menos 2 tokens em comum, ou 1 se o nome só tiver 1 token
         const overlap = nameTokens.filter(t => op.includes(t)).length;
         const nameMatch = nameTokens.length > 0 && overlap >= Math.min(2, nameTokens.length);
-        // Equipa também tem de bater (se existir nos dois lados)
-        const teamMatch = myTeam && ot && (ot.includes(myTeam) || myTeam.includes(ot));
+        // Equipa: se existir nos dois lados tem de bater; se faltar num dos lados aceita na mesma
+        const teamMatch = !myTeam || !ot || ot.includes(myTeam) || myTeam.includes(ot);
         return nameMatch && teamMatch;
       });
 
