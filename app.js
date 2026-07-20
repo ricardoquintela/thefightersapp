@@ -2626,7 +2626,9 @@ function App() {
   const effectiveClub = viewAsClub || club;
   const effectiveFighters = viewAsClub
     ? allFighters.filter(f => f.club_id === viewAsClub.id)
-    : fighters;
+    : user.role === "superadmin"
+      ? allFighters.filter(f => f.club_id === user.club_id)
+      : fighters;
 
   if (user.role === "admin" || user.role === "superadmin") return React.createElement(AdminDashboard, {
     fighters: effectiveFighters, setFighters, users, setUsers,
