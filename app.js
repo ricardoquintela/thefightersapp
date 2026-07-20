@@ -2581,7 +2581,7 @@ function MatchmakingPage({ onLogout, user, setPage, pendingCount, club, clubs, v
   const [allFights, setAllFights] = React.useState([]);
   const [allClubs, setAllClubs] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
-  const [filters, setFilters] = React.useState({ modality: "Kickboxing", sub_modality: "K1", level: "Amador", weight: "", country: "Portugal", fight_date: "" });
+  const [filters, setFilters] = React.useState({ modality: "Kickboxing", sub_modality: "K1", level: "Amador", escalao: "", weight: "", gender: "Masculino", country: "Portugal", fight_date: "", adjacent: true });
   const [pairs, setPairs] = React.useState([]);
   const [searched, setSearched] = React.useState(false);
 
@@ -2641,12 +2641,26 @@ function MatchmakingPage({ onLogout, user, setPage, pendingCount, club, clubs, v
   }
 
   function search() {
-    const { modality, sub_modality, level, weight, country, fight_date } = filters;
+    const { modality, sub_modality, level, escalao, weight, gender, country, fight_date, adjacent } = filters;
+
+    // Categorias de peso adjacentes
+    const weightList = getWeightCategories(sub_modality, escalao, gender, level);
+    const weightIdx = weight ? weightList.indexOf(weight) : -1;
+    const validWeights = new Set();
+    if (weight) {
+      validWeights.add(weight);
+      if (adjacent) {
+        if (weightIdx > 0) validWeights.add(weightList[weightIdx - 1]);
+        if (weightIdx < weightList.length - 1) validWeights.add(weightList[weightIdx + 1]);
+      }
+    }
+
     const candidates = allFighters.filter(f => {
       if (f.modality !== modality) return false;
       if (sub_modality && f.sub_modality !== sub_modality) return false;
       if (level && f.level !== level) return false;
-      if (weight && f.weight !== weight) return false;
+      if (escalao && f.category && f.category !== escalao) return false;
+      if (weight && !validWeights.has(f.weight)) return false;
       if (country && getClubCountry(f.club_id) !== country) return false;
       return true;
     });
@@ -2698,20 +2712,40 @@ function MatchmakingPage({ onLogout, user, setPage, pendingCount, club, clubs, v
         React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
           React.createElement("div", null,
             React.createElement("label", { style: s.lbl }, "Modalidade"),
-            React.createElement("select", { style: s.inp, value: filters.modality, onChange: e => setFilters(p => ({ ...p, modality: e.target.value, sub_modality: (MODALITIES[e.target.value] || [])[0] || "", weight: "" })) },
+            React.createElement("select", { style: s.inp, value: filters.modality, onChange: e => setFilters(p => ({ ...p, modality: e.target.value, sub_modality: (MODALITIES[e.target.value] || [])[0] || "", escalao: "", weight: "" })) },
               Object.keys(MODALITIES).map(m => React.createElement("option", { key: m }, m))
             )
           ),
           React.createElement("div", null,
             React.createElement("label", { style: s.lbl }, "Disciplina"),
-            React.createElement("select", { style: s.inp, value: filters.sub_modality, onChange: e => setFilters(p => ({ ...p, sub_modality: e.target.value, weight: "" })) },
+            React.createElement("select", { style: s.inp, value: filters.sub_modality, onChange: e => setFilters(p => ({ ...p, sub_modality: e.target.value, escalao: "", weight: "" })) },
               (MODALITIES[filters.modality] || []).map(m => React.createElement("option", { key: m }, m))
             )
           ),
           React.createElement("div", null,
             React.createElement("label", { style: s.lbl }, "Nível"),
-            React.createElement("select", { style: s.inp, value: filters.level, onChange: e => setFilters(p => ({ ...p, level: e.target.value })) },
+            React.createElement("select", { style: s.inp, value: filters.level, onChange: e => setFilters(p => ({ ...p, level: e.target.value, escalao: "", weight: "" })) },
               LEVELS.map(l => React.createElement("option", { key: l }, l))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: s.lbl }, "Género"),
+            React.createElement("select", { style: s.inp, value: filters.gender, onChange: e => setFilters(p => ({ ...p, gender: e.target.value, weight: "" })) },
+              ["Masculino", "Feminino"].map(g => React.createElement("option", { key: g }, g))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: s.lbl }, "Escalão"),
+            React.createElement("select", { style: s.inp, value: filters.escalao, onChange: e => setFilters(p => ({ ...p, escalao: e.target.value, weight: "" })) },
+              React.createElement("option", { value: "" }, "Todos"),
+              getEscaloes(filters.modality, filters.sub_modality).map(e => React.createElement("option", { key: e, value: e }, e))
+            )
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { style: s.lbl }, "Categoria de peso"),
+            React.createElement("select", { style: s.inp, value: filters.weight, onChange: e => setFilters(p => ({ ...p, weight: e.target.value })) },
+              React.createElement("option", { value: "" }, "Todas"),
+              getWeightCategories(filters.sub_modality, filters.escalao, filters.gender, filters.level).map(w => React.createElement("option", { key: w, value: w }, w))
             )
           ),
           React.createElement("div", null,
@@ -2722,13 +2756,15 @@ function MatchmakingPage({ onLogout, user, setPage, pendingCount, club, clubs, v
             )
           ),
           React.createElement("div", null,
-            React.createElement("label", { style: s.lbl }, "Peso"),
-            React.createElement("input", { style: s.inp, placeholder: "ex: -60kg", value: filters.weight, onChange: e => setFilters(p => ({ ...p, weight: e.target.value })) })
-          ),
-          React.createElement("div", null,
             React.createElement("label", { style: s.lbl }, "Data prevista da luta"),
             React.createElement("input", { type: "date", style: s.inp, value: filters.fight_date, onChange: e => setFilters(p => ({ ...p, fight_date: e.target.value })) })
           )
+        ),
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginTop: 10, cursor: "pointer" }, onClick: () => setFilters(p => ({ ...p, adjacent: !p.adjacent })) },
+          React.createElement("div", { style: { width: 32, height: 18, borderRadius: 9, background: filters.adjacent ? "#4caf7d" : T.BG4, border: "1px solid " + (filters.adjacent ? "#4caf7d" : T.BORDER), position: "relative" } },
+            React.createElement("div", { style: { position: "absolute", top: 2, left: filters.adjacent ? 16 : 2, width: 12, height: 12, borderRadius: "50%", background: "#fff", transition: "left 0.2s" } })
+          ),
+          React.createElement("span", { style: { fontSize: 12, color: filters.adjacent ? "#4caf7d" : T.TEXT3 } }, "Incluir categoria acima e abaixo")
         ),
         React.createElement("button", { onClick: search, disabled: loading, style: { ...s.btnGold, width: "100%", marginTop: 12 } }, loading ? "A carregar..." : "Pesquisar")
       ),
