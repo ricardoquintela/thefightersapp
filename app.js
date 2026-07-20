@@ -2413,15 +2413,33 @@ function MatchConfirmModal({ fighter, onDone }) {
   React.useEffect(() => {
     async function findMatches() {
       const allFights = await db.get("fights");
-      const name = fighter.name.toLowerCase().trim();
-      // Encontrar combates onde este atleta aparece como adversário mas não tem fighter_id próprio
-      const found = allFights.filter(f =>
-        f.fighter_id !== fighter.id &&
-        f.opponent && f.opponent.toLowerCase().trim() === name
-      );
+
+      // Normalizar texto: minúsculas, sem acentos, sem espaços extra
+      const norm = (str) => (str||"").toLowerCase()
+        .normalize("NFD").replace(/[̀-ͯ]/g, "")
+        .replace(/\(teste\)/g, "").trim();
+
+      const name = norm(fighter.name);
+      // Tokens com mais de 2 letras (ignora preposições como "de", "da", "dos")
+      const nameTokens = name.split(/\s+/).filter(t => t.length > 2);
+      const myTeam = norm(fighter.team);
+      const myIdStr = String(fighter.id);
+
+      const found = allFights.filter(f => {
+        if (String(f.fighter_id) === myIdStr) return false; // luta própria
+        if (f.confirmed_from) return false; // já confirmada
+        const op = norm(f.opponent);
+        const ot = norm(f.opponent_team);
+        // Pelo menos 2 tokens do nome em comum (ou 1 se só tiver 1 token >2 letras)
+        const overlap = nameTokens.filter(t => op.includes(t)).length;
+        const nameMatch = nameTokens.length > 0 && overlap >= Math.min(2, nameTokens.length);
+        // Equipa também tem de bater (se existir nos dois lados)
+        const teamMatch = myTeam && ot && (ot.includes(myTeam) || myTeam.includes(ot));
+        return nameMatch && teamMatch;
+      });
+
       setMatches(found);
       setLoading(false);
-      // Se não há matches, terminar imediatamente
       if (found.length === 0) onDone();
     }
     findMatches();
