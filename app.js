@@ -37,6 +37,52 @@ const db = {
 
 const { useState, useEffect } = React;
 
+// ─── STORAGE UPLOAD ───────────────────────────────────────
+async function compressImage(file, maxSize = 600, quality = 0.7) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let w = img.width, h = img.height;
+        if (w > maxSize || h > maxSize) {
+          if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+          else { w = Math.round(w * maxSize / h); h = maxSize; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => resolve(blob), "image/jpeg", quality);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadPhotoToStorage(file, fighterId) {
+  // Convert file to ArrayBuffer
+  const arrayBuffer = await file.arrayBuffer();
+  const ext = file.type === "image/png" ? "png" : "jpg";
+  const path = `fighters/${fighterId}.${ext}`;
+  const r = await fetch(`${SUPABASE_URL}/storage/v1/object/photos/${path}`, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": file.type,
+      "x-upsert": "true"
+    },
+    body: arrayBuffer
+  });
+  if (!r.ok) {
+    const err = await r.text();
+    throw new Error("Upload falhou: " + err);
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/photos/${path}`;
+}
+
+
 // ─── THEME ENGINE ─────────────────────────────────────────
 function buildTheme(club) {
   const primary = club?.primary_color || "#C9A84C";
@@ -304,7 +350,7 @@ const FEDERATIONS = [
 const EMPTY_FIGHT = { opponent: "", opponent_team: "", result: "V", method: "KO/TKO", event: "", date: "", modality: "Kickboxing", sub_modality: "K1", level: "Amador", weight: "", federation: "" };
 const EMPTY_EVENT = { name: "", local: "", city: "", country: "Portugal", organization: "", date: "", federation: "" };
 const TITLE_TYPES = ["Campeão", "Vencedor", "Medalha de Ouro", "Medalha de Prata", "Medalha de Bronze"];
-const MAX_FILE_SIZE = 2 * 1024 * 1024;
+const MAX_FILE_SIZE = 500 * 1024; // 500KB
 
 // ─── UTILITÁRIOS ──────────────────────────────────────────
 function generatePassword() {
@@ -1844,10 +1890,17 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
               "📷",
               React.createElement("input", { type: "file", accept: "image/*", style: { display: "none" }, onChange: e => {
                 const file = e.target.files[0]; if (!file) return;
-                if (file.size > MAX_FILE_SIZE) { alert("Foto demasiado grande. Máximo 2MB."); return; }
-                const reader = new FileReader();
-                reader.onload = async ev => { upd("photo", ev.target.result); await db.update("fighters", f.id, { photo: ev.target.result }); };
-                reader.readAsDataURL(file);
+                if (file.size > MAX_FILE_SIZE) { alert("Foto demasiado grande. Máximo 500KB."); return; }
+                try {
+                  // Comprimir antes de fazer upload
+                  const compressed = await compressImage(file, 600, 0.7);
+                  const url = await uploadPhotoToStorage(compressed, f.id);
+                  upd("photo", url);
+                  await db.update("fighters", f.id, { photo: url });
+                } catch(e) {
+                  alert("Erro ao carregar foto. Tenta novamente.");
+                  console.error(e);
+                }
               }})
             )
           ),
