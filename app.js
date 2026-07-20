@@ -2415,9 +2415,10 @@ function MatchConfirmModal({ fighter, onDone }) {
       const allFights = await db.get("fights");
 
       // Normalizar texto: minúsculas, sem acentos, sem espaços extra
-      const norm = (str) => (str||"").toLowerCase()
-        .normalize("NFD").replace(/[̀-ͯ]/g, "")
-        .replace(/\(teste\)/g, "").trim();
+      const norm = (str) => {
+        if (!str) return "";
+        return str.toLowerCase().normalize("NFD").split("").filter(c => c.charCodeAt(0) < 0x0300 || c.charCodeAt(0) > 0x036F).join("").trim();
+      };
 
       const name = norm(fighter.name);
       // Tokens com mais de 2 letras (ignora preposições como "de", "da", "dos")
