@@ -90,6 +90,15 @@ async function uploadPhotoToStorage(file, fighterId) {
 
 
 // ─── THEME ENGINE ─────────────────────────────────────────
+function isLightColor(hex) {
+  if (!hex) return false;
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substr(0,2),16);
+  const g = parseInt(h.substr(2,2),16);
+  const b = parseInt(h.substr(4,2),16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 160;
+}
+
 function buildTheme(club) {
   const primary = club?.primary_color || "#C9A84C";
   const secondary = club?.secondary_color || "#8a6f2e";
@@ -2018,7 +2027,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
         )
       ),
       React.createElement("div", { style: { display: "flex", gap: 4, marginBottom: 16, background: T.BG2, border: `1px solid ${T.BORDER}`, borderRadius: 8, padding: 4 } },
-        TABS.map((t, i) => React.createElement("button", { key: t, onClick: () => setTab(i), style: { flex: 1, padding: "7px 4px", borderRadius: 6, border: "none", background: tab === i ? T.GOLD : "transparent", color: tab === i ? "#fff" : T.TEXT2, cursor: "pointer", fontSize: 12, fontWeight: tab === i ? 700 : 400 } }, t))
+        TABS.map((t, i) => React.createElement("button", { key: t, onClick: () => setTab(i), style: { flex: 1, padding: "7px 4px", borderRadius: 6, border: "none", background: tab === i ? T.GOLD : "transparent", color: tab === i ? (isLightColor(T.GOLD) ? "#111" : "#fff") : T.TEXT2, cursor: "pointer", fontSize: 12, fontWeight: tab === i ? 700 : 400 } }, t))
       ),
       tabContent(),
       React.createElement(Footer)
