@@ -566,8 +566,8 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
     user && setPage && React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", marginTop: 12, flexWrap: "wrap" } },
       React.createElement("div", { style: { 
           display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center",
-          background: "#ffffff08", borderRadius: 14, padding: "8px 10px",
-          border: "1px solid #ffffff10"
+          background: "#1a1a1a", borderRadius: 14, padding: "8px 10px",
+          border: "1px solid #ffffff18"
         } },
         (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("fighters"), style: { 
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
@@ -579,12 +579,11 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
                 transition: "all 0.15s"
               } },
               React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
-              React.createElement("path", { d: "M8 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1" }),
-              React.createElement("path", { d: "M14 6h1a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-3" }),
-              React.createElement("path", { d: "M6 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" }),
-              React.createElement("rect", { x: 3, y: 14, width: 13, height: 5, rx: 1 }),
-              React.createElement("path", { d: "M6 14v5" }),
-              React.createElement("path", { d: "M13 14v5" })
+              React.createElement("path", { d: "M4 15.5C4 17 5 18 6.5 18h8c1.5 0 2.5-1 2.5-2.5V9c0-1-.8-1.8-1.8-1.8H14V6a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v1.2H6.8C5.8 7.2 5 8 5 9v1H4.5A1.5 1.5 0 0 0 3 11.5v2A1.5 1.5 0 0 0 4.5 15H5" }),
+              React.createElement("path", { d: "M6 18v1.5A1.5 1.5 0 0 0 7.5 21h6a1.5 1.5 0 0 0 1.5-1.5V18" }),
+              React.createElement("line", { x1: 8, y1: 7, x2: 8, y2: 12 }),
+              React.createElement("line", { x1: 11, y1: 7, x2: 11, y2: 12 }),
+              React.createElement("line", { x1: 14, y1: 9, x2: 14, y2: 12 })
             ),
               "Lutadores"
             ),
