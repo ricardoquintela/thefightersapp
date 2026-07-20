@@ -1422,7 +1422,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   }, [fighter.id]);
 
   // Snapshot dos campos editáveis para detectar alterações
-  const profileFields = ["name","team","weight","category","gender","modality","sub_modality","level","birthdate"];
+  const profileFields = ["name","team","weight","category","gender","modality","sub_modality","level","birthdate","available"];
   const snapshot = savedSnapshot || profileFields.reduce((o,k) => ({...o,[k]: fighter[k]}), {});
   const isDirty = profileFields.some(k => String(f[k]||"") !== String(snapshot[k]||""));
 
@@ -1465,7 +1465,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
   async function saveProfile() {
     setSaving(true);
     const autoCategory = calcEscalao(f.birthdate, f.modality, f.sub_modality);
-    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: autoCategory || san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, combat_photos: f.combat_photos, birthdate: f.birthdate || "" });
+    await db.update("fighters", f.id, { name: san(f.name, 100), weight: f.weight, category: autoCategory || san(f.category), modality: f.modality, sub_modality: f.sub_modality, level: f.level, gender: f.gender || "", photo: f.photo, birthdate: f.birthdate || "", available: f.available || false });
     setSavedSnapshot(profileFields.reduce((o,k) => ({...o,[k]: f[k]}), {}));
     setSaving(false);
   }
@@ -1577,7 +1577,7 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
             isOwner ? React.createElement("input", { style: inp, value: f.team || "", onChange: e => upd("team", e.target.value) }) : React.createElement("div", { style: { fontSize: 14, color: T.TEXT, padding: "8px 0" } }, f.team)
           )
         ),
-        isOwner && isDirty && React.createElement("button", { onClick: saveProfile, disabled: saving, style: { ...s.btnGold, opacity: saving ? 0.7 : 1 } }, saving ? "A guardar..." : "Guardar alterações")
+        isOwner && React.createElement("button", { onClick: saveProfile, disabled: saving || !isDirty, style: { ...s.btnGold, opacity: (saving || !isDirty) ? 0.4 : 1 } }, saving ? "A guardar..." : isDirty ? "Guardar alterações" : "Sem alterações")
       )
     );
 
@@ -1924,7 +1924,12 @@ function FighterProfile({ fighter, onBack, onSave, user, isOwner, onLogout, setP
               onClick: async () => {
                 const newVal = !f.available;
                 upd("available", newVal);
-                await db.update("fighters", f.id, { available: newVal });
+                // Guardar imediatamente
+                try {
+                  await db.update("fighters", f.id, { available: newVal });
+                } catch(e) {
+                  console.error("Erro ao guardar disponibilidade:", e);
+                }
               }
             },
               React.createElement("div", { style: { width: 36, height: 20, borderRadius: 10, background: f.available ? "#4caf7d" : T.BG4, border: `1px solid ${f.available ? "#4caf7d" : T.BORDER}`, position: "relative", transition: "background 0.2s" } },
