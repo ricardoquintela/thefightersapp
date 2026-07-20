@@ -564,18 +564,128 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
       React.createElement("button", { onClick: onLogout, style: { padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.BORDER}`, background: "transparent", color: T.TEXT2, cursor: "pointer", fontSize: 12 } }, "Sair")
     ),
     user && setPage && React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", marginTop: 12, flexWrap: "wrap" } },
-      React.createElement("div", { style: { display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" } },
-        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("fighters"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "fighters" ? T.GOLD_DIM : T.BORDER}`, background: currentPage === "fighters" ? "#C9A84C33" : "transparent", color: currentPage === "fighters" ? "#fff" : T.GOLD, cursor: "pointer", fontSize: 10, fontWeight: 500, transition: "all 0.15s", position: "relative" } }, React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("circle", { cx: 12, cy: 8, r: 4 }), React.createElement("path", { d: "M4 20c0-4 3.6-7 8-7s8 3 8 7" })), "Lutadores"),
-        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("pending"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "pending" ? T.GOLD_DIM : T.BORDER}`, background: currentPage === "pending" ? "#C9A84C33" : "transparent", color: currentPage === "pending" ? "#fff" : T.GOLD, cursor: "pointer", fontSize: 10, fontWeight: 500, transition: "all 0.15s", position: "relative" } }, React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("path", { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" })), "Pedidos", pendingCount > 0 && React.createElement("span", { style: { position: "absolute", top: -5, right: -5, background: "#e05555", color: "#fff", borderRadius: "50%", width: 15, height: 15, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" } }, pendingCount > 9 ? "9+" : pendingCount)),
-        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("teams"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "teams" ? T.GOLD_DIM : T.BORDER}`, background: currentPage === "teams" ? "#C9A84C33" : "transparent", color: currentPage === "teams" ? "#fff" : T.GOLD, cursor: "pointer", fontSize: 10, fontWeight: 500, transition: "all 0.15s", position: "relative" } }, React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("path", { d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" }), React.createElement("circle", { cx: 9, cy: 7, r: 4 }), React.createElement("path", { d: "M23 21v-2a4 4 0 0 0-3-3.87" }), React.createElement("path", { d: "M16 3.13a4 4 0 0 1 0 7.75" })), "Equipas"),
-        user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("dashboard"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "dashboard" ? "#ff990066" : T.BORDER}`, background: currentPage === "dashboard" ? "#ff990033" : "transparent", color: currentPage === "dashboard" ? "#fff" : "#ff9900", cursor: "pointer", fontSize: 10, fontWeight: 500, transition: "all 0.15s", position: "relative" } }, React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("rect", { x: 3, y: 3, width: 7, height: 7 }), React.createElement("rect", { x: 14, y: 3, width: 7, height: 7 }), React.createElement("rect", { x: 14, y: 14, width: 7, height: 7 }), React.createElement("rect", { x: 3, y: 14, width: 7, height: 7 })), "Dashboard"),
-        user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("clubs"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "clubs" ? "#ff990066" : T.BORDER}`, background: currentPage === "clubs" ? "#ff990033" : "transparent", color: currentPage === "clubs" ? "#fff" : "#ff9900", cursor: "pointer", fontSize: 10, fontWeight: 500, transition: "all 0.15s", position: "relative" } }, React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("path", { d: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" }), React.createElement("polyline", { points: "9 22 9 12 15 12 15 22" })), "Clubes"),
-        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("calendar"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "calendar" ? T.GOLD_DIM : T.BORDER}`, background: currentPage === "calendar" ? "#C9A84C33" : "transparent", color: currentPage === "calendar" ? "#fff" : T.GOLD, cursor: "pointer", fontSize: 10, fontWeight: 500, transition: "all 0.15s", position: "relative" } }, React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("rect", { x: 3, y: 4, width: 18, height: 18, rx: 2 }), React.createElement("line", { x1: 16, y1: 2, x2: 16, y2: 6 }), React.createElement("line", { x1: 8, y1: 2, x2: 8, y2: 6 }), React.createElement("line", { x1: 3, y1: 10, x2: 21, y2: 10 })), "Calendário"),
-        React.createElement("button", { onClick: () => setPage("matchmaking"), style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 10px", minWidth: 56, borderRadius: 8, border: `1px solid ${currentPage === "matchmaking" ? "#4caf7d" : "#4caf7d44"}`, background: currentPage === "matchmaking" ? "#4caf7d22" : "transparent", color: "#4caf7d", cursor: "pointer", fontSize: 10, fontWeight: 600, transition: "all 0.15s" } },
-          React.createElement("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } }, React.createElement("circle", { cx: 8, cy: 12, r: 3 }), React.createElement("circle", { cx: 16, cy: 8, r: 3 }), React.createElement("circle", { cx: 16, cy: 16, r: 3 }), React.createElement("line", { x1: 11, y1: 12, x2: 13, y2: 9 }), React.createElement("line", { x1: 11, y1: 12, x2: 13, y2: 15 })), "Matching"
-        )
-      )
-    )
+      React.createElement("div", { style: { 
+          display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center",
+          background: "#ffffff08", borderRadius: 14, padding: "8px 10px",
+          border: "1px solid #ffffff10"
+        } },
+        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("fighters"), style: { 
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                padding: "8px 12px", minWidth: 60, borderRadius: 10,
+                border: `1px solid ${currentPage === "fighters" ? `${T.GOLD}88` : "#ffffff15"}`,
+                background: currentPage === "fighters" ? `${T.GOLD}18` : "transparent",
+                color: currentPage === "fighters" ? T.GOLD : "#ffffff66",
+                cursor: "pointer", fontSize: 10, fontWeight: currentPage === "fighters" ? 700 : 400,
+                transition: "all 0.15s"
+              } },
+              React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
+              React.createElement("path", { d: "M8 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1" }),
+              React.createElement("path", { d: "M14 6h1a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-3" }),
+              React.createElement("path", { d: "M6 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" }),
+              React.createElement("rect", { x: 3, y: 14, width: 13, height: 5, rx: 1 }),
+              React.createElement("path", { d: "M6 14v5" }),
+              React.createElement("path", { d: "M13 14v5" })
+            ),
+              "Lutadores"
+            ),
+        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("pending"), style: { 
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                padding: "8px 12px", minWidth: 60, borderRadius: 10,
+                border: `1px solid ${currentPage === "pending" ? `${T.GOLD}88` : "#ffffff15"}`,
+                background: currentPage === "pending" ? `${T.GOLD}18` : "transparent",
+                color: currentPage === "pending" ? T.GOLD : "#ffffff66",
+                cursor: "pointer", fontSize: 10, fontWeight: currentPage === "pending" ? 700 : 400,
+                transition: "all 0.15s", position: "relative"
+              } },
+              React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
+              React.createElement("path", { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" })
+            ),
+              "Pedidos", pendingCount > 0 && React.createElement("span", { style: { position: "absolute", top: -4, right: -4, background: "#e05555", color: "#fff", borderRadius: "50%", width: 14, height: 14, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" } }, pendingCount > 9 ? "9+" : pendingCount)
+            ),
+        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("teams"), style: { 
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                padding: "8px 12px", minWidth: 60, borderRadius: 10,
+                border: `1px solid ${currentPage === "teams" ? `${T.GOLD}88` : "#ffffff15"}`,
+                background: currentPage === "teams" ? `${T.GOLD}18` : "transparent",
+                color: currentPage === "teams" ? T.GOLD : "#ffffff66",
+                cursor: "pointer", fontSize: 10, fontWeight: currentPage === "teams" ? 700 : 400,
+                transition: "all 0.15s"
+              } },
+              React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
+              React.createElement("path", { d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" }),
+              React.createElement("circle", { cx: 9, cy: 7, r: 4 }),
+              React.createElement("path", { d: "M23 21v-2a4 4 0 0 0-3-3.87" }),
+              React.createElement("path", { d: "M16 3.13a4 4 0 0 1 0 7.75" })
+            ),
+              "Equipas"
+            ),
+        user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("dashboard"), style: { 
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                padding: "8px 12px", minWidth: 60, borderRadius: 10,
+                border: `1px solid ${currentPage === "dashboard" ? `${T.GOLD}88` : "#ffffff15"}`,
+                background: currentPage === "dashboard" ? `${T.GOLD}18` : "transparent",
+                color: currentPage === "dashboard" ? T.GOLD : "#ffffff66",
+                cursor: "pointer", fontSize: 10, fontWeight: currentPage === "dashboard" ? 700 : 400,
+                transition: "all 0.15s"
+              } },
+              React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
+              React.createElement("rect", { x: 3, y: 3, width: 7, height: 7 }),
+              React.createElement("rect", { x: 14, y: 3, width: 7, height: 7 }),
+              React.createElement("rect", { x: 14, y: 14, width: 7, height: 7 }),
+              React.createElement("rect", { x: 3, y: 14, width: 7, height: 7 })
+            ),
+              "Dashboard"
+            ),
+        user.role === "superadmin" && !viewAsClub && React.createElement("button", { onClick: () => setPage("clubs"), style: { 
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                padding: "8px 12px", minWidth: 60, borderRadius: 10,
+                border: `1px solid ${currentPage === "clubs" ? `${T.GOLD}88` : "#ffffff15"}`,
+                background: currentPage === "clubs" ? `${T.GOLD}18` : "transparent",
+                color: currentPage === "clubs" ? T.GOLD : "#ffffff66",
+                cursor: "pointer", fontSize: 10, fontWeight: currentPage === "clubs" ? 700 : 400,
+                transition: "all 0.15s"
+              } },
+              React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
+              React.createElement("path", { d: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" }),
+              React.createElement("polyline", { points: "9 22 9 12 15 12 15 22" })
+            ),
+              "Clubes"
+            ),
+        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("calendar"), style: { 
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                padding: "8px 12px", minWidth: 60, borderRadius: 10,
+                border: `1px solid ${currentPage === "calendar" ? `${T.GOLD}88` : "#ffffff15"}`,
+                background: currentPage === "calendar" ? `${T.GOLD}18` : "transparent",
+                color: currentPage === "calendar" ? T.GOLD : "#ffffff66",
+                cursor: "pointer", fontSize: 10, fontWeight: currentPage === "calendar" ? 700 : 400,
+                transition: "all 0.15s"
+              } },
+              React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
+              React.createElement("rect", { x: 3, y: 4, width: 18, height: 18, rx: 2 }),
+              React.createElement("line", { x1: 16, y1: 2, x2: 16, y2: 6 }),
+              React.createElement("line", { x1: 8, y1: 2, x2: 8, y2: 6 }),
+              React.createElement("line", { x1: 3, y1: 10, x2: 21, y2: 10 })
+            ),
+              "Calendário"
+            ),
+        React.createElement("button", { onClick: () => setPage("matchmaking"), style: { 
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                padding: "8px 12px", minWidth: 60, borderRadius: 10,
+                border: `1px solid ${currentPage === "matchmaking" ? "#4caf7d" : "#4caf7d44"}`,
+                background: currentPage === "matchmaking" ? "#4caf7d22" : "transparent",
+                color: "#4caf7d", cursor: "pointer", fontSize: 10, fontWeight: 700,
+                transition: "all 0.15s", boxShadow: currentPage === "matchmaking" ? "0 0 12px #4caf7d33" : "none"
+              } },
+              React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
+              React.createElement("circle", { cx: 8, cy: 12, r: 3 }),
+              React.createElement("circle", { cx: 16, cy: 8, r: 3 }),
+              React.createElement("circle", { cx: 16, cy: 16, r: 3 }),
+              React.createElement("line", { x1: 11, y1: 12, x2: 13, y2: 9 }),
+              React.createElement("line", { x1: 11, y1: 12, x2: 13, y2: 15 })
+            ),
+              "Matching"
+            )
+      )    )
   );
 }
 
