@@ -579,8 +579,9 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
                 transition: "all 0.15s"
               } },
               React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
-              React.createElement("circle", { cx: 12, cy: 7, r: 4 }),
-              React.createElement("path", { d: "M5.5 21a7 7 0 0 1 13 0" })
+              React.createElement("path", { d: "M7 10a5 5 0 0 1 10 0v3a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3z" }),
+              React.createElement("path", { d: "M7 12c-1.6 0-2.5 1.1-2.5 2.5S5.4 17 7 17" }),
+              React.createElement("path", { d: "M9 16h6v3a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" })
             ),
               "Lutadores"
             ),
