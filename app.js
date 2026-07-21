@@ -674,10 +674,16 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
                 transition: "all 0.15s", boxShadow: currentPage === "matchmaking" ? "0 0 12px #4caf7d33" : "none"
               } },
               React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
-              React.createElement("rect", { x: 4, y: 7, width: 16, height: 12, rx: 1 }),
-              React.createElement("line", { x1: 4, y1: 7, x2: 4, y2: 4 }),
-              React.createElement("line", { x1: 20, y1: 7, x2: 20, y2: 4 }),
-              React.createElement("line", { x1: 4, y1: 13, x2: 20, y2: 13 })
+              React.createElement("line", { x1: 12, y1: 3, x2: 12, y2: 9 }),
+              React.createElement("line", { x1: 3, y1: 8, x2: 3, y2: 12 }),
+              React.createElement("line", { x1: 21, y1: 8, x2: 21, y2: 12 }),
+              React.createElement("line", { x1: 3, y1: 8, x2: 12, y2: 4 }),
+              React.createElement("line", { x1: 3, y1: 9.5, x2: 12, y2: 4 }),
+              React.createElement("line", { x1: 3, y1: 11, x2: 12, y2: 4 }),
+              React.createElement("line", { x1: 21, y1: 8, x2: 12, y2: 4 }),
+              React.createElement("line", { x1: 21, y1: 9.5, x2: 12, y2: 4 }),
+              React.createElement("line", { x1: 21, y1: 11, x2: 12, y2: 4 }),
+              React.createElement("path", { d: "M3 12 L12 20 L21 12 L12 15 Z", fill: "currentColor", stroke: "none" })
             ),
               "Matching"
             )
