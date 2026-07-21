@@ -674,11 +674,10 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
                 transition: "all 0.15s", boxShadow: currentPage === "matchmaking" ? "0 0 12px #4caf7d33" : "none"
               } },
               React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
-              React.createElement("circle", { cx: 8, cy: 12, r: 3 }),
-              React.createElement("circle", { cx: 16, cy: 8, r: 3 }),
-              React.createElement("circle", { cx: 16, cy: 16, r: 3 }),
-              React.createElement("line", { x1: 11, y1: 12, x2: 13, y2: 9 }),
-              React.createElement("line", { x1: 11, y1: 12, x2: 13, y2: 15 })
+              React.createElement("rect", { x: 4, y: 7, width: 16, height: 12, rx: 1 }),
+              React.createElement("line", { x1: 4, y1: 7, x2: 4, y2: 4 }),
+              React.createElement("line", { x1: 20, y1: 7, x2: 20, y2: 4 }),
+              React.createElement("line", { x1: 4, y1: 13, x2: 20, y2: 13 })
             ),
               "Matching"
             )
