@@ -673,14 +673,7 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
                 color: "#4caf7d", cursor: "pointer", fontSize: 10, fontWeight: 700,
                 transition: "all 0.15s", boxShadow: currentPage === "matchmaking" ? "0 0 12px #4caf7d33" : "none"
               } },
-              React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
-              React.createElement("rect", { x: 2, y: 4, width: 20, height: 16 }),
-              React.createElement("rect", { x: 7, y: 9, width: 10, height: 6 }),
-              React.createElement("line", { x1: 2, y1: 4, x2: 7, y2: 9 }),
-              React.createElement("line", { x1: 22, y1: 4, x2: 17, y2: 9 }),
-              React.createElement("line", { x1: 2, y1: 20, x2: 7, y2: 15 }),
-              React.createElement("line", { x1: 22, y1: 20, x2: 17, y2: 15 })
-            ),
+              React.createElement("img", { src: "/tfa_icon.png", width: 16, height: 16, style: { display: "block", objectFit: "contain" } }),
               "Matching"
             )
       )    )
