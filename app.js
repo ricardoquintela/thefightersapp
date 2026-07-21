@@ -578,13 +578,9 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
                 cursor: "pointer", fontSize: 10, fontWeight: currentPage === "fighters" ? 700 : 400,
                 transition: "all 0.15s"
               } },
-              React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 100 100", fill: "none", stroke: "currentColor", strokeWidth: 5, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
-              React.createElement("path", { d: "M20 65 C20 75 28 82 38 82 L62 82 C72 82 80 75 80 65 L80 42 C80 36 75 31 69 31 L65 31 L65 25 C65 19 60 14 54 14 L46 14 C40 14 35 19 35 25 L35 31 L31 31 C25 31 20 36 20 42 Z" }),
-              React.createElement("line", { x1: 45, y1: 31, x2: 45, y2: 58 }),
-              React.createElement("line", { x1: 55, y1: 31, x2: 55, y2: 58 }),
-              React.createElement("line", { x1: 65, y1: 36, x2: 65, y2: 58 }),
-              React.createElement("path", { d: "M20 58 L80 58" }),
-              React.createElement("path", { d: "M20 65 C15 65 10 62 10 57 L10 50 C10 45 15 42 20 42" })
+              React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
+              React.createElement("circle", { cx: 12, cy: 7, r: 4 }),
+              React.createElement("path", { d: "M5.5 21a7 7 0 0 1 13 0" })
             ),
               "Lutadores"
             ),
