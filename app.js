@@ -673,7 +673,7 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
                 color: "#4caf7d", cursor: "pointer", fontSize: 10, fontWeight: 700,
                 transition: "all 0.15s", boxShadow: currentPage === "matchmaking" ? "0 0 12px #4caf7d33" : "none"
               } },
-              React.createElement("img", { src: "/tfa_icon.png", width: 16, height: 16, style: { display: "block", objectFit: "contain", mixBlendMode: "screen" } }),
+              React.createElement("img", { src: "/tfa_icon.png", width: 24, height: 24, style: { display: "block", objectFit: "contain", mixBlendMode: "screen" } }),
               "Matching"
             )
       )    )
