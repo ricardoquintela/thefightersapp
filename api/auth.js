@@ -38,7 +38,8 @@ async function checkPassword(plain, stored) {
   // Bcrypt
   if (stored.startsWith("$2a$") || stored.startsWith("$2b$") || stored.startsWith("$2y$")) {
     try {
-      const bcrypt = (await import("bcryptjs")).default || (await import("bcryptjs"));
+      const bcryptModule = await import("bcryptjs");
+      const bcrypt = bcryptModule.default || bcryptModule;
       return await bcrypt.compare(plain, stored);
     } catch {
       // fallback: tentar bcrypt nativo do node se bcryptjs não disponível
@@ -84,7 +85,7 @@ export default async function handler(req, res) {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: "Campos obrigatórios." });
 
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username.toLowerCase().trim())}&select=*`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/users?username=ilike.${encodeURIComponent(username.toLowerCase().trim())}&select=*`, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
     });
     const users = await r.json();
@@ -220,7 +221,7 @@ export default async function handler(req, res) {
     const { username } = req.body;
     if (!username) return res.status(400).json({ error: "Username obrigatório." });
 
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username.toLowerCase())}&select=*`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/users?username=ilike.${encodeURIComponent(username.toLowerCase().trim())}&select=*`, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
     });
     const users = await r.json();
