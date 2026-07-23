@@ -579,9 +579,8 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
                 transition: "all 0.15s"
               } },
               React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
-              React.createElement("path", { d: "M7 10a5 5 0 0 1 10 0v3a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3z" }),
-              React.createElement("path", { d: "M7 12c-1.6 0-2.5 1.1-2.5 2.5S5.4 17 7 17" }),
-              React.createElement("path", { d: "M9 16h6v3a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" })
+              React.createElement("circle", { cx: 12, cy: 7, r: 4 }),
+              React.createElement("path", { d: "M5.5 21a7 7 0 0 1 13 0" })
             ),
               "Lutadores"
             ),
@@ -599,7 +598,7 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
             ),
               "Pedidos", pendingCount > 0 && React.createElement("span", { style: { position: "absolute", top: -4, right: -4, background: "#e05555", color: "#fff", borderRadius: "50%", width: 14, height: 14, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" } }, pendingCount > 9 ? "9+" : pendingCount)
             ),
-        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("teams"), style: { 
+        React.createElement("button", { onClick: () => setPage("teams"), style: { 
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
                 padding: "8px 12px", minWidth: 60, borderRadius: 10,
                 border: `1px solid ${currentPage === "teams" ? `${T.GOLD}88` : "#ffffff15"}`,
@@ -648,7 +647,7 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
             ),
               "Clubes"
             ),
-        (user.role === "admin" || user.role === "superadmin") && React.createElement("button", { onClick: () => setPage("calendar"), style: { 
+        React.createElement("button", { onClick: () => setPage("calendar"), style: { 
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
                 padding: "8px 12px", minWidth: 60, borderRadius: 10,
                 border: `1px solid ${currentPage === "calendar" ? `${T.GOLD}88` : "#ffffff15"}`,
@@ -673,7 +672,13 @@ function Header({ onLogout, user, currentPage, setPage, pendingCount = 0, club, 
                 color: "#4caf7d", cursor: "pointer", fontSize: 10, fontWeight: 700,
                 transition: "all 0.15s", boxShadow: currentPage === "matchmaking" ? "0 0 12px #4caf7d33" : "none"
               } },
-              React.createElement("img", { src: "/tfa_icon.png", width: 16, height: 16, style: { display: "block", objectFit: "contain", mixBlendMode: "screen", transform: "scale(1.75)" } }),
+              React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", style: { display: "block" } },
+              React.createElement("circle", { cx: 8, cy: 12, r: 3 }),
+              React.createElement("circle", { cx: 16, cy: 8, r: 3 }),
+              React.createElement("circle", { cx: 16, cy: 16, r: 3 }),
+              React.createElement("line", { x1: 11, y1: 12, x2: 13, y2: 9 }),
+              React.createElement("line", { x1: 11, y1: 12, x2: 13, y2: 15 })
+            ),
               "Matching"
             )
       )    )
@@ -1430,11 +1435,7 @@ function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs, viewAsC
   useEffect(() => {
     async function load() {
       const [fighters, fights] = await Promise.all([db.get("fighters"), db.get("fights")]);
-      const approved = fighters.filter(f => {
-        if (f.status === "pending" || f.status === "rejected") return false;
-        if (user.role === "admin") return f.club_id === user.club_id;
-        return true;
-      });
+      const approved = fighters.filter(f => f.status !== "pending" && f.status !== "rejected");
       setAllFighters(approved); setAllFights(fights);
       const teamMap = {};
       approved.forEach(f => { const t = f.team || "Sem Equipa"; if (!teamMap[t]) teamMap[t] = []; teamMap[t].push(f); });
@@ -3130,6 +3131,7 @@ function App() {
 
   if (page === "calendar") return React.createElement(CalendarPage, { onLogout: handleLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub });
   if (page === "matchmaking") return React.createElement(MatchmakingPage, { onLogout: handleLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub });
+  if (page === "teams") return React.createElement(TeamsPage, { onLogout: handleLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub });
 
   // Superadmin a ver como outro clube
   const effectiveClub = viewAsClub || club;
