@@ -756,7 +756,7 @@ function EventForm({ val, set }) {
   );
 }
 
-function CalendarPage({ onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub }) {
+function CalendarPage({ onLogout, user, setPage, pendingCount, resolveCount, club, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1163,7 +1163,7 @@ function RegisterPage({ clubs }) {
   );
 }
 
-function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, club, clubs, viewAsClub, setViewAsClub }) {
+function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, resolveCount, club, clubs, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1225,7 +1225,7 @@ function PendingPage({ onLogout, user, setPage, setUsers, users, pendingCount, c
   );
 }
 
-function DashboardPage({ onLogout, user, setPage, pendingCount, clubs, allFighters, allFights, viewAsClub, setViewAsClub }) {
+function DashboardPage({ onLogout, user, setPage, pendingCount, resolveCount, clubs, allFighters, allFights, viewAsClub, setViewAsClub }) {
   const [rankBy, setRankBy] = React.useState("wr");
 
   const activeClubs = (clubs || []).filter(c => c.active);
@@ -1359,7 +1359,7 @@ function DashboardPage({ onLogout, user, setPage, pendingCount, clubs, allFighte
     )
   );
 }
-function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes, viewAsClub, setViewAsClub }) {
+function ClubsPage({ onLogout, user, setPage, pendingCount, resolveCount, clubs, setClubes, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const { inp, lbl } = s;
   const [showForm, setShowForm] = useState(false);
@@ -1438,7 +1438,7 @@ function ClubsPage({ onLogout, user, setPage, pendingCount, clubs, setClubes, vi
 // PARTE 4: TEAMS PAGE
 // ═══════════════════════════════════════════════════════════
 
-function TeamsPage({ onLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub }) {
+function TeamsPage({ onLogout, user, setPage, pendingCount, resolveCount, club, clubs, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const [teams, setTeams] = useState([]);
   const [allFighters, setAllFighters] = useState([]);
@@ -2588,13 +2588,13 @@ function AdminDashboard({ fighters, setFighters, users, setUsers, onLogout, user
   }
 
   // Routing para sub-páginas
-  if (page === "pending") return React.createElement(PendingPage, { onLogout, user, setPage, setUsers, users, pendingCount, club, clubs, viewAsClub, setViewAsClub });
-  if (page === "teams") return React.createElement(TeamsPage, { onLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub });
-  if (page === "calendar") return React.createElement(CalendarPage, { onLogout, user, setPage, pendingCount, club, viewAsClub, setViewAsClub });
-  if (page === "dashboard") return React.createElement(DashboardPage, { onLogout, user, setPage, pendingCount, clubs, allFighters, allFights, viewAsClub, setViewAsClub });
-  if (page === "clubs") return React.createElement(ClubsPage, { onLogout, user, setPage, pendingCount, clubs, setClubes, viewAsClub, setViewAsClub });
+  if (page === "pending") return React.createElement(PendingPage, { onLogout, user, setPage, setUsers, users, pendingCount, resolveCount, club, clubs, viewAsClub, setViewAsClub });
+  if (page === "teams") return React.createElement(TeamsPage, { onLogout, user, setPage, pendingCount, resolveCount, club, clubs, viewAsClub, setViewAsClub });
+  if (page === "calendar") return React.createElement(CalendarPage, { onLogout, user, setPage, pendingCount, resolveCount, club, viewAsClub, setViewAsClub });
+  if (page === "dashboard") return React.createElement(DashboardPage, { onLogout, user, setPage, pendingCount, resolveCount, clubs, allFighters, allFights, viewAsClub, setViewAsClub });
+  if (page === "clubs") return React.createElement(ClubsPage, { onLogout, user, setPage, pendingCount, resolveCount, clubs, setClubes, viewAsClub, setViewAsClub });
   if (page === "resolve") return React.createElement(ResolvePage, { onLogout, user, setPage, pendingCount, resolveCount, club, clubs, viewAsClub, setViewAsClub });
-  if (page === "matchmaking") return React.createElement(MatchmakingPage, { onLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub });
+  if (page === "matchmaking") return React.createElement(MatchmakingPage, { onLogout, user, setPage, pendingCount, resolveCount, club, clubs, viewAsClub, setViewAsClub });
 
   // Modal password redefinida
   if (resetData) return React.createElement("div", { style: { minHeight: "100vh", background: T.BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
@@ -3004,7 +3004,7 @@ function ResolvePage({ onLogout, user, setPage, pendingCount, resolveCount, club
 // ═══════════════════════════════════════════════════════════
 // MATCHMAKING PAGE
 // ═══════════════════════════════════════════════════════════
-function MatchmakingPage({ onLogout, user, setPage, pendingCount, club, clubs, viewAsClub, setViewAsClub }) {
+function MatchmakingPage({ onLogout, user, setPage, pendingCount, resolveCount, club, clubs, viewAsClub, setViewAsClub }) {
   const s = getStyles();
   const [allFighters, setAllFighters] = React.useState([]);
   const [allFights, setAllFights] = React.useState([]);
